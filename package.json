@@ -1,0 +1,10 @@
+{
+  "name": "academia-modbus",
+  "version": "1.0.0",
+  "description": "Curso interactivo para aprender Modbus desde cero",
+  "private": true,
+  "scripts": {
+    "test": "node tests/core.test.js",
+    "test:smoke": "node tests/smoke.mjs"
+  }
+}
