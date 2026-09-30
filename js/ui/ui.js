@@ -47,32 +47,150 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const cssVar = (name, el = document.documentElement) => getComputedStyle(el).getPropertyValue(name).trim();
 
-  /* ---------------- Almacenamiento seguro ---------------- */
+  /* ---------------- Almacenamiento: navegador y cuenta ---------------- */
+  // El progreso se guarda siempre en este navegador (respuesta inmediata y sin
+  // conexión). Cuando la página se abre publicada en claude.ai, además se
+  // replica en un documento privado de la cuenta del usuario, de modo que el
+  // móvil y el ordenador comparten el mismo progreso.
   const KEY = 'academia-modbus:v1';
+  const SYNCED = ['done', 'challenges', 'examBest', 'checklist'];
   let memory = {};
+  const readAll = () => {
+    try {
+      const raw = global.localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : memory;
+    } catch (e) {
+      return memory;
+    }
+  };
+  const writeAll = (all) => {
+    memory = all;
+    try {
+      global.localStorage.setItem(KEY, JSON.stringify(all));
+    } catch (e) {
+      /* sin almacenamiento: seguimos en memoria */
+    }
+  };
+  const emit = (name, detail) => document.dispatchEvent(new CustomEvent(name, { detail }));
   const store = {
-    all() {
-      try {
-        const raw = global.localStorage.getItem(KEY);
-        return raw ? JSON.parse(raw) : memory;
-      } catch (e) {
-        return memory;
-      }
-    },
+    all: readAll,
     get(k, def) {
-      const v = store.all()[k];
+      const v = readAll()[k];
       return v === undefined ? def : v;
     },
     set(k, v) {
-      const all = store.all();
+      const all = readAll();
       all[k] = v;
-      memory = all;
+      writeAll(all);
+      emit('mb:store', { key: k });
+      if (SYNCED.includes(k)) sync.push();
+    },
+  };
+
+  /** Solo las claves sincronizadas, en forma canónica para comparar. */
+  const pickSynced = (obj) => {
+    const out = {};
+    SYNCED.forEach((k) => {
+      const v = obj ? obj[k] : undefined;
+      if (v === undefined || v === null) return;
+      out[k] = v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().filter((x) => v[x]).map((x) => [x, v[x]])) : v;
+    });
+    return out;
+  };
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  /** Primera vez en este dispositivo: se suma lo hecho aquí a lo guardado en la cuenta. */
+  const union = (local, remote) => {
+    const out = { ...remote };
+    ['done', 'challenges', 'checklist'].forEach((k) => {
+      if (local[k] || remote[k]) out[k] = { ...(remote[k] || {}), ...(local[k] || {}) };
+    });
+    const best = Math.max(local.examBest ?? -1, remote.examBest ?? -1);
+    if (best >= 0) out.examBest = best;
+    return pickSynced(out);
+  };
+
+  const sync = {
+    status: 'local',
+    ref: null,
+    uid: null,
+    ready: false,
+    timer: null,
+    writing: false,
+    again: false,
+    setStatus(s) {
+      if (sync.status === s) return;
+      sync.status = s;
+      emit('mb:sync-status', { status: s });
+    },
+    async start() {
+      const c = global.claude;
+      if (!c || typeof c.use !== 'function') return; // abierto como archivo: solo navegador
+      sync.setStatus('connecting');
+      let db = null;
+      let user = null;
       try {
-        global.localStorage.setItem(KEY, JSON.stringify(all));
+        [db, user] = await Promise.all([c.use('db'), c.use('user')]);
       } catch (e) {
-        /* sin almacenamiento: seguimos en memoria */
+        /* sin capacidades */
       }
-      document.dispatchEvent(new CustomEvent('mb:store', { detail: { key: k } }));
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) return sync.setStatus('local');
+      sync.uid = uid;
+      sync.ref = db.doc(`data/users/${uid}/progress`);
+      sync.ref.onSnapshot(sync.onRemote, () => sync.setStatus('error'));
+    },
+    onRemote(snap) {
+      if (snap.metadata.hasPendingWrites) return; // eco de nuestra propia escritura
+      if (!sync.ready && snap.metadata.fromCache && !snap.exists) return; // esperar al dato definitivo
+      const remote = pickSynced(snap.exists ? snap.data() : {});
+      const all = readAll();
+      const local = pickSynced(all);
+      if (!sync.ready) {
+        sync.ready = true;
+        const next = all.syncedWith === sync.uid ? remote : union(local, remote);
+        all.syncedWith = sync.uid;
+        sync.apply(all, next);
+        if (!snap.exists || !same(next, remote)) sync.push();
+        sync.setStatus('synced');
+        return;
+      }
+      // Cambios desde otro dispositivo. Si hay una escritura nuestra en camino, gana la nuestra.
+      if (sync.timer || sync.writing) return;
+      if (!same(remote, local)) sync.apply(all, remote);
+    },
+    apply(all, next) {
+      SYNCED.forEach((k) => delete all[k]);
+      Object.assign(all, next);
+      writeAll(all);
+      emit('mb:sync', {});
+    },
+    push() {
+      if (!sync.ref || !sync.ready) return;
+      clearTimeout(sync.timer);
+      sync.timer = setTimeout(sync.flush, 500);
+    },
+    async flush() {
+      sync.timer = null;
+      if (sync.writing) {
+        sync.again = true;
+        return;
+      }
+      sync.writing = true;
+      try {
+        await sync.ref.set(pickSynced(readAll()));
+        sync.setStatus('synced');
+      } catch (e) {
+        if (e && e.code === 'unavailable' && !sync.retried) {
+          sync.retried = true;
+          setTimeout(sync.push, 1000 + Math.random() * 1500);
+        } else sync.setStatus('error');
+      }
+      sync.retried = false;
+      sync.writing = false;
+      if (sync.again) {
+        sync.again = false;
+        sync.flush();
+      }
     },
   };
 
@@ -115,6 +233,7 @@
     send: '<path d="M4 12l16-8-6 16-2.5-6.5z"/>',
     gauge: '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l3.5-5"/>',
     shield: '<path d="M12 3l7.5 3v5.5c0 4.5-3 8-7.5 9.5-4.5-1.5-7.5-5-7.5-9.5V6z"/>',
+    cloud: '<path d="M7 18.5a4.5 4.5 0 0 1-.4-9A6 6 0 0 1 18 10.8a3.9 3.9 0 0 1-.5 7.7z"/>',
     network: '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
   };
   function icon(name, cls = '') {
@@ -480,7 +599,7 @@
   }
 
   Object.assign(UI, {
-    h, append, $, $$, esc, icon, iconHTML, toast, copyText, store, frameView, legend, KIND_LABEL,
+    h, append, $, $$, esc, icon, iconHTML, toast, copyText, store, sync, frameView, legend, KIND_LABEL,
     fitCanvas, BusView, segmented, field, select, switchCtl, confetti, reducedMotion, sleep, cssVar,
   });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "test": "node tests/core.test.js",
-    "test:smoke": "node tests/smoke.mjs"
+    "test:smoke": "node tests/smoke.mjs",
+    "test:sync": "node tests/sync.mjs"
   }
 }

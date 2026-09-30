@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
   const MB = global.MB;
-  const { h, icon, store, toast, $, $$ } = MB.ui;
+  const { h, icon, store, sync, toast, $, $$ } = MB.ui;
 
   const LESSONS = MB.LESSONS;
   LESSONS.forEach((l, i) => (l.num = i + 1));
@@ -47,6 +47,19 @@
 
   /* ---------------- Estructura ---------------- */
   const progressNum = h('b');
+  const syncLine = h('div', { class: 'sync-line', role: 'status' });
+  const SYNC_TEXT = {
+    local: ['Guardado en este navegador', 'Abre la versión publicada en claude.ai para compartir el progreso entre dispositivos'],
+    connecting: ['Conectando con tu cuenta…', ''],
+    synced: ['Sincronizado con tu cuenta', 'El mismo progreso en todos tus dispositivos'],
+    error: ['Sin sincronizar: guardado en este navegador', 'Tu cuenta no admite guardar aquí; el progreso sigue en este navegador'],
+  };
+  function renderSync() {
+    const [text, title] = SYNC_TEXT[sync.status] || SYNC_TEXT.local;
+    syncLine.className = `sync-line is-${sync.status}`;
+    syncLine.title = title;
+    syncLine.replaceChildren(icon(sync.status === 'local' ? 'chip' : 'cloud'), h('span', null, text));
+  }
   const progressBar = h('span');
   const nav = h('nav', { class: 'nav', 'aria-label': 'Lecciones' });
   let resetArmed = false;
@@ -81,7 +94,7 @@
     'aside',
     { class: 'sidebar', id: 'sidebar', 'aria-label': 'Índice del curso' },
     h('a', { class: 'brand', href: '#inicio' }, h('span', { class: 'brand-mark', html: LOGO }), h('span', { class: 'brand-txt' }, h('b', null, 'Academia Modbus'), h('small', null, 'RTU · ASCII · TCP/IP'))),
-    h('div', { class: 'progress-card' }, h('div', { class: 'progress-row' }, h('span', null, 'Tu progreso'), progressNum), h('div', { class: 'meter-bar' }, progressBar)),
+    h('div', { class: 'progress-card' }, h('div', { class: 'progress-row' }, h('span', null, 'Tu progreso'), progressNum), h('div', { class: 'meter-bar' }, progressBar), syncLine),
     nav,
     h('div', { class: 'sidebar-foot' }, h('span', null, 'Especificación v1.1b3'), resetBtn)
   );
@@ -326,6 +339,9 @@
         if (!isDone) toast(next ? `Lección completada. Siguiente: ${next.short || next.title}` : '¡Curso completado!', 'ok');
       });
       paint();
+      const onSync = () => paint();
+      document.addEventListener('mb:sync', onSync);
+      cleanups.push(() => document.removeEventListener('mb:sync', onSync));
       footItems.push(btn);
     }
     if (next) footItems.push(h('a', { class: 'nav-card next', href: `#${next.id}` }, h('small', null, 'Siguiente →'), h('b', null, next.short || next.title)));
@@ -485,8 +501,17 @@
     buildNav();
     renderProgress();
     applyTheme();
+    renderSync();
     global.addEventListener('hashchange', route);
     route();
+    document.addEventListener('mb:sync-status', renderSync);
+    // Progreso llegado de otro dispositivo: refresca el índice y, en la portada, la ruta
+    document.addEventListener('mb:sync', () => {
+      renderProgress();
+      const id = decodeURIComponent(location.hash.slice(1)) || 'inicio';
+      if (!byId[id]) route();
+    });
+    sync.start();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();

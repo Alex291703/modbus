@@ -12,7 +12,11 @@ Si prefieres servirlo por HTTP:
 npx serve .
 ```
 
-El progreso (lecciones completadas, retos, mejor nota del examen) se guarda en el navegador.
+## Progreso en varios dispositivos
+
+El progreso (lecciones completadas, retos del laboratorio, mejor nota del examen y lista de comprobación) se guarda siempre en el navegador. Si abres la **versión publicada en claude.ai** con tu cuenta, además se sincroniza en un espacio privado de tu cuenta: el móvil y el ordenador muestran el mismo progreso y los cambios de uno aparecen en el otro al momento. La barra lateral indica en cada caso dónde se está guardando.
+
+Al abrir `index.html` como archivo local, el progreso queda solo en ese navegador.
 
 ## Contenido
 
@@ -59,4 +63,5 @@ Sin dependencias ni paso de compilación. Los ejemplos de tramas coinciden con l
 ```bash
 npm test              # núcleo del protocolo (Node, sin dependencias)
 npm run test:smoke    # recorre todas las lecciones en Chromium (requiere Playwright)
+npm run test:sync     # simula dos dispositivos compartiendo el progreso (requiere Playwright)
 ```

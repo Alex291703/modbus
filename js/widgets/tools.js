@@ -243,7 +243,7 @@
     'Ten a mano un analizador: un adaptador USB-RS485 y un programa que muestre las tramas en hexadecimal.',
   ];
   W.checklist = function (body) {
-    const state = store.get('checklist', {});
+    const state = { ...store.get('checklist', {}) };
     const count = h('b');
     const upd = () => (count.textContent = `${Object.values(state).filter(Boolean).length} de ${PRACTICES.length}`);
     body.append(
@@ -271,6 +271,18 @@
       )
     );
     upd();
+    // Casillas marcadas en otro dispositivo
+    const onSync = () => {
+      if (!body.isConnected) return document.removeEventListener('mb:sync', onSync);
+      const remote = store.get('checklist', {});
+      PRACTICES.forEach((_, i) => {
+        state[i] = !!remote[i];
+        const box = body.querySelector(`#chk-${i}`);
+        if (box) box.checked = state[i];
+      });
+      upd();
+    };
+    document.addEventListener('mb:sync', onSync);
   };
 
   /* ------------------------------------------------------------------

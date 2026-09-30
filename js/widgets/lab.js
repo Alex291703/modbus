@@ -140,7 +140,7 @@
       log: [],
       t0: performance.now(),
     };
-    const done = store.get('challenges', {});
+    const done = { ...store.get('challenges', {}) };
 
     /* ---------- Bus ---------- */
     const busEl = h('div');
@@ -393,7 +393,9 @@
         }
       });
       if (fresh) {
-        store.set('challenges', done);
+        // Se suma a lo guardado, por si otro dispositivo consiguió retos mientras tanto
+        Object.assign(done, store.get('challenges', {}), done);
+        store.set('challenges', { ...done });
         renderChallenges();
         if (CHALLENGES.every((c) => done[c.id])) MB.ui.confetti();
       }
@@ -625,10 +627,19 @@
       plant.tick(0.25);
       refreshMem();
     }, 250);
+    // Retos conseguidos en otro dispositivo
+    const onSync = () => {
+      const remote = store.get('challenges', {});
+      Object.keys(done).forEach((k) => delete done[k]);
+      Object.assign(done, remote);
+      renderChallenges();
+    };
+    document.addEventListener('mb:sync', onSync);
     return () => {
       alive = false;
       st.auto = false;
       clearInterval(timer);
+      document.removeEventListener('mb:sync', onSync);
     };
   };
 })(typeof window !== 'undefined' ? window : globalThis);
