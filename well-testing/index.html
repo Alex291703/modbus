@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Well Testing · R.B. Tec México</title>
+<meta name="description" content="Material técnico-visual del servicio de aforo de pozos (Well Testing) con separador bifásico de circuito cerrado: animación del proceso, corte del separador, vista aérea de la macropera y DTI simplificado.">
+<meta name="theme-color" content="#0A2240">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A2240'/%3E%3Crect x='7' y='9' width='18' height='10' rx='5' fill='none' stroke='%23FFC20E' stroke-width='2.4'/%3E%3Cpath d='M10 23h12' stroke='%234CC3F0' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/wt.css">
+<link rel="stylesheet" href="css/dti.css">
+</head>
+<body>
+<div id="wt-app">
+  <header class="wt-top" id="wt-top">
+    <a class="wt-brand" href="#inicio" aria-label="Inicio">
+      <span class="wt-logo" data-logo></span>
+    </a>
+    <div class="wt-title">
+      <strong>Well Testing</strong>
+      <span>Aforo de pozos</span>
+    </div>
+    <nav class="wt-tabs" aria-label="Secciones">
+      <a href="#inicio" data-tab="inicio">Inicio</a>
+      <a href="#proceso" data-tab="proceso"><b>1</b>Proceso</a>
+      <a href="#separador" data-tab="separador"><b>2</b>Separador</a>
+      <a href="#macropera" data-tab="macropera"><b>3</b>Macropera</a>
+      <a href="#dti" data-tab="dti"><b>4</b>DTI</a>
+    </nav>
+    <div class="wt-top-actions">
+      <button class="wt-icon-btn" id="wt-fullscreen" title="Pantalla completa (F)" aria-label="Pantalla completa">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="wt-main">
+    <!-- ============================ INICIO ============================ -->
+    <section class="wt-view" id="view-inicio" data-view="inicio">
+      <div class="wt-hero">
+        <div class="wt-hero-copy">
+          <p class="wt-kicker">Servicio · <span data-cfg="empresa.nombre"></span></p>
+          <h1>Aforo de pozos con separador bifásico<br><em>de circuito cerrado</em></h1>
+          <p class="wt-lead">Medimos durante 24 h el gasto de aceite, agua y gas de un pozo sin ventear a la atmósfera: la mezcla se separa, cada fase se mide con instrumentación Endress+Hauser y ambas regresan a la línea hacia batería. Las lecturas llegan a un RTU <span data-cfg="sistema.rtu"></span> y se visualizan en el SCADA <span data-cfg="sistema.scada"></span>.</p>
+          <ol class="wt-states" aria-label="Estados de la medición">
+            <li><span class="dot s1"></span><b>Estabilización</b><small>el pozo se alinea al separador y las variables se asientan</small></li>
+            <li><span class="dot s2"></span><b>En curso</b><small>24 h de medición continua y totalización</small></li>
+            <li><span class="dot s3"></span><b>Finalizado</b><small>cierre de acumulados y reporte</small></li>
+          </ol>
+        </div>
+        <figure class="wt-hero-photo">
+          <img src="assets/separador-fa.webp" alt="Separador bifásico de aforo montado en remolque">
+          <figcaption>Equipo de aforo <span data-cfg="equipo.seleccionado"></span> · separador bifásico horizontal en remolque</figcaption>
+        </figure>
+      </div>
+
+      <div class="wt-flow-strip" aria-label="Ruta del fluido">
+        <div class="wt-flow-step"><span class="ic mix"></span><b>Árbol de válvulas</b><small>Boca de pozo · TDP</small></div>
+        <div class="wt-flow-step"><span class="ic mix"></span><b>Estrangulador</b><small>TP / TR</small></div>
+        <div class="wt-flow-step"><span class="ic mix"></span><b>Línea de entrada</b><small>TPL</small></div>
+        <div class="wt-flow-step big"><span class="ic sep"></span><b>Separador bifásico</b><small>TPS · TT · TN</small></div>
+        <div class="wt-flow-split">
+          <div class="wt-flow-step"><span class="ic gas"></span><b>Gas</b><small>Placa de orificio · TDG</small></div>
+          <div class="wt-flow-step"><span class="ic liq"></span><b>Líquido</b><small>Coriolis Promass 300</small></div>
+        </div>
+        <div class="wt-flow-step"><span class="ic mix"></span><b>Línea a batería</b><small>TDM · circuito cerrado</small></div>
+      </div>
+
+      <div class="wt-cards">
+        <a class="wt-card" href="#proceso">
+          <span class="num">1</span>
+          <h3>Animación del proceso</h3>
+          <p>Recorrido de cámara pozo → separador → batería con flechas de flujo, etiquetas de equipos e instrumentos y lecturas del SCADA.</p>
+          <span class="go">Ver animación</span>
+        </a>
+        <a class="wt-card" href="#separador">
+          <span class="num">2</span>
+          <h3>Corte interno del separador</h3>
+          <p>Sección 3D paso a paso: deflector, liberación de gas, asentamiento, extractor de niebla, control de nivel y salida de gas.</p>
+          <span class="go">Ver corte</span>
+        </a>
+        <a class="wt-card" href="#macropera">
+          <span class="num">3</span>
+          <h3>Vista aérea de la macropera</h3>
+          <p>Layout con árbol, cabezal, separador, líneas temporales, caseta de medición, zona de seguridad y ruta de acceso.</p>
+          <span class="go">Ver macropera</span>
+        </a>
+        <a class="wt-card" href="#dti">
+          <span class="num">4</span>
+          <h3>DTI simplificado</h3>
+          <p>Diagrama de tubería e instrumentación con simbología ISA, lazos de control y tags, en vertical para imprimir y horizontal para pantalla.</p>
+          <span class="go">Ver DTI</span>
+        </a>
+      </div>
+
+      <div class="wt-legend-colors" aria-label="Código de colores">
+        <span><i style="--c: var(--f-mix)"></i>Mezcla (multifásica)</span>
+        <span><i style="--c: var(--f-gas)"></i>Gas</span>
+        <span><i class="liq"></i>Líquido (aceite + agua)</span>
+        <span><i style="--c: var(--f-sig)"></i>Señal de instrumento</span>
+      </div>
+      <p class="wt-footnote">Las lecturas mostradas en las animaciones son simuladas e ilustrativas. Las medidas de la macropera son aproximadas, estimadas a partir de imagen satelital.</p>
+    </section>
+
+    <!-- ============================ 1. PROCESO ============================ -->
+    <section class="wt-view" id="view-proceso" data-view="proceso">
+      <div class="wt-stage-wrap">
+        <div class="wt-stage" id="proc-stage" data-fmt="16x9">
+          <canvas class="wt-canvas"></canvas>
+          <div class="wt-labels"></div>
+          <div class="wt-overlay" id="proc-overlay"></div>
+        </div>
+      </div>
+      <div class="wt-transport" id="proc-transport"></div>
+    </section>
+
+    <!-- ============================ 2. SEPARADOR ============================ -->
+    <section class="wt-view" id="view-separador" data-view="separador">
+      <div class="wt-split">
+        <div class="wt-stage-wrap">
+          <div class="wt-stage" id="sep-stage" data-fmt="16x9">
+            <canvas class="wt-canvas"></canvas>
+            <div class="wt-labels"></div>
+            <div class="wt-overlay" id="sep-overlay"></div>
+          </div>
+        </div>
+        <aside class="wt-side" id="sep-side"></aside>
+      </div>
+      <div class="wt-transport" id="sep-transport"></div>
+    </section>
+
+    <!-- ============================ 3. MACROPERA ============================ -->
+    <section class="wt-view" id="view-macropera" data-view="macropera">
+      <div class="wt-split">
+        <div class="wt-stage-wrap">
+          <div class="wt-stage free" id="mac-stage">
+            <canvas class="wt-canvas"></canvas>
+            <div class="wt-labels"></div>
+            <div class="wt-overlay" id="mac-overlay"></div>
+          </div>
+        </div>
+        <aside class="wt-side" id="mac-side"></aside>
+      </div>
+    </section>
+
+    <!-- ============================ 4. DTI ============================ -->
+    <section class="wt-view" id="view-dti" data-view="dti">
+      <div id="dti-root" class="dti-root"></div>
+    </section>
+  </main>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/core.js"></script>
+<script src="js/models.js"></script>
+<script src="js/scada.js"></script>
+<script src="js/separator.js"></script>
+<script src="js/scene-proceso.js"></script>
+<script src="js/scene-separador.js"></script>
+<script src="js/scene-macropera.js"></script>
+<script src="js/dti.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

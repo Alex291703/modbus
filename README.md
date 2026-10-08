@@ -1,5 +1,7 @@
 # Academia Modbus
 
+> Este repositorio también incluye **[Well Testing · Aforo de pozos](well-testing/README.md)**: material técnico-visual de R.B. Tec México (animación 3D del proceso, corte del separador, vista aérea de la macropera y DTI). Ábrelo en `well-testing/index.html`.
+
 Curso interactivo para aprender el protocolo **Modbus desde cero**, en español. Explica cada concepto con figuras que se pueden manipular e incluye un laboratorio con una planta simulada donde tú haces de maestro del bus.
 
 ## Cómo abrirlo
