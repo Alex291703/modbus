@@ -1,0 +1,164 @@
+/* =====================================================================
+   Well Testing · R.B. Tec México — DTI simplificado
+   Hoja blanca sobre fondo marino, barra de herramientas, zoom/arrastre,
+   resaltado de lazos, impresión A3 y modo captura.
+   (Los estilos del dibujo en sí viajan dentro del <svg>; aquí solo lo
+   que depende de la página: interacción, animación e impresión.)
+   ===================================================================== */
+
+/* ----------------------------- Vista ----------------------------- */
+#view-dti.active { display: flex; flex-direction: column; height: calc(100dvh - var(--top-h)); }
+.dti-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* ----------------------------- Barra de herramientas ----------------------------- */
+.dti-toolbar {
+  flex: none; position: relative; z-index: 2;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+  padding: 10px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.dti-seg button { font-family: var(--font-cond); font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 12px; }
+.dti-seg button[aria-pressed="false"]:hover { color: var(--fg); background: var(--surface-3); }
+.dti-layers { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.dti-layers .wt-check { padding: 4px 0; font-size: 14.5px; gap: 8px; white-space: nowrap; }
+.dti-layers .wt-check i.dash { background: repeating-linear-gradient(90deg, var(--c) 0 6px, transparent 6px 9px); }
+.dti-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.dti-actions .wt-btn[disabled] { opacity: 0.5; cursor: progress; }
+
+/* ----------------------------- Visor y hoja ----------------------------- */
+.dti-viewport {
+  position: relative; flex: 1; min-height: 0; overflow: hidden;
+  touch-action: none; outline: none;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(76, 195, 240, 0.07), transparent 60%),
+    linear-gradient(180deg, #0B2343, #061528);
+}
+.dti-viewport:focus-visible { box-shadow: inset 0 0 0 2px var(--rb-sky); }
+.dti-viewport.can-pan { cursor: grab; }
+.dti-viewport.panning { cursor: grabbing; }
+.dti-sheet {
+  position: absolute; left: 0; top: 0; will-change: transform;
+  background: #fff; border-radius: 2px;
+  box-shadow: 0 22px 60px -18px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.dti-sheet > svg { display: block; user-select: none; -webkit-user-select: none; }
+
+/* Zoom */
+.dti-zoom {
+  position: absolute; right: 12px; bottom: 12px; z-index: 3;
+  display: flex; align-items: center; gap: 4px; padding: 4px;
+  background: var(--glass); border: 1px solid var(--line-strong); border-radius: 12px;
+  backdrop-filter: blur(6px);
+}
+.dti-zoom .wt-btn { height: 34px; font-size: 14px; }
+.dti-zoom .wt-btn.icon { width: 34px; font-family: var(--font-mono); font-size: 18px; }
+.dti-zval { min-width: 50px; text-align: center; font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-2); }
+.dti-hint {
+  position: absolute; left: 12px; bottom: 14px; z-index: 3; margin: 0;
+  padding: 6px 12px; border-radius: 999px; pointer-events: none;
+  font-size: 13px; color: var(--fg-2); background: rgba(5, 18, 36, 0.86);
+  transition: opacity 0.5s;
+}
+.dti-hint.gone { opacity: 0; }
+
+/* Ficha flotante del instrumento */
+.dti-tip {
+  position: absolute; left: 0; top: 0; z-index: 4;
+  width: max-content; max-width: min(320px, calc(100% - 16px));
+  padding: 10px 13px 11px; border-radius: 10px;
+  background: rgba(8, 24, 46, 0.95); border: 1px solid var(--line-strong); border-left: 3px solid var(--rb-yellow);
+  box-shadow: var(--shadow); pointer-events: none; color: var(--fg);
+}
+.dti-tip.pinned { border-left-color: var(--rb-sky); }
+.dti-tip .hd { display: flex; align-items: center; gap: 8px; }
+.dti-tip .tag { font-family: var(--font-mono); font-weight: 700; font-size: 12px; padding: 1px 7px; border-radius: 4px; background: var(--rb-yellow); color: var(--rb-navy); }
+.dti-tip .isa { font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--rb-sky); }
+.dti-tip h4 { margin: 5px 0 6px; font-family: var(--font-cond); font-size: 17px; line-height: 1.15; text-transform: uppercase; letter-spacing: 0.02em; }
+.dti-tip dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 13.5px; line-height: 1.3; }
+.dti-tip dt { color: var(--muted); }
+.dti-tip dd { margin: 0; color: var(--fg); }
+.dti-tip p { margin: 7px 0 0; font-size: 12.5px; color: var(--fg-2); }
+
+/* Aviso no bloqueante (p. ej. PNG no disponible en file://) */
+.dti-toast {
+  position: absolute; left: 50%; top: 12px; z-index: 5; transform: translateX(-50%);
+  width: max-content; max-width: calc(100% - 24px); padding: 9px 14px; border-radius: 10px;
+  font-size: 14px; color: var(--fg); background: rgba(8, 24, 46, 0.96);
+  border: 1px solid var(--warn); box-shadow: var(--shadow);
+}
+
+/* ----------------------------- Dibujo: interacción ----------------------------- */
+.dti-svg .nl, .dti-svg .lp { transition: opacity 0.18s ease; }
+.dti-svg.is-focus .nl, .dti-svg.is-focus .lp:not(.on) { opacity: 0.13; }
+.dti-svg.is-focus .d-sg.on { stroke-width: 2.6; }
+.dti-svg .d-ib[tabindex] { cursor: pointer; outline: none; }
+.dti-svg .d-ib[tabindex]:hover .d-bc { stroke: #1E8FC4; stroke-width: 2.4; }
+.dti-svg .d-ib:focus-visible .d-ring, .dti-svg .d-ib.pin .d-ring { stroke: #1E8FC4; stroke-width: 3; stroke-dasharray: 4 3; }
+
+/* Capas */
+.dti-svg.hide-sig .ly-sig, .dti-svg.hide-loop .ly-loop,
+.dti-svg.hide-table .ly-table, .dti-svg.hide-anim .ly-anim { display: none; }
+
+/* Flujo animado: trazo discontinuo que avanza sobre el núcleo de la línea */
+.dti-svg .d-fa { fill: none; stroke-width: 1.6; stroke-dasharray: 5 13; stroke-linecap: round; animation: dti-flow 0.9s linear infinite; }
+.dti-svg .d-fa-mezcla { stroke: #FFE3C6; }
+.dti-svg .d-fa-gas { stroke: #6E5600; }
+.dti-svg .d-fa-liquido { stroke: #FFF4DA; }
+@keyframes dti-flow { to { stroke-dashoffset: -18; } }
+
+/* ----------------------------- Responsivo ----------------------------- */
+@media (max-width: 1100px) {
+  .dti-actions { margin-left: 0; }
+}
+@media (max-width: 720px) {
+  .dti-toolbar { padding: 8px 10px; gap: 6px 10px; }
+  .dti-seg { width: 100%; }
+  .dti-seg button { flex: 1; padding: 0 6px; font-size: 13px; }
+  .dti-layers { gap: 0 12px; }
+  .dti-layers .wt-check { font-size: 13.5px; }
+  .dti-actions { width: 100%; gap: 6px; }
+  .dti-actions .wt-btn { flex: 1 1 0; min-width: 0; height: 34px; padding: 0 6px; font-size: 12.5px; letter-spacing: 0.02em; }
+  .dti-hint { display: none; }
+  .dti-zoom { right: 8px; bottom: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dti-svg .d-fa { animation: none; }
+  .dti-svg .ly-anim { display: none; }
+  .dti-svg .nl, .dti-svg .lp { transition: none; }
+}
+
+/* ----------------------------- Modo captura (Playwright) ----------------------------- */
+html.dti-capture { color-scheme: light; }
+html.dti-capture, html.dti-capture body { background: #fff !important; margin: 0 !important; overflow: hidden !important; }
+html.dti-capture .wt-top, html.dti-capture .wt-view:not(#view-dti) { display: none !important; }
+html.dti-capture #view-dti { display: block !important; height: auto !important; padding: 0 !important; margin: 0 !important; }
+html.dti-capture .dti-root.is-capture {
+  position: fixed; left: 0; top: 0; z-index: 2147483000;
+  display: block; margin: 0; padding: 0; overflow: hidden; background: #fff;
+}
+.dti-root.is-capture > svg { display: block; }
+.dti-root.is-capture .ly-anim { display: none; }
+
+/* ----------------------------- Impresión ----------------------------- */
+@page dti-a3l { size: A3 landscape; margin: 8mm; }
+@page dti-a3p { size: A3 portrait; margin: 5mm; }
+@media print {
+  /* :root usa color-scheme: dark; sin esto Chrome pinta los márgenes de la página en gris oscuro */
+  html.dti-printing, html.dti-capture { color-scheme: light !important; }
+  html.dti-printing, html.dti-printing body,
+  html.dti-capture, html.dti-capture body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  html.dti-printing .wt-top, html.dti-printing .wt-view:not(#view-dti),
+  html.dti-printing .dti-toolbar, html.dti-printing .dti-zoom, html.dti-printing .dti-tip,
+  html.dti-printing .dti-toast, html.dti-printing .dti-hint { display: none !important; }
+  html.dti-printing #view-dti { display: block !important; height: auto !important; }
+  html.dti-printing .dti-root, html.dti-printing .dti-viewport { display: block !important; height: auto !important; overflow: visible !important; background: none !important; box-shadow: none !important; }
+  html.dti-printing .dti-sheet { position: static !important; transform: none !important; box-shadow: none !important; border-radius: 0; }
+  html.dti-printing .dti-sheet > svg { width: 100% !important; height: auto !important; }
+  html.dti-print-h .dti-sheet { page: dti-a3l; }
+  html.dti-print-v .dti-sheet { page: dti-a3p; }
+  html.dti-capture .dti-root.is-capture { position: static !important; width: 100% !important; height: auto !important; }
+  html.dti-capture .dti-root.is-capture > svg { width: 100% !important; height: auto !important; }
+  .dti-svg .ly-anim { display: none !important; }
+  .dti-svg .nl, .dti-svg .lp { opacity: 1 !important; transition: none !important; }
+  .dti-svg .d-ring { stroke: none !important; }
+}

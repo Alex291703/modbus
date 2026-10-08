@@ -81,9 +81,9 @@ async function video(scene, fmt) {
 async function images() {
   const browser = await launch();
   if (want("dti")) {
-    for (const [layout, size, pdfSize] of [
-      ["h", [1920, 1080], { width: "420mm", height: "297mm" }],
-      ["v", [1123, 1587], { width: "297mm", height: "420mm" }],
+    for (const [layout, size] of [
+      ["h", [1920, 1080]],
+      ["v", [1123, 1587]],
     ]) {
       const page = await openCapture(browser, `capture=dti&layout=${layout}`, size);
       await page.waitForFunction(() => document.documentElement.dataset.dtiReady === "1", null, { timeout: 30000 }).catch(() => {});
@@ -97,8 +97,8 @@ async function images() {
       await hi.waitForTimeout(400);
       await hi.screenshot({ path: path.join(out, `${name}@2x.png`) });
       await hi.close();
-      await page.emulateMedia({ media: "screen" });
-      await page.pdf({ path: path.join(out, `${name}.pdf`), ...pdfSize, printBackground: true, pageRanges: "1", scale: Math.min(1, (parseFloat(pdfSize.width) / 25.4) * 96 / size[0]) });
+      // El modo captura del DTI define el tamaño de página (@page): A3 vertical o 1920×1080 px.
+      await page.pdf({ path: path.join(out, `${name}.pdf`), preferCSSPageSize: true, printBackground: true, pageRanges: "1" });
       await page.close();
       console.log(`✔ ${name}.png / ${name}@2x.png / ${name}.pdf`);
     }
