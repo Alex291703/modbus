@@ -604,7 +604,7 @@
       L.set("tdg", WT.labelHTML({ tag: "TDG", title: "ΔP placa de orificio", val: `Q gas ${U.fmt(v.qGas, 2)} MMpcd` }));
       L.set("tdm", WT.labelHTML({ tag: "TDM", title: "Presión línea a batería", val: kg(v.pBat) }));
       this.labelDefs.forEach((d) => {
-        d.opacity = this.showLabels && !this.explore ? U.win(t, d.win[0], d.win[1], 0.45) : this.explore && this.showLabels ? 0 : 0;
+        d.opacity = this.showLabels ? U.win(t, d.win[0], d.win[1], 0.45) : 0;
       });
 
       // Capítulo, subtítulo, títulos
