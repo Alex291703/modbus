@@ -106,12 +106,11 @@ async function images() {
   if (want("macropera")) {
     for (const view of ["plan", "3d"]) {
       const page = await openCapture(browser, `capture=macropera&view=${view}`, [1920, 1080]);
-      await page.evaluate(() => {
-        for (let i = 0; i < 90; i++) window.__wt.seek(6 + i / 60);
-      });
+      // La cámara ya está en su encuadre final (setMode instantáneo): basta un cuadro
+      await page.evaluate(() => window.__wt.seek(6));
       await page.waitForTimeout(300);
       const name = `macropera-${view === "plan" ? "planta" : "3d"}`;
-      await page.screenshot({ path: path.join(out, `${name}.png`) });
+      await page.screenshot({ path: path.join(out, `${name}.png`), timeout: 180000 });
       await page.close();
       console.log(`✔ ${name}.png`);
     }
