@@ -42,6 +42,14 @@ El logotipo es **provisional**: reemplace `assets/logo-rbtec.svg` (fondos claros
 * **Macropera**: no se recibió croquis; la distribución y las distancias son aproximadas
   (`WT.data.macropera`).
 * **Duración de la estabilización** (2 h ilustrativas, `WT.data.medicion`).
+* **Orden en cada salida**: se dibujó la práctica usual de separadores de prueba, con el medidor
+  aguas arriba de la válvula de control (líquido: Coriolis → LV; gas: placa de orificio → PV),
+  para medir a presión del separador y sin vaporización en el medidor.
+* **Lazos de control** (`WT.data.funciones`): nivel TN → LIC (en el RTU) → LV y presión
+  TPS → PIC (en el RTU) → PV. Si la PV es una válvula de contrapresión autorregulada o los
+  controladores son neumáticos locales, ajustar `funciones`.
+* **Montaje del TN** (sonda superior), ubicación del manómetro local, enlace RTU → SCADA por
+  Ethernet y diámetro nominal de 4 in (rotulado en la tubería del equipo de la foto).
 * Los valores del SCADA son **simulados** y así se rotulan.
 
 ## Video (HyperFrames)
