@@ -574,6 +574,8 @@
     lam('bush', '#ffffff', { map: texLeaf });
     std('sphereWhite', '#e7e9e6', 0.5, 0.2);
     std('signs', '#ffffff', 0.55, 0, { map: texSigns });
+    // letrero de destino "A BATERÍA": algo de autoiluminación para que se lea en tomas cercanas y a contraluz
+    std('signLit', '#ffffff', 0.5, 0, { map: texSigns, emissive: new THREE.Color('#ffffff'), emissiveMap: texSigns, emissiveIntensity: 0.32 });
     std('steelInt', '#9ea3a7', 0.45, 0.7);
     std('meshPad', '#ffffff', 0.6, 0.6, { map: texMesh });
     std('choke', '#596069', 0.45, 0.6);
@@ -1004,6 +1006,8 @@
     var R_GAS = [L2W(0.7, 2.12, 0), L2W(0.7, 2.55, 0), L2W(SK.xGd, 2.55, SK.zG), L2W(SK.xGd, SK.yG, SK.zG), L2W(SK.xTe, SK.yG, SK.zG), L2W(SK.xTe, SK.yL, SK.zG), L2W(SK.xTe, SK.yL, SK.zL)];
     var R_LIQ = [L2W(0.55, 1.7, 0), L2W(0.55, SK.yL, 0), L2W(0.55, SK.yL, SK.zL), L2W(SK.xTe, SK.yL, SK.zL)];
     var BX = MP.lineaBateria.desdeX, BZ = MP.lineaBateria.z, BX1 = MP.lineaBateria.haciaX;
+    // letrero "A BATERÍA" junto al final de la línea, dentro del barandal del lindero este (m, rad)
+    var SIGN_BAT = { x: BX1 - 2.4, z: BZ + 2.0, w: 3.0, h: 1.0, post: 1.5, yaw: 0.25 };
     var teOut = L2W(-3.25, 0.35, 0.6), southZ = L2W(0, 0, 2.15).z;
     var R_SAL = [L2W(SK.xTe, SK.yL, SK.zL), L2W(-2.75, SK.yL, SK.zL), L2W(-2.75, SK.yL, 0.6), L2W(-3.25, SK.yL, 0.6), teOut, [teOut.x, 0.35, southZ], [30, 0.35, southZ], [30, 0.35, BZ], [BX, 0.35, BZ], [BX1 + 2.6, 0.35, BZ], [BX1 + 2.6, -1.0, BZ]];
 
@@ -1518,9 +1522,18 @@
       var padM = new THREE.MeshStandardMaterial({ map: texSigns, roughness: 0.9, transparent: true, opacity: 0.92, polygonOffset: true, polygonOffsetFactor: -3, depthWrite: false });
       var padMesh = new THREE.Mesh(pad, padM); padMesh.position.set(pr.x, 0.02, pr.z); padMesh.receiveShadow = true; root.add(padMesh);
       bp.flush('puntoReunion'); ID.puntoReunion.push(padMesh);
-      // "A batería" en el lindero, velocidad máxima en el acceso
-      var bb = new Builder();
-      signBoard(bb, 'bateria', BX1 - 1.2, BZ + 1.3, 1.5, 0.5, 0, 1.2);
+      // "A BATERÍA": letrero de destino grande en el lindero este, junto al final de la línea.
+      // Mira al sur-sureste (de donde llegan las tomas) y la flecha apunta al este, en el sentido del flujo.
+      var bb = new Builder(), LB = SIGN_BAT, mB = mat(LB.x, 0, LB.z, 0, LB.yaw, 0), hp = LB.post + LB.h + 0.06;
+      [-LB.w * 0.36, LB.w * 0.36].forEach(function (dx) {
+        bb.add('galv', gCyl(0.045, 0.045, hp, 10), mat(dx, hp / 2, -0.07).premultiply(mB));
+        bb.add('galv', gCyl(0.11, 0.13, 0.08, 12), mat(dx, 0.04, -0.07).premultiply(mB)); // base
+      });
+      bb.add('steelDark', gBox(LB.w + 0.1, LB.h + 0.1, 0.05), mat(0, LB.post + LB.h / 2, -0.026).premultiply(mB));
+      var plB = new THREE.PlaneGeometry(LB.w, LB.h), uvB = plB.attributes.uv, qB = signUV('bateria');
+      for (i = 0; i < uvB.count; i++) uvB.setXY(i, lerp(qB[0], qB[2], uvB.getX(i)), lerp(qB[1], qB[3], uvB.getY(i)));
+      bb.add('signLit', plB, mat(0, LB.post + LB.h / 2, 0.006).premultiply(mB));
+      signPoles.push([LB.x, LB.z]);
       bb.flush('letreroBateria');
       var bv = new Builder(), ac = MP.acceso.puntos;
       signBoard(bv, 'velocidad', ac[1][0] + 1.5, ac[1][1] - 4.2, 0.6, 0.8, PI / 2, 1.3);
@@ -1890,7 +1903,7 @@
     var HLGROUPS = {
       arbol: ['arbol'], estrangulador: ['estrangulador'], manifold: ['manifold'], lineaEntrada: ['lineaEntrada'],
       separador: ['separador'], coriolis: ['coriolis', 'CORIOLIS'], placa: ['placa', 'TDG'], recombinacion: ['recombinacion'],
-      lineaSalida: ['lineaSalida'], lineaBateria: ['lineaBateria', 'letreroBateria'], caseta: ['caseta'], scada: ['caseta'], rtu: ['rtu'],
+      lineaSalida: ['lineaSalida'], lineaBateria: ['lineaBateria', 'letreroBateria'], letreroBateria: ['letreroBateria'], caseta: ['caseta'], scada: ['caseta'], rtu: ['rtu'],
       psv: ['psv'], deflector: ['deflector'], extractor: ['extractor'], nivel: ['TN'], puntoReunion: ['puntoReunion'],
       zonaSeguridad: ['letreros'], acceso: ['letreroAcceso'], mangaViento: ['mangaViento'], pozosInactivos: ['pozosInactivos'],
       LV: ['LV'], PV: ['PV'], TDP: ['TDP'], TPS: ['TPS'], TT: ['TT'], TN: ['TN'], CORIOLIS: ['CORIOLIS'], TDG: ['TDG'], TDM: ['TDM'], TPL: ['TPL'],
@@ -1960,6 +1973,7 @@
       placa: arr(L2W(SK.xOri, SK.yG, SK.zG)),
       recombinacion: arr(L2W(SK.xTe, SK.yL, SK.zL)),
       lineaBateria: [(BX + BX1) / 2 + 2, 0.45, BZ],
+      letreroBateria: [SIGN_BAT.x, SIGN_BAT.post + SIGN_BAT.h / 2, SIGN_BAT.z],   // centro de la cara del letrero "A BATERÍA"
       caseta: [MP.caseta.x, 2.3, MP.caseta.z],
       rtu: [MP.rtu.x, 1.3, MP.rtu.z + 0.05],
       zonaSeguridad: [MP.zonaSeguridad.x1 - 8, 1.6, MP.zonaSeguridad.z1 + 0.6],
