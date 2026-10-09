@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DTI del aforo · Well Testing · R.B. Tec México</title>
+<meta name="description" content="Infografía del DTI (P&amp;ID) simplificado del aforo de pozos con separador bifásico de circuito cerrado: simbología ISA, lazos de control, instrumentos E+H, RTU Honeywell ControlEdge 2020 y SCADA SAF-900. Versión horizontal para pantalla y vertical A3 para imprimir.">
+<link rel="stylesheet" href="css/wt.css">
+<style>
+  :root { --gut: 24px; --stage-h: calc(100vh - 252px); }
+  body { min-height: 100vh; background:
+    radial-gradient(1100px 600px at 12% -10%, rgba(79,179,232,0.10), transparent 60%),
+    radial-gradient(900px 520px at 105% 0%, rgba(255,194,14,0.06), transparent 60%), var(--bg); }
+  :focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: 2px; }
+  .wt-topbar .wt-brand { display: inline-flex; border-radius: var(--r-sm); }
+
+  .dti { max-width: 1800px; margin: 0 auto; padding: 14px var(--gut) 56px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ---------- encabezado + barra de herramientas ---------- */
+  .dti-head { display: flex; align-items: flex-end; gap: 10px 28px; flex-wrap: wrap; animation: wt-rise .8s var(--ease) both; }
+  .dti-head h1 { margin: 2px 0 0; font: 800 clamp(26px, 2.5vw, 36px)/1.02 var(--font-display); text-transform: uppercase; letter-spacing: .01em; }
+  .dti-head h1 em { font-style: normal; color: var(--rb-amarillo); }
+  .dti-head p { margin: 0; max-width: 64ch; color: var(--fg-2); font-size: 15px; }
+
+  .tools { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--r-md);
+    border: 1px solid var(--line); background: linear-gradient(180deg, rgba(20,53,99,.55), rgba(10,31,61,.7)); animation: wt-rise .8s .08s var(--ease) both; }
+  .seg { display: inline-flex; align-items: center; gap: 6px; }
+  .seg > span { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; margin-right: 2px; }
+  .seg .opts { display: inline-flex; padding: 3px; gap: 3px; border-radius: 9px; background: rgba(6,22,49,.65); border: 1px solid var(--line-strong); }
+  .seg button { min-height: 34px; padding: 4px 12px; border: 0; border-radius: 6px; background: transparent; color: var(--fg-2);
+    font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background .2s var(--ease), color .2s var(--ease); }
+  .seg button:hover { color: var(--fg); background: rgba(79,179,232,.12); }
+  .seg button[aria-pressed="true"] { background: var(--rb-amarillo); color: var(--rb-marino); }
+  .seg button svg { width: 16px; height: 16px; }
+  .tools .spacer { flex: 1; }
+  @media (max-width: 1500px) { .seg > span { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } .seg button { padding: 4px 10px; } }
+  .tools .wt-btn { min-height: 40px; }
+  .wt-btn svg { width: 18px; height: 18px; flex: none; }
+  #btnCapas[aria-pressed="true"] { border-color: var(--rb-amarillo); color: var(--rb-amarillo); }
+
+  /* ---------- escenario ---------- */
+  .stage-wrap { position: relative; animation: wt-rise .9s .12s var(--ease) both; }
+  .stage { position: relative; height: max(460px, var(--stage-h)); border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line-strong);
+    background: radial-gradient(1200px 700px at 50% 20%, #10305a, #061631 70%);
+    box-shadow: 0 40px 80px -40px rgba(0,0,0,.9), inset 0 0 0 1px rgba(79,179,232,.06);
+    touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+  .stage.is-paper { background: radial-gradient(1200px 700px at 50% 15%, #3a4f69, #1a2a40 75%); }
+  .stage.dragging { cursor: grabbing; }
+  .stage:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: -3px; }
+  .pz { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform-style: preserve-3d; }
+  .sheet3d { position: relative; transform-style: preserve-3d; transform-origin: 50% 60%; }
+  .sheet { position: relative; box-shadow: 0 30px 70px -20px rgba(0,0,0,.75), 0 0 0 1px rgba(169,220,247,.10); border-radius: 4px; overflow: hidden; }
+  .sheet svg { display: block; width: 100%; height: 100%; }
+  .sheet svg.pid-ov { position: absolute; inset: 0; will-change: transform; }
+  .sheen { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: 0;
+    background: linear-gradient(115deg, transparent 35%, rgba(169,220,247,.22) 48%, rgba(255,255,255,.10) 52%, transparent 65%); background-size: 260% 100%; }
+
+  /* vista por capas */
+  .layers { position: absolute; left: 0; top: 0; transform-style: preserve-3d; transform-origin: 50% 50%; pointer-events: none; }
+  .layers[hidden] { display: none; }
+  .plane { position: absolute; left: 0; top: 0; transform-style: preserve-3d; border-radius: 6px; }
+  .plane .sheet-l { position: absolute; inset: 0; border-radius: 6px; }
+  .plane.p1 .sheet-l { box-shadow: 0 40px 90px -30px rgba(0,0,0,.85); }
+  .plane.p2 .sheet-l, .plane.p3 .sheet-l { background: rgba(79,179,232,.045); border: 1.5px solid rgba(79,179,232,.45); box-shadow: 0 0 0 1px rgba(255,255,255,.04) inset, 0 30px 60px -30px rgba(0,0,0,.6); }
+  .stage.is-paper .plane.p2 .sheet-l, .stage.is-paper .plane.p3 .sheet-l { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.55); }
+  .plane svg { position: absolute; inset: 0; width: 100%; height: 100%; background: transparent !important; }
+  .plane .tagl { position: absolute; left: -24px; top: 0; transform: translate(-100%, 0); white-space: nowrap; padding: 18px 26px; border-radius: 14px; opacity: 0;
+    background: rgba(6,22,49,.94); border: 2px solid rgba(169,220,247,.45); font: 800 64px/1 var(--font-display); letter-spacing: .03em; text-transform: uppercase; color: var(--fg); box-shadow: 0 20px 40px -20px #000; }
+  .plane .tagl small { display: block; font: 600 34px/1.2 var(--font-body); color: var(--rb-celeste-200); text-transform: none; letter-spacing: 0; margin-top: 8px; }
+  .plane .tagl b { color: var(--rb-amarillo); }
+
+  /* controles flotantes */
+  .zoombar { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; align-items: center; padding: 6px; border-radius: 12px;
+    background: rgba(6,22,49,.82); border: 1px solid var(--line-strong); backdrop-filter: blur(6px); z-index: 3; }
+  .zoombar button { width: 40px; height: 40px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--fg); cursor: pointer; display: grid; place-items: center; }
+  .zoombar button:hover { background: var(--surface-2); border-color: var(--line-strong); }
+  .zoombar button svg { width: 20px; height: 20px; }
+  .zoombar output { min-width: 40px; text-align: center; font: 700 11px var(--font-mono); color: var(--fg-2); padding: 2px 0; }
+  .hint { position: absolute; left: 12px; bottom: 12px; z-index: 3; font-size: 12px; color: var(--fg-2); padding: 6px 10px; border-radius: 8px;
+    background: rgba(6,22,49,.72); border: 1px solid var(--line); pointer-events: none; transition: opacity .4s; }
+  .badge-live { position: absolute; left: 12px; top: 12px; z-index: 3; display: inline-flex; align-items: center; gap: 8px; font: 700 11px var(--font-mono);
+    letter-spacing: .12em; text-transform: uppercase; color: var(--rb-celeste-200); padding: 6px 10px; border-radius: 999px; background: rgba(6,22,49,.78); border: 1px solid var(--line-strong); pointer-events: none; }
+  .badge-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(60,207,142,.6); animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(60,207,142,.55); } 100% { box-shadow: 0 0 0 10px rgba(60,207,142,0); } }
+
+  /* ficha del instrumento */
+  .ficha { position: absolute; z-index: 5; width: min(320px, calc(100% - 24px)); padding: 14px 16px 14px; border-radius: 12px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(20,53,99,.97), rgba(10,31,61,.97)); border: 1px solid var(--line-strong);
+    box-shadow: 0 24px 50px -20px rgba(0,0,0,.85); opacity: 0; transform: translateY(6px) scale(.98); transition: opacity .18s var(--ease), transform .18s var(--ease); }
+  .ficha.on { opacity: 1; transform: none; }
+  .ficha .top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .ficha .bub { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--rb-celeste-200); display: grid; place-items: center; font: 800 14px/1 var(--font-display); text-align: center; flex: none; }
+  .ficha .bub.fn { border-radius: 4px; box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 3.5px var(--rb-celeste-200); }
+  .ficha .bub small { display: block; font: 700 9px/1.1 var(--font-mono); color: var(--rb-amarillo); margin-top: 2px; }
+  .ficha h3 { margin: 0; font: 700 18px/1.1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; }
+  .ficha .isa { font-size: 12.5px; color: var(--rb-celeste-200); }
+  .ficha dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; font-size: 13px; }
+  .ficha dt { color: var(--muted); font-weight: 600; }
+  .ficha dd { margin: 0; color: var(--fg); }
+  .ficha .conf { margin-top: 8px; font-size: 12px; color: var(--warn); }
+
+  /* corrientes */
+  .streams { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; animation: wt-rise .9s .16s var(--ease) both; }
+  .streams > span { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 12px 4px 8px; border-radius: 999px; border: 1px solid var(--line-strong);
+    background: rgba(6,22,49,.6); color: var(--fg-2); font-weight: 700; font-size: 14px; cursor: pointer; transition: border-color .2s, background .2s, color .2s; }
+  .chip:hover { color: var(--fg); border-color: var(--rb-celeste); }
+  .chip[aria-pressed="true"] { color: var(--fg); border-color: var(--rb-amarillo); background: rgba(255,194,14,.12); }
+  .chip .ln { width: 30px; height: 8px; border-radius: 4px; }
+  .chip .ln.mezcla { background: var(--st-mezcla); box-shadow: 0 0 0 1.5px var(--st-mezcla-claro); }
+  .chip .ln.gas { background: var(--st-gas); }
+  .chip .ln.liquido { background: var(--st-liquido); box-shadow: 0 0 0 2px var(--st-liquido-ambar); }
+  .chip .ln.salida { background: var(--st-salida); box-shadow: 0 0 0 1.5px #b0855c; }
+  .chip .ln.senal { height: 0; border-top: 3px dashed var(--st-senal); border-radius: 0; }
+
+  /* ---------- tarjetas informativas ---------- */
+  .info { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; margin-top: 8px; }
+  .info > .wt-card { padding: 18px 20px; min-width: 0; }
+  .c-leer { grid-column: span 4; } .c-lazos { grid-column: span 4; } .c-desc { grid-column: span 4; } .c-lista { grid-column: span 12; }
+  .info h2 { margin: 4px 0 12px; font: 700 22px/1.1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; }
+  .info ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .info li { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: start; font-size: 14.5px; color: var(--fg-2); }
+  .info li b { color: var(--fg); }
+  .info li .ico { width: 40px; height: 28px; display: grid; place-items: center; }
+  .info li .ico svg { width: 40px; height: 28px; }
+  .loop { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; margin-bottom: 12px; }
+  .loop .chain { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font: 700 13px var(--font-mono); }
+  .loop .chain .n { padding: 3px 8px; border-radius: 6px; background: rgba(79,179,232,.14); border: 1px solid rgba(79,179,232,.4); color: var(--rb-celeste-200); cursor: pointer; }
+  .loop .chain .n.fn { background: rgba(255,194,14,.14); border-color: rgba(255,194,14,.5); color: var(--rb-amarillo-300); }
+  .loop .chain .n:hover { border-color: var(--fg); }
+  .loop .chain .a { color: var(--muted); }
+  .loop p { grid-column: 1 / -1; margin: 0; font-size: 13.5px; color: var(--fg-2); }
+  .loop .k { font: 800 15px var(--font-display); text-transform: uppercase; color: var(--fg); letter-spacing: .03em; }
+  .dl-list { display: grid; gap: 8px; }
+  .dl-list a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(6,22,49,.5); color: var(--fg); text-decoration: none; font-weight: 600; font-size: 14px; }
+  .dl-list a:hover { border-color: var(--rb-celeste); background: var(--surface); }
+  .dl-list a small { margin-left: auto; color: var(--muted); font: 600 11px var(--font-mono); white-space: nowrap; }
+  .dl-list a .fx { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: rgba(79,179,232,.14); color: var(--rb-celeste-200); font: 800 11px var(--font-mono); flex: none; }
+  .dl-list a .fx.pdf { background: rgba(255,90,95,.14); color: #ffb3b5; }
+  .tbl-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 700 12px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: rgba(6,22,49,.55); position: sticky; top: 0; }
+  tbody tr { cursor: pointer; transition: background .15s; }
+  tbody tr:hover, tbody tr.on { background: rgba(79,179,232,.09); }
+  tbody tr:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: -3px; }
+  td.tg { font: 700 13px var(--font-mono); color: var(--rb-amarillo); white-space: nowrap; }
+  td.isa { font: 700 14px var(--font-display); white-space: nowrap; }
+  td .wt-confirmar { font-size: 11.5px; white-space: nowrap; }
+  .note { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
+
+  @keyframes wt-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  @media (max-width: 1180px) { .c-leer, .c-lazos { grid-column: span 6; } .c-desc { grid-column: span 12; } }
+  @media (max-width: 720px) {
+    :root { --gut: 16px; }
+    .wt-topbar { flex-wrap: wrap; row-gap: 6px; }
+    .wt-topbar .wt-title { font-size: 17px; line-height: 1.15; }
+    .wt-topbar .wt-title small { display: none; }
+    .wt-topbar nav a { white-space: nowrap; }
+    .dti-head p { font-size: 14px; }
+    .seg > span { position: static !important; width: auto; height: auto; clip: auto; min-width: 54px; }
+    .tools { gap: 8px; padding: 8px; }
+    .tools .spacer { display: none; }
+    .seg { flex: 1 1 100%; justify-content: space-between; }
+    .seg .opts { flex: 1; } .seg .opts button { flex: 1; justify-content: center; }
+    .tools .wt-btn { flex: 1 1 calc(50% - 8px); justify-content: center; }
+    .stage { height: min(78vh, 680px); min-height: 420px; }
+    .zoombar { top: auto; bottom: 12px; transform: none; flex-direction: row; gap: 6px; }
+    .chip { min-height: 34px; font-size: 13px; padding: 3px 10px 3px 7px; }
+    .hint { display: none; }
+    .c-leer, .c-lazos, .c-desc { grid-column: span 12; }
+    .plane .tagl { font-size: 40px; }
+    .tbl-wrap { border: 0; overflow: visible; }
+    table, tbody, tr, td { display: block; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    tbody { display: grid; gap: 10px; }
+    tbody tr { display: grid; grid-template-columns: auto auto 1fr; gap: 2px 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(6,22,49,.45); }
+    td { border: 0; padding: 0; }
+    td.tg { grid-column: 1; } td.isa { grid-column: 2; } td.est { grid-column: 3; justify-self: end; }
+    td.var { grid-column: 1 / -1; color: var(--fg); font-weight: 600; margin-top: 4px; }
+    td.pt, td.un, td.sg { grid-column: 1 / -1; color: var(--fg-2); font-size: 13px; }
+    td.pt::before { content: 'Punto: '; color: var(--muted); }
+    td.un::before { content: 'Unidad: '; color: var(--muted); }
+    td.sg::before { content: 'Señal: '; color: var(--muted); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dti-head, .tools, .stage-wrap, .streams { animation: none; }
+    .badge-live i { animation: none; }
+    .ficha { transition: none; }
+  }
+
+  /* ---------- exportación (PNG/PDF) ---------- */
+  body.export { background: #fff; margin: 0; overflow: hidden; }
+  body.export *, body.export *::before, body.export *::after { animation: none !important; transition: none !important; }
+  body.export .wt-topbar, body.export .dti-head, body.export .tools, body.export .streams, body.export .info,
+  body.export .zoombar, body.export .hint, body.export .badge-live, body.export .ficha, body.export .sheen { display: none !important; }
+  body.export .dti { padding: 0; max-width: none; }
+  body.export .stage { position: fixed; inset: 0; height: 100vh; border: 0; border-radius: 0; box-shadow: none; background: none; }
+  body.export .pz, body.export .sheet3d { position: absolute; inset: 0; transform: none !important; width: 100% !important; height: 100% !important; }
+  body.export .sheet { width: 100% !important; height: 100% !important; box-shadow: none; border-radius: 0; }
+
+  /* ---------- impresión (A3; @page se inyecta según la orientación) ---------- */
+  @media print {
+    body { background: #fff !important; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .wt-topbar, .dti-head, .tools, .streams, .info, .zoombar, .hint, .badge-live, .ficha, .sheen, .layers { display: none !important; }
+    .dti { padding: 0 !important; max-width: none !important; }
+    .stage-wrap { animation: none !important; }
+    .stage { position: static !important; height: auto !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: none !important; overflow: visible !important; }
+    .pz, .sheet3d { position: static !important; transform: none !important; width: auto !important; height: auto !important; }
+    .sheet { width: 100% !important; height: auto !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; }
+    .sheet svg { width: 100% !important; height: auto !important; max-height: 100vh; }
+  }
+</style>
+</head>
+<body>
+<header class="wt-topbar">
+  <a class="wt-brand" href="index.html"><img class="wt-logo" src="assets/logo-rbtec-blanco.svg" alt="R.B. Tec México · Well Testing — ir al inicio" width="150" height="40"></a>
+  <div class="wt-title">DTI del aforo<small>Entregable 4 · P&amp;ID con simbología ISA</small></div>
+  <nav aria-label="Entregables">
+    <a href="index.html">Inicio</a>
+    <a href="proceso.html">1 · Proceso</a>
+    <a href="separador.html">2 · Separador</a>
+    <a href="macropera.html">3 · Macropera</a>
+    <a href="dti.html" aria-current="page">4 · DTI</a>
+  </nav>
+</header>
+
+<main class="dti" id="main">
+  <div class="dti-head">
+    <div>
+      <div class="wt-eyebrow">Entregable 4 · Infografía del DTI</div>
+      <h1>Tubería e <em>instrumentación</em> del aforo</h1>
+    </div>
+    <p>DTI simplificado del aforo con separador bifásico de circuito cerrado: corrientes de proceso, válvulas, instrumentos E+H y lazos al RTU. Toque una burbuja para ver su ficha o una línea para seguir su corriente.</p>
+  </div>
+
+  <div class="tools" role="toolbar" aria-label="Opciones del DTI">
+    <div class="seg" role="group" aria-label="Orientación">
+      <span>Formato</span>
+      <div class="opts">
+        <button type="button" data-orient="horizontal" aria-pressed="true" title="16:9 para pantalla">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="5" width="16" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Horizontal</button>
+        <button type="button" data-orient="vertical" aria-pressed="false" title="A3 vertical para imprimir">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="2" width="10" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Vertical A3</button>
+      </div>
+    </div>
+    <div class="seg" role="group" aria-label="Tema">
+      <span>Tema</span>
+      <div class="opts">
+        <button type="button" data-tema="pantalla" aria-pressed="true">Pantalla</button>
+        <button type="button" data-tema="papel" aria-pressed="false">Papel</button>
+      </div>
+    </div>
+    <div class="seg" role="group" aria-label="Equipo">
+      <span>Equipo</span>
+      <div class="opts" id="tagOpts"></div>
+    </div>
+    <div class="spacer"></div>
+    <button type="button" class="wt-btn" id="btnTrazo" title="Volver a trazar el DTI en el orden del flujo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4.5v11l9-5.5z" fill="currentColor"/></svg>Trazar</button>
+    <button type="button" class="wt-btn" id="btnCapas" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 18 6l-8 4-8-4zM2 10l8 4 8-4M2 14l8 4 8-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Capas 3D</button>
+    <button type="button" class="wt-btn" id="btnPrint" title="Imprimir en A3 (tema papel)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8V2h10v6M5 15H3V9h14v6h-2M6 12h8v6H6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Imprimir</button>
+    <button type="button" class="wt-btn primary" id="btnSvg" title="Descargar la vista actual como SVG" aria-label="Descargar SVG"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SVG</button>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage" tabindex="0" role="region" aria-label="Visor del DTI. Arrastre para desplazar; rueda, pellizco o teclas más y menos para acercar; cero para ajustar.">
+      <div class="pz" id="pz">
+        <div class="sheet3d" id="sheet3d">
+          <div class="sheet" id="sheet"><div class="sheen" id="sheen"></div></div>
+        </div>
+        <div class="layers" id="layers" hidden></div>
+      </div>
+      <div class="badge-live" aria-hidden="true"><i></i><span id="liveTxt">Flujo animado</span></div>
+      <div class="hint" id="hint">Arrastre para mover · rueda o pellizco para zoom · doble clic para acercar</div>
+      <div class="zoombar" role="group" aria-label="Zoom">
+        <button type="button" id="zOut" aria-label="Alejar"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <output id="zVal" aria-live="polite">100%</output>
+        <button type="button" id="zIn" aria-label="Acercar"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M10 5v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <button type="button" id="zFit" aria-label="Ajustar a la vista"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="ficha" id="ficha" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="streams" role="group" aria-label="Resaltar corriente">
+    <span>Resaltar:</span>
+    <button type="button" class="chip" data-hl="mezcla" aria-pressed="false"><i class="ln mezcla"></i>Mezcla del pozo</button>
+    <button type="button" class="chip" data-hl="gas" aria-pressed="false"><i class="ln gas"></i>Gas</button>
+    <button type="button" class="chip" data-hl="liquido" aria-pressed="false"><i class="ln liquido"></i>Líquido (aceite + agua)</button>
+    <button type="button" class="chip" data-hl="salida" aria-pressed="false"><i class="ln salida"></i>Reincorporada → batería</button>
+    <button type="button" class="chip" data-hl="senal" aria-pressed="false"><i class="ln senal"></i>Señales al RTU</button>
+  </div>
+
+  <section class="info" aria-label="Guía de lectura">
+    <article class="wt-card c-leer">
+      <div class="wt-eyebrow">Para capacitación</div>
+      <h2>Cómo leer el DTI</h2>
+      <ul>
+        <li><span class="ico"><svg viewBox="0 0 40 28" aria-hidden="true"><path d="M2 14h36" stroke="#b9824a" stroke-width="9"/><path d="M2 14h36" stroke="#8a5a2b" stroke-width="5"/><path d="M24 14l-7-5 2 5-2 5z" fill="#eef5fb"/></svg></span><span><b>Líneas gruesas = tubería de proceso.</b> El color indica la corriente y la flecha, el sentido del flujo.</span></li>
+        <li><span class="ico"><svg viewBox="0 0 40 28" aria-hidden="true"><path d="M2 14h36" stroke="#4fb3e8" stroke-width="2.4" stroke-dasharray="7 5"/></svg></span><span><b>Discontinua azul claro = señal eléctrica</b> (4–20 mA / HART) del instrumento al RTU.</span></li>
+        <li><span class="ico"><svg viewBox="0 0 40 28" aria-hidden="true"><circle cx="20" cy="14" r="12" fill="none" stroke="#a9dcf7" stroke-width="2"/><text x="20" y="12" text-anchor="middle" font-size="8" font-weight="700" fill="#eef5fb" font-family="Barlow Condensed">PIT</text><text x="20" y="21" text-anchor="middle" font-size="6.5" font-weight="700" fill="#ffc20e" font-family="Barlow Condensed">TPS</text></svg></span><span><b>Burbuja ISA:</b> arriba las letras de función (PIT = transmisor indicador de presión), abajo el tag de campo.</span></li>
+        <li><span class="ico"><svg viewBox="0 0 40 28" aria-hidden="true"><rect x="7" y="1" width="26" height="26" fill="none" stroke="#a9dcf7" stroke-width="2"/><circle cx="20" cy="14" r="11" fill="none" stroke="#a9dcf7" stroke-width="2"/><path d="M9 14h22" stroke="#a9dcf7" stroke-width="2"/></svg></span><span><b>Círculo en cuadro con línea</b> = función que corre dentro del RTU (control o cálculo), no un equipo en campo.</span></li>
+      </ul>
+    </article>
+    <article class="wt-card c-lazos">
+      <div class="wt-eyebrow">Lazos de control</div>
+      <h2>Qué controla el RTU</h2>
+      <div id="lazos"></div>
+    </article>
+    <article class="wt-card c-desc">
+      <div class="wt-eyebrow">Descargas</div>
+      <h2>Para imprimir y presentar</h2>
+      <div class="dl-list">
+        <a href="entregables/dti-horizontal.pdf" download><span class="fx pdf">PDF</span>DTI horizontal · A3<small>vector</small></a>
+        <a href="entregables/dti-vertical.pdf" download><span class="fx pdf">PDF</span>DTI vertical · A3<small>vector</small></a>
+        <a href="entregables/dti-horizontal.png" download><span class="fx">PNG</span>Horizontal · papel<small>3840 × 2160</small></a>
+        <a href="entregables/dti-horizontal-pantalla.png" download><span class="fx">PNG</span>Horizontal · pantalla<small>3840 × 2160</small></a>
+        <a href="entregables/dti-vertical.png" download><span class="fx">PNG</span>Vertical · papel<small>2480 × 3508</small></a>
+        <a href="entregables/dti-horizontal.svg" download><span class="fx">SVG</span>Horizontal · editable<small>vector</small></a>
+        <a href="entregables/dti-vertical.svg" download><span class="fx">SVG</span>Vertical · editable<small>vector</small></a>
+      </div>
+      <p class="note">El botón «SVG» de la barra guarda la vista actual (formato, tema y equipo). Los SVG de esta lista llevan las fuentes incrustadas para abrirse en cualquier equipo.</p>
+    </article>
+    <article class="wt-card c-lista">
+      <div class="wt-eyebrow">Instrumentación E+H → RTU Honeywell ControlEdge 2020</div>
+      <h2>Lista de instrumentos</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">Tag</th><th scope="col">ISA</th><th scope="col">Variable</th><th scope="col">Punto de medición</th><th scope="col">Unidad</th><th scope="col">Señal</th><th scope="col">Estado</th></tr></thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+      <p class="note">Pase el cursor o toque una fila para ubicar el instrumento en el DTI. «Por confirmar»: asignación tag ↔ variable a validar con el área técnica.</p>
+    </article>
+  </section>
+</main>
+
+<script src="js/vendor/gsap.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/pid.js"></script>
+<script>
+(function () {
+  'use strict';
+  var D = WT.data, U = WT.util;
+  var Q = new URLSearchParams(location.search);
+  var EXPORT = Q.get('export') === '1';
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var narrow = window.matchMedia && matchMedia('(max-width: 720px)').matches;
+  var hasGsap = typeof window.gsap !== 'undefined';
+  if (hasGsap) gsap.ticker.lagSmoothing(0); // las animaciones decorativas terminan a tiempo aunque un cuadro tarde
+
+  var st = {
+    orient: Q.get('orientacion') === 'vertical' || Q.get('orientacion') === 'horizontal' ? Q.get('orientacion') : (narrow ? 'vertical' : 'horizontal'),
+    tema: Q.get('tema') === 'papel' ? 'papel' : 'pantalla',
+    tag: D.separador.tags.indexOf(Q.get('tag')) >= 0 ? Q.get('tag') : D.separador.tagDefault,
+    hl: null, pinned: null, capas: false,
+    t0: 0, trazoDur: reduce ? 0 : 6.5, pulsos: !reduce
+  };
+  if (EXPORT) document.body.classList.add('export');
+
+  var stage = document.getElementById('stage'), pzEl = document.getElementById('pz'), s3 = document.getElementById('sheet3d');
+  var sheet = document.getElementById('sheet'), sheen = document.getElementById('sheen'), layersEl = document.getElementById('layers');
+  var ficha = document.getElementById('ficha'), zVal = document.getElementById('zVal');
+  var P = null, LAYERS = [];
+
+  /* ---------------- render ---------------- */
+  function build() {
+    if (P) P.destroy();
+    P = WT.PID.render(sheet, { orientacion: st.orient, tema: st.tema, tag: st.tag, interactivo: !EXPORT, overlay: !EXPORT });
+    sheet.insertBefore(P.svg, sheen);
+    if (P.overlay) sheet.insertBefore(P.overlay, sheen);
+    sheet.style.width = P.W + 'px'; sheet.style.height = P.H + 'px';
+    s3.style.width = P.W + 'px'; s3.style.height = P.H + 'px';
+    stage.classList.toggle('is-paper', st.tema === 'papel');
+    if (st.capas) { buildLayers(); applyCapas(); }
+    wireSvg();
+    if (!EXPORT) fit(true);
+  }
+
+  function now() { return performance.now() / 1000; }
+  function frame() {
+    if (!P) return;
+    var t = now() - st.t0;
+    var k = st.trazoDur > 0 ? t / st.trazoDur : 1;
+    var trazo = k >= 1 ? 1 : (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
+    var est = { trazo: trazo, pulsos: st.pulsos ? 1 : 0, resaltar: st.hl };
+    P.renderAt(t, est);
+    for (var i = 0; i < LAYERS.length; i++) LAYERS[i].renderAt(t, { trazo: 1, pulsos: st.pulsos ? 1 : 0, resaltar: st.hl });
+  }
+  function loop() { frame(); if (st.pulsos || now() - st.t0 < st.trazoDur + 0.2) raf = requestAnimationFrame(loop); else raf = 0; }
+  var raf = 0;
+  function kick() { if (!raf) raf = requestAnimationFrame(loop); }
+
+  function replay(dur) {
+    st.trazoDur = reduce ? 0 : (dur == null ? 6.5 : dur);
+    st.t0 = now();
+    kick();
+    if (!reduce && hasGsap) {
+      gsap.fromTo(sheen, { opacity: 1, backgroundPosition: '120% 0' }, { backgroundPosition: '-60% 0', duration: 1.6, ease: 'power2.inOut', onComplete: function () { sheen.style.opacity = 0; } });
+    }
+  }
+  function intro() {
+    if (reduce || !hasGsap) { replay(); return; }
+    gsap.set(s3, { transformPerspective: 2200 });
+    gsap.fromTo(s3, { rotationX: 42, rotationZ: -7, y: 90, scale: 0.86, opacity: 0 },
+      { rotationX: 0, rotationZ: 0, y: 0, scale: 1, opacity: 1, duration: 1.5, ease: 'power3.out', clearProps: 'transform,opacity' });
+    replay(6.5);
+  }
+
+  /* ---------------- vista por capas 3D ---------------- */
+  var CAPAS = [
+    { id: 'proceso', n: '1', t: 'Proceso', s: 'Tubería, equipos y válvulas' },
+    { id: 'instrumentacion', n: '2', t: 'Instrumentación', s: 'Transmisores E+H en campo' },
+    { id: 'control', n: '3', t: 'Control', s: 'Señales → RTU → SCADA SAF-900' }
+  ];
+  function buildLayers() {
+    LAYERS.forEach(function (l) { l.destroy(); });
+    LAYERS = []; layersEl.innerHTML = '';
+    layersEl.style.width = P.W + 'px'; layersEl.style.height = P.H + 'px';
+    CAPAS.forEach(function (c, i) {
+      var pl = document.createElement('div');
+      pl.className = 'plane p' + (i + 1);
+      pl.style.width = P.W + 'px'; pl.style.height = P.H + 'px';
+      pl.innerHTML = '<div class="sheet-l"></div><div class="tagl"><b>' + c.n + '</b> · ' + c.t + '<small>' + c.s + '</small></div>';
+      layersEl.appendChild(pl);
+      var L = WT.PID.render(pl, { orientacion: st.orient, tema: st.tema, tag: st.tag, capa: c.id, overlay: true });
+      L.svg.setAttribute('aria-hidden', 'true');
+      LAYERS.push(L);
+      pl._L = L;
+    });
+  }
+  var capasK = { k: 0 };
+  function capasGeom() {
+    var tilt = 56, rz = -36, gap = P.H * 0.34;
+    var a = rz * Math.PI / 180, t = tilt * Math.PI / 180;
+    var w = P.W * Math.abs(Math.cos(a)) + P.H * Math.abs(Math.sin(a));
+    var h = (P.W * Math.abs(Math.sin(a)) + P.H * Math.abs(Math.cos(a))) * Math.cos(t) + 2 * gap * Math.sin(t);
+    var s = Math.min(P.W / w, P.H / h) * 0.96;
+    return { tilt: tilt, rz: rz, gap: gap, s: s, ty: gap * Math.sin(t) * s, pw: w * s, ph: h * s };
+  }
+  function fitCapas() { // encuadra la pila proyectada (no la hoja) en el escenario
+    var g = capasGeom(), r = stage.getBoundingClientRect(), pad = r.width < 600 ? 8 : 24;
+    var tab = 560 * g.s;  // pestañas «1 · Proceso…» a la izquierda de cada plano
+    var k = Math.min((r.width - 2 * pad) / (g.pw + tab), (r.height - 2 * pad) / g.ph);
+    var sc = Math.max(Math.min(view.fit, k), k);
+    animView({ s: sc, x: r.width / 2 - (P.W / 2) * sc + (tab / 2) * sc, y: r.height / 2 - (P.H / 2) * sc });
+  }
+  function applyCapas() {
+    var k = capasK.k, g = capasGeom();
+    var e = k; // progreso ya suavizado por GSAP
+    layersEl.style.transform = 'translateY(' + (g.ty * e).toFixed(1) + 'px) scale(' + (1 - (1 - g.s) * e).toFixed(4) + ') rotateX(' + (g.tilt * e).toFixed(2) + 'deg) rotateZ(' + (g.rz * e).toFixed(2) + 'deg)';
+    var planes = layersEl.querySelectorAll('.plane');
+    for (var i = 0; i < planes.length; i++) {
+      var kz = Math.min(1, Math.max(0, (e - 0.25) / 0.75));
+      planes[i].style.transform = 'translateZ(' + (i * g.gap * kz).toFixed(1) + 'px)';
+      var tg = planes[i].querySelector('.tagl'); if (tg) tg.style.opacity = kz;
+    }
+  }
+  function setCapas(on) {
+    st.capas = on;
+    document.getElementById('btnCapas').setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (hasGsap) gsap.killTweensOf(capasK);
+    if (on) {
+      buildLayers();
+      layersEl.hidden = false; s3.style.opacity = 0;
+      if (hasGsap && !reduce) gsap.to(capasK, { k: 1, duration: 1.4, ease: 'power3.inOut', onUpdate: applyCapas });
+      else { capasK.k = 1; applyCapas(); }
+      fitCapas();
+      document.getElementById('liveTxt').textContent = 'Vista por capas';
+    } else {
+      var done = function () { layersEl.hidden = true; s3.style.opacity = 1; LAYERS.forEach(function (l) { l.destroy(); }); LAYERS = []; layersEl.innerHTML = ''; };
+      if (hasGsap && !reduce) gsap.to(capasK, { k: 0, duration: 1.0, ease: 'power3.inOut', onUpdate: applyCapas, onComplete: done });
+      else { capasK.k = 0; done(); }
+      fit();
+      document.getElementById('liveTxt').textContent = 'Flujo animado';
+    }
+    kick();
+  }
+
+  /* ---------------- zoom / desplazamiento ---------------- */
+  var view = { s: 1, x: 0, y: 0, fit: 1 };
+  function applyView() {
+    pzEl.style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.s + ')';
+    zVal.textContent = Math.round(view.s / view.fit * 100) + '%';
+  }
+  function fit(instant) {
+    var r = stage.getBoundingClientRect();
+    var pad = r.width < 600 ? 10 : 28;
+    var s = Math.min((r.width - pad * 2) / P.W, (r.height - pad * 2) / P.H);
+    view.fit = s;
+    var to = { s: s, x: (r.width - P.W * s) / 2, y: (r.height - P.H * s) / 2 };
+    animView(to, instant);
+  }
+  function animView(to, instant) {
+    if (instant || reduce || !hasGsap) { view.s = to.s; view.x = to.x; view.y = to.y; applyView(); return; }
+    gsap.to(view, { s: to.s, x: to.x, y: to.y, duration: 0.45, ease: 'power3.out', onUpdate: applyView, overwrite: true });
+  }
+  function zoomAt(f, cx, cy, instant) {
+    var s = Math.max(view.fit * 0.6, Math.min(view.fit * 12, view.s * f));
+    var k = s / view.s;
+    animView({ s: s, x: cx - (cx - view.x) * k, y: cy - (cy - view.y) * k }, instant);
+  }
+  function center() { var r = stage.getBoundingClientRect(); return [r.width / 2, r.height / 2]; }
+  document.getElementById('zIn').addEventListener('click', function () { var c = center(); zoomAt(1.5, c[0], c[1]); });
+  document.getElementById('zOut').addEventListener('click', function () { var c = center(); zoomAt(1 / 1.5, c[0], c[1]); });
+  document.getElementById('zFit').addEventListener('click', function () { if (st.capas) fitCapas(); else fit(); });
+  stage.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var r = stage.getBoundingClientRect();
+    if (hasGsap) gsap.killTweensOf(view);
+    zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0016)), e.clientX - r.left, e.clientY - r.top, true);
+    hideHint();
+  }, { passive: false });
+
+  var ptrs = new Map(), drag = null, moved = false;
+  stage.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('.zoombar')) return;
+    stage.setPointerCapture && stage.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (hasGsap) gsap.killTweensOf(view);
+    moved = false;
+    if (ptrs.size === 1) drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, target: e.target };
+    else if (ptrs.size === 2) {
+      var a = Array.from(ptrs.values());
+      drag = { pinch: true, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), s: view.s, vx: view.x, vy: view.y, mx: (a[0].x + a[1].x) / 2, my: (a[0].y + a[1].y) / 2 };
+    }
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (!ptrs.has(e.pointerId)) { hoverAt(e); return; }
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!drag) return;
+    var r = stage.getBoundingClientRect();
+    if (drag.pinch && ptrs.size >= 2) {
+      var a = Array.from(ptrs.values());
+      var d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), mx = (a[0].x + a[1].x) / 2, my = (a[0].y + a[1].y) / 2;
+      var s = Math.max(view.fit * 0.6, Math.min(view.fit * 12, drag.s * d / drag.d)), k = s / drag.s;
+      view.s = s; view.x = (mx - r.left) - ((drag.mx - r.left) - drag.vx) * k; view.y = (my - r.top) - ((drag.my - r.top) - drag.vy) * k;
+      moved = true; applyView(); return;
+    }
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!moved && Math.hypot(dx, dy) < 5) return;
+    moved = true; stage.classList.add('dragging'); hideFicha(); hideHint();
+    view.x = drag.vx + dx; view.y = drag.vy + dy; applyView();
+  });
+  function endPtr(e) {
+    var wasDrag = drag && !drag.pinch ? drag : null;
+    ptrs.delete(e.pointerId);
+    if (ptrs.size === 0) { stage.classList.remove('dragging'); if (wasDrag && !moved) clickAt(wasDrag.target, e); drag = null; }
+    else if (ptrs.size === 1) { var p = Array.from(ptrs.values())[0]; drag = { x: p.x, y: p.y, vx: view.x, vy: view.y }; }
+  }
+  stage.addEventListener('pointerup', endPtr);
+  stage.addEventListener('pointercancel', function (e) { ptrs.delete(e.pointerId); drag = null; stage.classList.remove('dragging'); });
+  stage.addEventListener('dblclick', function (e) { var r = stage.getBoundingClientRect(); zoomAt(2, e.clientX - r.left, e.clientY - r.top); });
+  stage.addEventListener('keydown', function (e) {
+    var c = center(), step = 60;
+    if (e.key === '+' || e.key === '=') { zoomAt(1.4, c[0], c[1]); e.preventDefault(); }
+    else if (e.key === '-' || e.key === '_') { zoomAt(1 / 1.4, c[0], c[1]); e.preventDefault(); }
+    else if (e.key === '0') { fit(); e.preventDefault(); }
+    else if (e.key === 'Escape') { setHl(null); hideFicha(true); }
+    else if (e.target === stage && /^Arrow/.test(e.key)) {
+      view.x += e.key === 'ArrowLeft' ? step : e.key === 'ArrowRight' ? -step : 0;
+      view.y += e.key === 'ArrowUp' ? step : e.key === 'ArrowDown' ? -step : 0;
+      applyView(); e.preventDefault();
+    }
+  });
+  window.addEventListener('resize', function () { if (P && !EXPORT) fit(true); });
+  var hintEl = document.getElementById('hint');
+  function hideHint() { hintEl.style.opacity = 0; }
+
+  /* ---------------- interacción con el SVG ---------------- */
+  var ISA_V = { P: 'presión', T: 'temperatura', L: 'nivel', F: 'flujo', PD: 'presión diferencial' };
+  var ISA_F = { IT: 'Transmisor indicador de ', IC: 'Controlador indicador de ', QI: 'Totalizador indicador de ', I: 'Indicador de ' };
+  function isaMeaning(isa) {
+    var v = isa.indexOf('PD') === 0 ? 'PD' : isa.charAt(0), f = isa.slice(v.length);
+    return (ISA_F[f] || '') + (ISA_V[v] || '');
+  }
+  var FUNCS = {
+    LIC: { isa: 'LIC', sub: 'TN', t: 'Control de nivel', d: 'Función en el RTU: compara el nivel del TN con el punto de ajuste y posiciona la LV de la salida de líquido.' },
+    PIC: { isa: 'PIC', sub: 'TPS', t: 'Control de presión', d: 'Función en el RTU: con la presión del TPS posiciona la PV de la salida de gas para mantener la contrapresión del separador.' },
+    FQI: { isa: 'FQI', sub: 'TDG', t: 'Gasto y acumulado de gas', d: 'Función en el RTU: calcula el gasto de gas a partir del diferencial de la placa de orificio (TDG) y lo acumula para el SCADA.' },
+    PI: { isa: 'PI', sub: 'local', t: 'Manómetro local', d: 'Indicación local de presión en la línea de entrada al separador (sin señal al RTU).' }
+  };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function showFicha(tag, anchorEl) {
+    var ins = U.instrumento(tag), f = FUNCS[tag], html;
+    if (ins) {
+      html = '<div class="top"><div class="bub">' + esc(ins.isa) + '<small>' + esc(ins.tag) + '</small></div><div><h3>' + esc(ins.variable) + '</h3><div class="isa">' + esc(ins.isa) + ' · ' + esc(isaMeaning(ins.isa)) + '</div></div></div>' +
+        '<dl><dt>Tag</dt><dd>' + esc(ins.tag) + '</dd><dt>Punto</dt><dd>' + esc(ins.punto) + '</dd><dt>Unidad</dt><dd>' + esc(ins.unidad) + '</dd><dt>Marca</dt><dd>' + esc(ins.marca) + '</dd><dt>Señal</dt><dd>' + esc(ins.senal) + ' → RTU</dd></dl>' +
+        (ins.confirmar ? '<div class="conf">Asignación tag ↔ variable por confirmar</div>' : '');
+    } else if (f) {
+      html = '<div class="top"><div class="bub' + (tag === 'PI' ? '' : ' fn') + '">' + esc(f.isa) + '<small>' + esc(f.sub) + '</small></div><div><h3>' + esc(f.t) + '</h3><div class="isa">' + esc(f.isa) + ' · ' + esc(isaMeaning(f.isa)) + '</div></div></div><dl><dt></dt><dd>' + esc(f.d) + '</dd></dl>';
+    } else return;
+    ficha.innerHTML = html;
+    var r = stage.getBoundingClientRect(), b = anchorEl.getBoundingClientRect();
+    var fw = Math.min(320, r.width - 24), x = b.right - r.left + 12, y = b.top - r.top - 6;
+    if (x + fw > r.width - 12) x = b.left - r.left - fw - 12;
+    if (x < 12) { x = Math.max(12, Math.min(r.width - fw - 12, b.left - r.left + b.width / 2 - fw / 2)); y = b.bottom - r.top + 10; }
+    ficha.style.left = x + 'px'; ficha.style.top = '0px';
+    ficha.classList.add('on');
+    var fh = ficha.offsetHeight;
+    if (y + fh > r.height - 12) y = Math.max(12, r.height - fh - 12);
+    if (y < 12) y = 12;
+    ficha.style.top = y + 'px';
+    Array.prototype.forEach.call(P.svg.querySelectorAll('.inst.is-hover'), function (n) { n.classList.remove('is-hover'); });
+    anchorEl.classList.add('is-hover');
+  }
+  function hideFicha(force) {
+    if (st.pinned && !force) return;
+    if (force) st.pinned = null;
+    ficha.classList.remove('on');
+    if (P) Array.prototype.forEach.call(P.svg.querySelectorAll('.inst.is-hover'), function (n) { n.classList.remove('is-hover'); });
+  }
+  var lastHover = null;
+  function hoverAt(e) {
+    if (e.pointerType === 'touch') return;
+    var g = e.target.closest && e.target.closest('.inst');
+    if (g === lastHover) return;
+    lastHover = g;
+    if (g) showFicha(g.getAttribute('data-tag'), g);
+    else if (st.pinned) { var pg = P.svg.querySelector('.inst[data-tag="' + st.pinned + '"]'); if (pg) showFicha(st.pinned, pg); }
+    else hideFicha();
+  }
+  function clickAt(target) {
+    var g = target.closest && target.closest('.inst');
+    if (g) { var tg = g.getAttribute('data-tag'); st.pinned = tg; showFicha(tg, g); setHl(tg); return; }
+    var hit = target.closest && target.closest('.pl-hit');
+    if (hit) { var sm = hit.getAttribute('data-stream'); setHl(st.hl === sm ? null : sm); hideFicha(true); return; }
+    setHl(null); hideFicha(true);
+  }
+  function wireSvg() {
+    P.svg.addEventListener('focusin', function (e) {
+      var g = e.target.closest('.inst'); if (g) { showFicha(g.getAttribute('data-tag'), g); setHl(g.getAttribute('data-tag')); }
+    });
+    P.svg.addEventListener('focusout', function () { if (!st.pinned) { hideFicha(); } });
+    P.svg.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var hit = e.target.closest('.pl-hit'); if (hit) { e.preventDefault(); var sm = hit.getAttribute('data-stream'); setHl(st.hl === sm ? null : sm); }
+      var g = e.target.closest('.inst'); if (g) { e.preventDefault(); st.pinned = g.getAttribute('data-tag'); showFicha(st.pinned, g); setHl(st.pinned); }
+    });
+    Array.prototype.forEach.call(P.svg.querySelectorAll('.pl-hit'), function (h) {
+      var nm = { mezcla: 'Mezcla del pozo', gas: 'Gas', liquido: 'Líquido (aceite + agua)', salida: 'Mezcla reincorporada a batería' }[h.getAttribute('data-stream')];
+      h.setAttribute('aria-label', 'Resaltar corriente: ' + nm);
+    });
+  }
+  function setHl(id) {
+    st.hl = id;
+    Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (c) { c.setAttribute('aria-pressed', c.getAttribute('data-hl') === id ? 'true' : 'false'); });
+    Array.prototype.forEach.call(document.querySelectorAll('#tblBody tr'), function (r) { r.classList.toggle('on', r.getAttribute('data-tag') === id); });
+    if (!st.pulsos || !raf) frame();
+    kick();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (c) {
+    c.addEventListener('click', function () { var id = c.getAttribute('data-hl'); setHl(st.hl === id ? null : id); hideFicha(true); });
+  });
+
+  /* ---------------- barra de herramientas ---------------- */
+  function syncButtons() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-orient]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-orient') === st.orient ? 'true' : 'false'); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tema]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-tema') === st.tema ? 'true' : 'false'); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tag]'), function (b) { if (b.tagName === 'BUTTON') b.setAttribute('aria-pressed', b.getAttribute('data-tag') === st.tag ? 'true' : 'false'); });
+    if (!EXPORT) {
+      var u = new URL(location.href);
+      u.searchParams.set('orientacion', st.orient); u.searchParams.set('tema', st.tema);
+      if (st.tag !== D.separador.tagDefault) u.searchParams.set('tag', st.tag); else u.searchParams.delete('tag');
+      try { history.replaceState(null, '', u.href); } catch (e) { /* file:// en algunos navegadores */ }
+    }
+  }
+  var tagOpts = document.getElementById('tagOpts');
+  D.separador.tags.forEach(function (t) {
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('data-tag', t); b.setAttribute('aria-pressed', 'false');
+    b.style.fontFamily = 'var(--font-mono)'; b.style.fontSize = '13px';
+    tagOpts.appendChild(b);
+  });
+  document.querySelector('.tools').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.hasAttribute('data-orient') && b.getAttribute('data-orient') !== st.orient) {
+      st.orient = b.getAttribute('data-orient'); hideFicha(true); build(); replay(3); syncButtons();
+      if (hasGsap && !reduce) gsap.fromTo(s3, { rotationY: st.orient === 'vertical' ? -70 : 70, opacity: 0, transformPerspective: 2200 }, { rotationY: 0, opacity: st.capas ? 0 : 1, duration: 0.9, ease: 'power3.out', clearProps: st.capas ? 'transform' : 'transform,opacity' });
+    } else if (b.hasAttribute('data-tema') && b.getAttribute('data-tema') !== st.tema) {
+      st.tema = b.getAttribute('data-tema'); P.setTema(st.tema); LAYERS.forEach(function (l) { l.setTema(st.tema); });
+      stage.classList.toggle('is-paper', st.tema === 'papel'); syncButtons(); frame();
+      if (hasGsap && !reduce) gsap.fromTo(sheen, { opacity: 1, backgroundPosition: '120% 0' }, { backgroundPosition: '-60% 0', duration: 1.1, ease: 'power2.inOut', onComplete: function () { sheen.style.opacity = 0; } });
+    } else if (b.tagName === 'BUTTON' && b.hasAttribute('data-tag') && b.getAttribute('data-tag') !== st.tag) {
+      st.tag = b.getAttribute('data-tag'); build(); replay(0.01); syncButtons();
+    }
+  });
+  document.getElementById('btnTrazo').addEventListener('click', function () { if (st.capas) setCapas(false); replay(6.5); });
+  document.getElementById('btnCapas').addEventListener('click', function () { setCapas(!st.capas); });
+  function toDataURL(url) {
+    return fetch(url).then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); }).then(function (bl) {
+      return new Promise(function (res, rej) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.onerror = rej; fr.readAsDataURL(bl); });
+    });
+  }
+  function saveSvg(txt) {
+    var blob = new Blob([txt], { type: 'image/svg+xml' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'DTI-' + st.tag + '-' + st.orient + '-' + st.tema + '.svg';
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  document.getElementById('btnSvg').addEventListener('click', function () {
+    var logo = P.svg.querySelector('image.logo'), logoUrl = logo ? new URL(logo.getAttribute('href'), location.href).href : null;
+    if (/^https?:/.test(location.protocol)) {
+      // servido por http(s): fuentes y logo se incrustan → SVG autónomo
+      Promise.all(WT.PID.FUENTES.map(function (f) {
+        return toDataURL('assets/' + f.file).then(function (d) { return '@font-face{font-family:"' + f.family + '";font-weight:' + f.weight + ';src:url(' + d + ') format("woff2")}'; });
+      }).concat([logoUrl ? toDataURL(logoUrl) : Promise.resolve(null)])).then(function (r) {
+        var logoData = r.pop();
+        saveSvg(P.toSVGString({ fontCSS: r.join('\n'), logoHref: logoData }));
+      }).catch(function () { saveSvg(P.toSVGString({ logoHref: logoUrl })); });
+    } else {
+      // abierto con doble clic (file://): el navegador no deja leer las fuentes; el logo se enlaza con ruta absoluta.
+      // Las versiones con fuentes incrustadas están en entregables/dti-*.svg
+      saveSvg(P.toSVGString({ logoHref: logoUrl }));
+    }
+  });
+  var printStyle = document.createElement('style'); document.head.appendChild(printStyle);
+  var prevTema = null;
+  function beforePrint() {
+    printStyle.textContent = '@page { size: A3 ' + (st.orient === 'vertical' ? 'portrait' : 'landscape') + '; margin: 8mm; }';
+    if (st.tema !== 'papel') { prevTema = st.tema; P.setTema('papel'); }
+    P.renderAt(0, { trazo: 1, pulsos: 0 });
+  }
+  function afterPrint() { if (prevTema) { P.setTema(prevTema); prevTema = null; } kick(); }
+  window.addEventListener('beforeprint', beforePrint);
+  window.addEventListener('afterprint', afterPrint);
+  document.getElementById('btnPrint').addEventListener('click', function () { if (st.capas) setCapas(false); beforePrint(); window.print(); });
+
+  /* ---------------- tarjetas: lazos y lista ---------------- */
+  var lz = document.getElementById('lazos');
+  [
+    { k: 'Nivel', c: [['TN', 'LIT'], ['LIC', 'fn'], ['LV', 'v']], p: 'Al subir el nivel, el LIC abre la LV y el líquido sale hacia el Coriolis Promass 300.' },
+    { k: 'Presión', c: [['TPS', 'PIT'], ['PIC', 'fn'], ['PV', 'v']], p: 'La PV en la salida de gas mantiene la contrapresión del separador.' },
+    { k: 'Gas', c: [['TDG', 'PDIT'], ['FQI', 'fn']], p: 'El ΔP en la placa de orificio se convierte en gasto y acumulado de gas (MMpcd).' },
+    { k: 'Monitoreo', c: [['8 tags', ''], ['RTU', 'fn'], ['SAF-900', 'fn']], p: 'Todas las señales llegan al ' + U.equipo('rtu').nombre + ' y se visualizan en el ' + U.equipo('scada').nombre + '.' }
+  ].forEach(function (L) {
+    var d = document.createElement('div'); d.className = 'loop';
+    var ch = L.c.map(function (n) {
+      var target = U.instrumento(n[0]) || FUNCS[n[0]] ? n[0] : n[0] === 'LV' ? 'liquido' : n[0] === 'PV' ? 'gas' : n[0] === 'RTU' || n[0] === 'SAF-900' || n[0] === '8 tags' ? 'senal' : null;
+      return '<button type="button" class="n' + (n[1] === 'fn' ? ' fn' : '') + '" data-go="' + (target || '') + '" style="font:inherit">' + esc(n[0]) + '</button>';
+    }).join('<span class="a" aria-hidden="true">→</span>');
+    d.innerHTML = '<span class="k">' + L.k + '</span><span class="chain">' + ch + '</span><p>' + esc(L.p) + '</p>';
+    lz.appendChild(d);
+  });
+  lz.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-go]'); if (!b) return;
+    var id = b.getAttribute('data-go'); if (!id) return;
+    setHl(id);
+    var g = P.svg.querySelector('.inst[data-tag="' + id + '"]');
+    stage.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    if (g) setTimeout(function () { st.pinned = id; showFicha(id, g); }, reduce ? 0 : 450);
+  });
+  var tb = document.getElementById('tblBody');
+  D.instrumentos.forEach(function (ins) {
+    var tr = document.createElement('tr'); tr.setAttribute('data-tag', ins.tag); tr.tabIndex = 0;
+    tr.innerHTML = '<td class="tg">' + esc(ins.tag) + '</td><td class="isa">' + esc(ins.isa) + '</td><td class="var">' + esc(ins.variable) + '</td><td class="pt">' + esc(ins.punto) + '</td><td class="un">' + esc(ins.unidad) + '</td><td class="sg">' + esc(ins.senal) + '</td><td class="est">' + (ins.confirmar ? '<span class="wt-confirmar">Por confirmar</span>' : 'Confirmado') + '</td>';
+    tb.appendChild(tr);
+  });
+  tb.addEventListener('mouseover', function (e) { var r = e.target.closest('tr'); if (r) setHl(r.getAttribute('data-tag')); });
+  tb.addEventListener('mouseleave', function () { if (!st.pinned) setHl(null); });
+  function goRow(r) {
+    var id = r.getAttribute('data-tag'); setHl(id); st.pinned = id;
+    stage.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    var g = P.svg.querySelector('.inst[data-tag="' + id + '"]');
+    if (g) setTimeout(function () { showFicha(id, g); }, reduce ? 0 : 450);
+  }
+  tb.addEventListener('click', function (e) { var r = e.target.closest('tr'); if (r) goRow(r); });
+  tb.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { var r = e.target.closest('tr'); if (r) { e.preventDefault(); goRow(r); } } });
+
+  /* ---------------- arranque ---------------- */
+  syncButtons();
+  build();
+  if (EXPORT) {
+    P.renderAt(0, { trazo: 1, pulsos: 0 });
+    var img = P.svg.querySelector('image.logo');
+    var imgReady = new Promise(function (res) {
+      if (!img) return res();
+      var probe = new Image(); probe.onload = probe.onerror = function () { res(); }; probe.src = img.getAttribute('href');
+    });
+    Promise.all([document.fonts ? document.fonts.ready : Promise.resolve(), imgReady]).then(function () {
+      requestAnimationFrame(function () { requestAnimationFrame(function () { window.__WT_READY = true; document.documentElement.setAttribute('data-ready', '1'); }); });
+    });
+  } else {
+    (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { fit(true); intro(); });
+    setTimeout(hideHint, 7000);
+  }
+  window.WT_DTI = { get pid() { return P; }, estado: st, setHl: setHl, setCapas: setCapas, fit: fit };
+})();
+</script>
+</body>
+</html>

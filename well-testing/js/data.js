@@ -39,7 +39,13 @@
       liquido: '#1c140c',     // negro: líquido (aceite + agua)
       liquidoAmbar: '#e8971e',// ámbar: brillo / resalte del líquido
       salida: '#7a5233',      // corriente recombinada hacia batería
-      senal: '#4fb3e8'        // líneas de señal / instrumento
+      senal: '#4fb3e8',       // líneas de señal / instrumento (pantalla)
+      senalPapel: '#2a8fd0',  // señal sobre fondo blanco (impresión)
+      agua: '#3d8fd1',        // % agua / Q agua en SCADA y gráficas
+      zonaSeguridad: '#d6262e',
+      camino: '#b9a888',
+      // Colores del equipo tomados de las fotos de campo
+      equipo: { recipiente: '#24513b', brida: '#7a4a8f', remolque: '#f0a51f', cabezalEH: '#1f63b3', psv: '#c9252f', placaTag: '#f28c1b' }
     },
 
     /* Estados de la medición de 24 h (orden fijo) */
@@ -70,12 +76,14 @@
       presionDiseno: null,     // p. ej. '1440 psi @ 100 °C' — capturar
       temperaturaDiseno: null,
       nfpa: { salud: 3, inflamabilidad: 2, reactividad: 1 }, // rombo visible en el equipo
+      tnMontaje: { valor: 'Superior (sonda)', confirmar: true },
+      nivelSP: 42,             // % consigna ilustrativa del lazo de nivel
       internos: [
         { id: 'deflector', nombre: 'Deflector de entrada', desc: 'Placa de choque frente a la boquilla de entrada: rompe el momento del chorro y produce la separación primaria gas–líquido.' },
         { id: 'asentamiento', nombre: 'Sección de asentamiento por gravedad', desc: 'Volumen donde las gotas de líquido caen y las burbujas de gas suben por diferencia de densidad durante el tiempo de residencia.' },
         { id: 'extractor', nombre: 'Extractor de niebla', desc: 'Malla (mesh pad) junto a la salida de gas: atrapa y coalesce las gotas finas arrastradas, que drenan de regreso al líquido.' },
         { id: 'nivel', nombre: 'Control de nivel', desc: 'El transmisor de nivel (TN) envía la señal al controlador; al subir el nivel abre la válvula de control de líquido.' },
-        { id: 'valvulas', nombre: 'Válvulas de control', desc: 'LV en la salida de líquido (control de nivel) y PV en la salida de gas (contrapresión del separador).' }
+        { id: 'valvulas', nombre: 'Válvulas de control', desc: 'LV en la salida de líquido (control de nivel, aguas abajo del Coriolis) y PV en la salida de gas (contrapresión, aguas abajo de la placa de orificio).' }
       ],
       // Accesorios visibles en las fotos del equipo
       accesorios: [
@@ -88,16 +96,16 @@
     /* Equipos del proceso, en el orden del recorrido del fluido */
     equipos: [
       { id: 'arbol', nombre: 'Árbol de válvulas', desc: 'Cabezal del pozo con válvulas maestras, cruz y válvulas laterales; de aquí sale la producción por TP (tubería de producción) o TR (tubería de revestimiento).' },
-      { id: 'estrangulador', nombre: 'Estrangulador TP / TR', desc: 'Restricción calibrada que controla el gasto y la presión de flujo del pozo.' },
+      { id: 'estrangulador', nombre: 'Estrangulador TP / TR', corto: 'Estrangulador TP/TR', desc: 'Restricción calibrada que controla el gasto y la presión de flujo del pozo.' },
       { id: 'manifold', nombre: 'Cabezal / manifold', desc: 'Arreglo de válvulas que alinea la producción del pozo hacia el separador de prueba.' },
       { id: 'lineaEntrada', nombre: 'Línea de entrada', desc: 'Línea temporal que conduce la mezcla multifásica hasta la boquilla del separador.' },
       { id: 'separador', nombre: 'Separador bifásico', desc: 'Separa la mezcla en una corriente de gas y una de líquido (aceite + agua) para medirlas por separado.' },
-      { id: 'coriolis', nombre: 'Medidor Coriolis E+H Promass 300', desc: 'En la salida de líquido: mide flujo másico, densidad y % de agua.' },
-      { id: 'placa', nombre: 'Placa de orificio + transmisor de presión diferencial E+H', desc: 'En la salida de gas: el diferencial a través de la placa permite calcular el gasto de gas.' },
+      { id: 'coriolis', nombre: 'Medidor Coriolis E+H Promass 300', corto: 'Coriolis Promass 300', desc: 'En la salida de líquido, aguas arriba de la LV: mide flujo másico, densidad y % de agua.' },
+      { id: 'placa', nombre: 'Placa de orificio + transmisor de presión diferencial E+H', corto: 'Placa de orificio', desc: 'En la salida de gas, aguas arriba de la PV: el diferencial a través de la placa permite calcular el gasto de gas.' },
       { id: 'recombinacion', nombre: 'Reincorporación', desc: 'Gas y líquido medidos se unen de nuevo en la línea de salida (circuito cerrado, sin venteo).' },
       { id: 'lineaBateria', nombre: 'Línea a batería', desc: 'La producción continúa hacia la batería de separación.' },
-      { id: 'rtu', nombre: 'RTU Honeywell ControlEdge 2020', desc: 'Concentra las señales de todos los transmisores y el Coriolis.' },
-      { id: 'scada', nombre: 'SCADA SAF-900 (PC de campo)', desc: 'Visualiza variables, tendencias, estado de la medición y acumulados.' }
+      { id: 'rtu', nombre: 'RTU Honeywell ControlEdge 2020', corto: 'RTU ControlEdge 2020', desc: 'Concentra las señales de todos los transmisores y el Coriolis.' },
+      { id: 'scada', nombre: 'SCADA SAF-900 (PC de campo)', corto: 'SCADA SAF-900', desc: 'Visualiza variables, tendencias, estado de la medición y acumulados.' }
     ],
 
     /* Instrumentos. `isa` = letras de identificación funcional ISA-5.1
@@ -113,6 +121,20 @@
       { tag: 'TDM', isa: 'PIT', variable: 'Presión de la línea de salida (mezcla reincorporada)', punto: 'Línea de salida, después de la reincorporación', unidad: 'kg/cm²', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
       { tag: 'TPL', isa: 'PIT', variable: 'Presión de la línea a batería', punto: 'Línea a batería', unidad: 'kg/cm²', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true }
     ],
+
+    /* Válvulas de control y funciones en el RTU (lazos).
+       Orden en cada salida: primero el medidor, después la válvula de control. */
+    valvulasControl: [
+      { tag: 'LV', nombre: 'Válvula de control de nivel', corriente: 'liquido', lazo: 'LIC', ubicacion: 'Salida de líquido, aguas abajo del Coriolis' },
+      { tag: 'PV', nombre: 'Válvula de control de presión (contrapresión)', corriente: 'gas', lazo: 'PIC', ubicacion: 'Salida de gas, aguas abajo de la placa de orificio' }
+    ],
+    funciones: [
+      { tag: 'LIC', en: 'RTU', mide: 'TN', actua: 'LV', desc: 'Control de nivel del separador' },
+      { tag: 'PIC', en: 'RTU', mide: 'TPS', actua: 'PV', desc: 'Control de presión del separador (contrapresión)', confirmar: true },
+      { tag: 'FQI', en: 'RTU', mide: 'TDG', desc: 'Cálculo de gasto y acumulado de gas' }
+    ],
+    rtu: { modelo: 'Honeywell ControlEdge 2020', modulo: 'Controller & Mixed I/O SC-UCMX02', enlaceScada: 'Ethernet' },
+    lineas: { diametroNominal: '4"', fuente: 'Rotulado en la tubería del equipo (fotografía)' },
 
     /* Variables que se reportan (orden del reporte) */
     variables: [
@@ -140,7 +162,10 @@
       pctAgua: 14.0,   // %
       qMezcla: 980,    // bpd de líquido (aceite + agua)
       qGas: 1.35,      // MMpcd
-      densidad: 868    // kg/m³ del líquido
+      densidad: 868,   // kg/m³ del líquido
+      densidadAgua: 1030, // kg/m³ agua de formación
+      tAmbiente: 29,   // °C
+      dpGas: 64        // inH2O en la placa con el gasto de gas de demostración
     },
 
     /* Macropera: medidas APROXIMADAS (sin croquis del cliente). Metros.
@@ -171,8 +196,8 @@
       { n: 2, id: 'liberacion', titulo: 'Caída de presión y liberación de gas', texto: 'Al pasar del estrangulador y la línea al volumen del separador, la presión baja y el gas disuelto se libera en forma de burbujas.' },
       { n: 3, id: 'asentamiento', titulo: 'Asentamiento por gravedad', texto: 'Con baja velocidad y tiempo de residencia, las gotas de líquido caen y las burbujas suben por diferencia de densidad.' },
       { n: 4, id: 'niebla', titulo: 'Extractor de niebla', texto: 'Las gotas finas que arrastra el gas chocan con la malla, se unen (coalescen) y escurren de regreso al líquido.' },
-      { n: 5, id: 'nivel', titulo: 'Control de nivel', texto: 'El TN detecta que el nivel sube; el controlador abre la válvula de líquido (LV) y el líquido sale hacia el medidor Coriolis.' },
-      { n: 6, id: 'gas', titulo: 'Salida de gas por arriba', texto: 'El gas seco sale por la boquilla superior hacia la placa de orificio; la válvula de presión (PV) mantiene la presión del separador.' }
+      { n: 5, id: 'nivel', titulo: 'Control de nivel', texto: 'El TN detecta que el nivel sube y el controlador abre la válvula de líquido (LV): el líquido sale por el fondo, se mide en el Coriolis y pasa por la LV.' },
+      { n: 6, id: 'gas', titulo: 'Salida de gas por arriba', texto: 'El gas seco sale por la boquilla superior, se mide en la placa de orificio y pasa por la válvula de contrapresión (PV), que mantiene la presión del separador.' }
     ]
   };
 

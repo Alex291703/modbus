@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corte del separador · Well Testing · R.B. Tec México</title>
+<meta name="description" content="Corte interno animado del separador bifásico horizontal de R.B. Tec México: deflector, liberación de gas, asentamiento, extractor de niebla, control de nivel y salida de gas, paso a paso.">
+<link rel="stylesheet" href="css/wt.css">
+<style>
+  :root { --panel-w: 372px; --gut: 24px; }
+  body { min-height: 100vh; background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(79,179,232,0.10), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(255,194,14,0.06), transparent 60%), var(--bg); }
+  .wt-topbar .wt-brand { display: inline-flex; border-radius: var(--r-sm); }
+  .wt-topbar .wt-brand:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: 2px; }
+  :focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: 2px; }
+
+  .sep {
+    max-width: 1760px; margin: 0 auto; padding: 14px var(--gut) 48px;
+    display: grid; gap: 14px 20px;
+    grid-template-columns: minmax(0, 1fr) var(--panel-w);
+    grid-template-areas: "head head" "stage panel" "info info";
+  }
+  .sep-head { grid-area: head; display: flex; align-items: flex-end; gap: 12px 28px; flex-wrap: wrap; }
+  .sep-head h1 { margin: 2px 0 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 2.6vw, 38px); line-height: 1.02; letter-spacing: 0.01em; text-transform: uppercase; }
+  .sep-head h1 em { font-style: normal; color: var(--rb-amarillo); }
+  .sep-head p { margin: 0; max-width: 62ch; color: var(--fg-2); font-size: 15px; }
+
+  /* ---------- escenario con inclinación 3D ---------- */
+  .sep-stage { grid-area: stage; min-width: 0; display: flex; flex-direction: column; gap: 10px; animation: wt-rise 0.9s var(--ease) both; }
+  .sep-3d { perspective: 1700px; }
+  .sep-tilt {
+    position: relative; border-radius: var(--r-lg); overflow: hidden;
+    aspect-ratio: 16 / 9; max-height: calc(100vh - 210px); min-height: 300px; width: 100%;
+    background: #061631; border: 1px solid var(--line-strong);
+    box-shadow: 0 40px 80px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(79,179,232,0.08) inset;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transform-style: preserve-3d; transition: transform 0.35s var(--ease); will-change: transform;
+  }
+  .sep-tilt #cut { position: absolute; inset: 0; }
+  .sep-glare { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: 0; transition: opacity 0.4s var(--ease);
+    background: radial-gradient(520px 340px at var(--gx, 50%) var(--gy, 30%), rgba(169,220,247,0.14), transparent 70%); }
+  .sep-3d.is-hover .sep-glare { opacity: 1; }
+  .sep-frame-tag { position: absolute; right: 12px; top: 12px; z-index: 2; pointer-events: none; }
+
+  /* barra de control */
+  .sep-ctrl {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 12px; border-radius: var(--r-md); border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(20,53,99,0.55), rgba(10,31,61,0.7));
+  }
+  .sep-ctrl .wt-btn { min-height: 42px; }
+  .wt-btn svg { width: 18px; height: 18px; flex: none; }
+  .btn-icon { padding: 8px 12px; }
+  #btnPlay { min-width: 148px; justify-content: center; }
+  .sep-seg { flex: 1 1 220px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; min-width: 180px; }
+  .sep-seg button {
+    position: relative; height: 28px; border-radius: 6px; border: 1px solid var(--line-strong);
+    background: rgba(6,22,49,0.6); color: var(--fg-2); font: 700 12px/1 var(--font-mono); cursor: pointer; overflow: hidden; padding: 0;
+  }
+  .sep-seg button i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; transform-origin: left; transform: scaleX(0); background: rgba(255,194,14,0.28); }
+  .sep-seg button span { position: relative; }
+  .sep-seg button.done i { transform: scaleX(1); background: rgba(79,179,232,0.22); }
+  .sep-seg button[aria-current="step"] { color: var(--rb-marino); border-color: var(--rb-amarillo); background: rgba(255,194,14,0.2); }
+  .sep-seg button[aria-current="step"] span { color: var(--fg); }
+  .sep-seg button:hover { border-color: var(--rb-celeste); color: var(--fg); }
+  #btnGeneral[aria-pressed="true"] { border-color: var(--rb-amarillo); color: var(--rb-amarillo); }
+  .kbd-hint { font-size: 12px; color: var(--muted); }
+  .kbd-hint kbd { font: 700 11px var(--font-mono); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line-strong); background: rgba(6,22,49,0.7); color: var(--fg-2); }
+
+  /* ---------- panel de pasos ---------- */
+  .sep-panel { grid-area: panel; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .sep-panel > * { animation: wt-slide 0.8s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 150ms); }
+  .panel-card { padding: 16px; }
+  .panel-card h2 { margin: 0 0 4px; font: 700 20px/1.1 var(--font-display); text-transform: uppercase; letter-spacing: 0.02em; }
+  .tag-select { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; border: 0; padding: 0; }
+  .tag-select legend { width: 100%; font-size: 13px; color: var(--fg-2); margin-bottom: 6px; padding: 0; }
+  .tag-select label { position: relative; }
+  .tag-select input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .tag-select span {
+    display: inline-flex; align-items: center; min-height: 36px; padding: 6px 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: rgba(6,22,49,0.6); font: 700 14px var(--font-mono); color: var(--fg-2);
+    transition: all 0.2s var(--ease);
+  }
+  .tag-select input:checked + span { background: #f28c1b; color: #111; border-color: #f28c1b; box-shadow: 0 6px 18px -8px rgba(242,140,27,0.8); }
+  .tag-select input:focus-visible + span { outline: 3px solid var(--rb-celeste); outline-offset: 2px; }
+  .tag-select label:hover span { border-color: var(--rb-celeste); color: var(--fg); }
+
+  .steps { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .step { position: relative; border-radius: 10px; border: 1px solid transparent; background: rgba(6,22,49,0.35); transition: background 0.3s var(--ease), border-color 0.3s var(--ease), transform 0.3s var(--ease); }
+  .step:hover { background: rgba(20,53,99,0.6); }
+  .step.is-active { background: linear-gradient(180deg, rgba(255,194,14,0.10), rgba(20,53,99,0.55)); border-color: rgba(255,194,14,0.5); transform: translateX(-4px); }
+  .step-btn { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; cursor: pointer; border-radius: 10px; }
+  .step-btn:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: 1px; }
+  .step-n { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font: 800 16px var(--font-display); border: 1.5px solid var(--line-strong); color: var(--fg-2); transition: all 0.3s var(--ease); }
+  .step.is-active .step-n { background: var(--rb-amarillo); color: var(--rb-marino); border-color: var(--rb-amarillo); box-shadow: 0 0 0 5px rgba(255,194,14,0.15); }
+  .step.is-done .step-n { border-color: var(--rb-celeste); color: var(--rb-celeste); }
+  .step-t { font: 600 17px/1.15 var(--font-display); letter-spacing: 0.01em; }
+  .step.is-active .step-t { color: #fff; }
+  .step-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s var(--ease); }
+  .step-body > div { overflow: hidden; }
+  .step-body p { margin: 0; padding: 0 14px 16px 54px; font-size: 14.5px; color: var(--fg-2); line-height: 1.5; }
+  .step.is-active .step-body { grid-template-rows: 1fr; }
+  .step-bar { position: absolute; left: 12px; right: 12px; bottom: 0; height: 3px; border-radius: 2px; overflow: hidden; background: rgba(169,220,247,0.08); opacity: 0; transition: opacity 0.3s; }
+  .step.is-active .step-bar { opacity: 1; }
+  .step-bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--rb-amarillo), var(--rb-amarillo-300)); transform-origin: left; transform: scaleX(0); }
+
+  /* ---------- información ---------- */
+  .sep-info { grid-area: info; display: grid; gap: 20px; grid-template-columns: 1.15fr 1fr 1fr; align-items: start; }
+  .sep-info > * { animation: wt-rise 0.8s var(--ease) both; animation-delay: calc(var(--i, 0) * 100ms + 300ms); }
+  .info-card { padding: 20px; }
+  .info-card h2 { margin: 6px 0 12px; font: 700 22px/1.1 var(--font-display); text-transform: uppercase; letter-spacing: 0.02em; }
+  .info-card h2 .tagname { font-family: var(--font-mono); color: #f28c1b; font-size: 0.85em; margin-left: 6px; }
+  dl.datos { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; font-size: 14.5px; }
+  dl.datos dt { color: var(--muted); font-weight: 600; }
+  dl.datos dd { margin: 0; color: var(--fg); }
+  dl.datos .fuente { display: block; font-size: 12.5px; color: var(--muted); }
+  .nfpa { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 13px; color: var(--fg-2); }
+  .nfpa svg { width: 58px; height: 58px; flex: none; }
+  .legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .legend li { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; font-size: 14.5px; color: var(--fg-2); }
+  .legend li strong { color: var(--fg); display: block; font-weight: 600; }
+  .legend .bar { height: 12px; border-radius: 6px; position: relative; overflow: hidden; }
+  .legend .bar.dash { background: none !important; border-top: 3px dashed; height: 0; border-radius: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+  .chips .wt-tag { cursor: help; }
+  .internos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: i; }
+  .internos li { font-size: 14px; color: var(--fg-2); padding-left: 14px; border-left: 2px solid rgba(255,194,14,0.5); }
+  .internos li strong { display: block; color: var(--fg); font-weight: 600; }
+  figure.foto { margin: 16px 0 0; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); position: relative; }
+  figure.foto img { width: 100%; height: 190px; object-fit: cover; object-position: 50% 45%; transition: transform 0.8s var(--ease); }
+  figure.foto:hover img { transform: scale(1.04); }
+  figure.foto figcaption { font-size: 12.5px; color: var(--fg-2); padding: 8px 12px; background: rgba(6,22,49,0.85); }
+
+  @keyframes wt-rise { from { opacity: 0; transform: translateY(18px) scale(0.985); } to { opacity: 1; transform: none; } }
+  @keyframes wt-slide { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1180px) {
+    :root { --panel-w: 330px; }
+    .sep-info { grid-template-columns: 1fr 1fr; }
+    .sep-info .info-internos { grid-column: 1 / -1; }
+  }
+  @media (max-width: 980px) {
+    .sep { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "stage" "panel" "info"; }
+    .sep-tilt { max-height: none; }
+    .step.is-active { transform: none; }
+  }
+  @media (max-width: 720px) {
+    .wt-topbar { flex-wrap: wrap; row-gap: 6px; }
+    .wt-topbar .wt-title { font-size: 17px; line-height: 1.15; }
+    .wt-topbar .wt-title small { display: none; }
+    .wt-topbar nav a { white-space: nowrap; }
+    :root { --gut: 16px; }
+    .sep { padding-top: 12px; }
+    .sep-head p { font-size: 14px; }
+    .sep-tilt { aspect-ratio: auto; height: min(74vh, 132vw); min-height: 380px; }
+    .sep-ctrl { gap: 8px; padding: 8px; }
+    .sep-ctrl .grp { display: flex; gap: 8px; width: 100%; }
+    .sep-ctrl .grp .wt-btn { flex: 1; justify-content: center; }
+    #btnPlay { min-width: 0; }
+    .sep-seg { flex-basis: 100%; }
+    .kbd-hint { display: none; }
+    .sep-info { grid-template-columns: minmax(0, 1fr); }
+    dl.datos { grid-template-columns: 1fr; gap: 2px 0; }
+    dl.datos dd { margin-bottom: 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sep-tilt { transform: none !important; transition: none; }
+    .sep-glare { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="wt-topbar">
+  <a class="wt-brand" href="index.html"><img class="wt-logo" src="assets/logo-rbtec-blanco.svg" alt="R.B. Tec México · Well Testing — ir al inicio"></a>
+  <div class="wt-title">Corte del separador<small>Entregable 2 · Separador bifásico</small></div>
+  <nav aria-label="Entregables">
+    <a href="index.html">Inicio</a>
+    <a href="proceso.html">1 · Proceso</a>
+    <a href="separador.html" aria-current="page">2 · Separador</a>
+    <a href="macropera.html">3 · Macropera</a>
+    <a href="dti.html">4 · DTI</a>
+  </nav>
+</header>
+
+<main class="sep" id="main">
+  <div class="sep-head">
+    <div>
+      <div class="wt-eyebrow">Entregable 2 · Corte interno</div>
+      <h1>¿Cómo separa el <em>separador bifásico</em>?</h1>
+    </div>
+    <p id="lead">Vista en sección del recipiente horizontal: la mezcla del pozo entra, choca, se separa en gas y líquido y cada corriente sale medida. Recorra los 6 pasos o deje que se reproduzcan solos.</p>
+  </div>
+
+  <section class="sep-stage" aria-label="Animación del corte del separador">
+    <div class="sep-3d" id="stage3d">
+      <div class="sep-tilt" id="tilt">
+        <div id="cut"></div>
+        <div class="sep-glare" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="sep-ctrl" role="group" aria-label="Controles del recorrido">
+      <div class="grp">
+        <button class="wt-btn btn-icon" id="btnPrev" type="button" aria-label="Paso anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="wt-btn primary" id="btnPlay" type="button" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true" id="icoPlay"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          <span id="lblPlay">Reproducir</span>
+        </button>
+        <button class="wt-btn btn-icon" id="btnNext" type="button" aria-label="Paso siguiente">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="sep-seg" id="seg" role="group" aria-label="Ir al paso"></div>
+      <button class="wt-btn" id="btnGeneral" type="button" aria-pressed="true">Vista general</button>
+      <span class="kbd-hint" aria-hidden="true"><kbd>←</kbd> <kbd>→</kbd> pasos · <kbd>Espacio</kbd> reproducir</span>
+    </div>
+  </section>
+
+  <aside class="sep-panel" aria-label="Pasos de la separación">
+    <div class="wt-card panel-card" style="--i:0">
+      <div class="wt-eyebrow">Paso a paso</div>
+      <h2>Separación gas – líquido</h2>
+      <fieldset class="tag-select" id="tagSel">
+        <legend>Equipo (tipo):</legend>
+      </fieldset>
+      <ol class="steps" id="steps"></ol>
+    </div>
+  </aside>
+
+  <section class="sep-info" aria-label="Información del separador">
+    <article class="wt-card info-card" style="--i:0">
+      <div class="wt-eyebrow">Ficha técnica</div>
+      <h2>Datos del separador <span class="tagname" id="tagName"></span></h2>
+      <dl class="datos" id="datos"></dl>
+      <div class="nfpa" id="nfpa"></div>
+    </article>
+    <article class="wt-card info-card" style="--i:1">
+      <div class="wt-eyebrow">Código de colores</div>
+      <h2>Corrientes y señales</h2>
+      <ul class="legend" id="legend"></ul>
+      <figure class="foto">
+        <img src="assets/fotos/05-separador-fa02.jpg" alt="Separador bifásico horizontal verde sobre remolque amarillo de doble eje, con placa FA-02, válvula de seguridad roja y transmisores Endress+Hauser" loading="lazy">
+        <figcaption>Referencia de campo: separador bifásico en remolque (equipo FA-02). Desde fuera no se ven los internos; el corte los muestra.</figcaption>
+      </figure>
+    </article>
+    <article class="wt-card info-card info-internos" style="--i:2">
+      <div class="wt-eyebrow">Qué hay adentro</div>
+      <h2>Internos y accesorios</h2>
+      <ul class="internos" id="internos"></ul>
+      <div class="chips" id="accesorios" style="margin-top:14px"></div>
+    </article>
+  </section>
+</main>
+<div class="wt-visually-hidden" aria-live="polite" id="live"></div>
+<noscript><p style="padding:16px">Esta página necesita JavaScript para dibujar la animación del corte.</p></noscript>
+
+<script src="js/data.js"></script>
+<script src="js/cutaway.js"></script>
+<script>
+(function () {
+  'use strict';
+  var D = WT.data, sep = D.separador, pasos = D.pasosSeparacion, N = pasos.length, col = D.colores;
+  var STEP_DUR = 7.5, GEN_DUR = 4.5, INTRO = 0.42, OPEN_DUR = 2.4;
+  var mq = function (q) { return window.matchMedia ? window.matchMedia(q).matches : false; };
+  var reduced = mq('(prefers-reduced-motion: reduce)');
+  var finePointer = mq('(hover: hover) and (pointer: fine)');
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs, html) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) { if (k === 'class') e.className = attrs[k]; else if (k === 'text') e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  /* ---------- estado ---------- */
+  var S = { paso: 0, desde: 0, clock: 0, intro: 0, playing: false, t: reduced ? 4.2 : 0, apertura: reduced ? 1 : 0,
+            tag: sep.tagDefault, autoStart: !reduced };
+  var m = /^#(?:paso-(\d+)|general)$/.exec(location.hash);
+  if (m) {
+    var n0 = m[1] == null ? 0 : clamp(parseInt(m[1], 10), 0, N);
+    S.paso = S.desde = n0; S.apertura = 1; S.autoStart = false; S.intro = 0.25 * STEP_DUR;
+  }
+
+  /* ---------- módulo del corte ---------- */
+  var tilt = $('tilt'), stage3d = $('stage3d');
+  var cut = WT.Cutaway.create($('cut'), { width: tilt.clientWidth || 960, height: tilt.clientHeight || 540, layout: 'landscape', labels: true, tag: S.tag });
+  function fit() {
+    var w = tilt.clientWidth, h = tilt.clientHeight;
+    if (!w || !h) return;
+    cut.resize(w, h);
+    cut.setLayout(w < 720 || h > w * 1.02 ? 'portrait' : 'landscape');
+    dirty = true;
+  }
+  var dirty = true;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { dirty = true; });
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(tilt); else window.addEventListener('resize', fit);
+  fit();
+
+  /* ---------- lista de pasos, segmentos y selector de equipo ---------- */
+  var list = $('steps'), seg = $('seg'), items = [], segs = [];
+  pasos.forEach(function (p, i) {
+    var li = el('li', { class: 'step', 'data-paso': p.n });
+    var b = el('button', { class: 'step-btn', type: 'button', 'aria-controls': 'cut' });
+    b.innerHTML = '<span class="step-n" aria-hidden="true">' + p.n + '</span><span class="step-t"><span class="wt-visually-hidden">Paso ' + p.n + ': </span>' + esc(p.titulo) + '</span>';
+    b.addEventListener('click', function () { go(p.n); });
+    var body = el('div', { class: 'step-body', id: 'paso-txt-' + p.n }, '<div><p>' + esc(p.texto) + '</p></div>');
+    var bar = el('div', { class: 'step-bar', 'aria-hidden': 'true' }, '<i></i>');
+    li.appendChild(b); li.appendChild(body); li.appendChild(bar); list.appendChild(li);
+    items.push({ li: li, btn: b, bar: bar.firstChild });
+    var sb = el('button', { type: 'button', 'aria-label': 'Paso ' + p.n + ': ' + p.titulo, title: p.titulo }, '<i></i><span>' + p.n + '</span>');
+    sb.addEventListener('click', function () { go(p.n); });
+    seg.appendChild(sb); segs.push({ btn: sb, bar: sb.firstChild });
+  });
+  var tagSel = $('tagSel');
+  sep.tags.forEach(function (tg) {
+    var lab = el('label');
+    var inp = el('input', { type: 'radio', name: 'tag', value: tg });
+    if (tg === S.tag) inp.checked = true;
+    inp.addEventListener('change', function () { if (inp.checked) setTag(tg); });
+    lab.appendChild(inp); lab.appendChild(el('span', { text: tg })); tagSel.appendChild(lab);
+  });
+  function setTag(tg) {
+    S.tag = tg; cut.setTag(tg); $('tagName').textContent = tg; dirty = true;
+    say('Equipo ' + tg + ' seleccionado');
+  }
+  $('tagName').textContent = S.tag;
+
+  /* ---------- ficha técnica, leyenda, internos (desde WT.data) ---------- */
+  (function () {
+    var rows = [['Tipo', sep.tipo], ['Orientación', sep.orientacion], ['Montaje', sep.montaje], ['Servicio', sep.servicio], ['Circuito', sep.circuito]];
+    if (sep.capacidad && sep.capacidad.valor != null) {
+      rows.push(['Capacidad', esc(sep.capacidad.valor) + '<span class="fuente">Fuente: ' + esc(sep.capacidad.fuente || '') +
+        (sep.capacidad.confirmar ? ' · <span class="wt-confirmar">por confirmar para ' + esc(sep.tags.join(' / ')) + '</span>' : '') + '</span>', true]);
+    }
+    [['Diámetro', 'diametro'], ['Longitud', 'longitud'], ['Presión de diseño', 'presionDiseno'], ['Temperatura de diseño', 'temperaturaDiseno']].forEach(function (r) {
+      if (sep[r[1]] != null) rows.push([r[0], sep[r[1]]]);
+    });
+    var dl = $('datos');
+    rows.forEach(function (r) {
+      if (r[1] == null) return;
+      dl.appendChild(el('dt', { text: r[0] }));
+      dl.appendChild(r[2] ? el('dd', null, r[1]) : el('dd', { text: r[1] }));
+    });
+    var nf = sep.nfpa;
+    if (nf) {
+      $('nfpa').innerHTML = '<svg viewBox="0 0 60 60" role="img" aria-label="Rombo NFPA 704: salud ' + nf.salud + ', inflamabilidad ' + nf.inflamabilidad + ', reactividad ' + nf.reactividad + '">' +
+        '<g font-family="Barlow Condensed, Arial, sans-serif" font-weight="700" font-size="13" text-anchor="middle">' +
+        '<path d="M30 2 44 16 30 30 16 16Z" fill="#d32f2f"/><path d="M16 16 30 30 16 44 2 30Z" fill="#1f5fbf"/>' +
+        '<path d="M44 16 58 30 44 44 30 30Z" fill="#f6c21b"/><path d="M30 30 44 44 30 58 16 44Z" fill="#fff"/>' +
+        '<text x="30" y="21" fill="#fff">' + nf.inflamabilidad + '</text><text x="16" y="35" fill="#fff">' + nf.salud + '</text><text x="44" y="35" fill="#111">' + nf.reactividad + '</text></g></svg>' +
+        '<span>Rombo NFPA 704 rotulado en el equipo: salud <b>' + nf.salud + '</b>, inflamabilidad <b>' + nf.inflamabilidad + '</b>, reactividad <b>' + nf.reactividad + '</b>.</span>';
+    }
+    var lg = $('legend');
+    [
+      ['Mezcla', 'Del pozo al separador (aceite + agua + gas)', 'linear-gradient(90deg,' + col.mezcla + ',' + col.mezclaClaro + ')'],
+      ['Gas', 'Sale por arriba hacia la placa de orificio', col.gas],
+      ['Líquido (aceite + agua)', 'Sale por abajo hacia el medidor Coriolis', 'linear-gradient(90deg,' + col.liquido + ' 55%,' + col.liquidoAmbar + ')'],
+      ['Señal de instrumento', 'TN → LIC en el RTU → LV (lazo de nivel)', null]
+    ].forEach(function (r) {
+      var li = el('li');
+      var bar = el('span', { class: 'bar' + (r[2] ? '' : ' dash'), 'aria-hidden': 'true' });
+      if (r[2]) bar.style.background = r[2]; else bar.style.borderColor = col.senal;
+      li.appendChild(bar);
+      li.appendChild(el('span', null, '<strong>' + esc(r[0]) + '</strong>' + esc(r[1])));
+      lg.appendChild(li);
+    });
+    var ul = $('internos');
+    sep.internos.forEach(function (it) { ul.appendChild(el('li', null, '<strong>' + esc(it.nombre) + '</strong>' + esc(it.desc))); });
+    var ch = $('accesorios');
+    ch.appendChild(el('div', { class: 'wt-note', text: 'Accesorios e instrumentos en el recipiente:', style: 'width:100%' }));
+    sep.accesorios.forEach(function (a) { ch.appendChild(el('span', { class: 'wt-tag', title: a.desc, text: a.nombre })); });
+    ['TN', 'TPS', 'TT'].forEach(function (tg) {
+      var ins = WT.util.instrumento(tg); if (ins) ch.appendChild(el('span', { class: 'wt-tag', title: ins.variable + ' · ' + ins.marca, text: ins.tag + ' · ' + ins.variable }));
+    });
+  })();
+
+  /* ---------- control ---------- */
+  var live = $('live');
+  function say(txt) { live.textContent = ''; setTimeout(function () { live.textContent = txt; }, 30); }
+  function dur() { return S.paso ? STEP_DUR : GEN_DUR; }
+  function go(n, quiet) {
+    n = clamp(n, 0, N);
+    S.desde = S.paso; S.paso = n; S.clock = 0; S.intro = 0;
+    if (S.apertura < 1) { S.apertura = 1; S.desde = n; }
+    S.autoStart = false; dirty = true;
+    sync();
+    try { history.replaceState(null, '', n ? '#paso-' + n : '#general'); } catch (e) { /* file:// en algunos navegadores */ }
+    if (!quiet) { var p = pasos[n - 1]; say(p ? 'Paso ' + p.n + ' de ' + N + ': ' + p.titulo + '. ' + p.texto : 'Vista general del separador funcionando.'); }
+  }
+  function next() { go(S.paso >= N ? 0 : S.paso + 1); }
+  function prev() { go(S.paso <= 0 ? N : S.paso - 1); }
+  function setPlaying(on) {
+    S.playing = !!on; S.autoStart = false;
+    if (S.playing && S.paso === 0 && S.apertura >= 1 && S.clock === 0 && S.intro > 0.5) go(1, false);
+    var b = $('btnPlay');
+    b.setAttribute('aria-pressed', S.playing ? 'true' : 'false');
+    $('lblPlay').textContent = S.playing ? 'Pausa' : 'Reproducir';
+    $('icoPlay').innerHTML = S.playing ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/>' : '<path d="M8 5v14l11-7z" fill="currentColor"/>';
+  }
+  function sync() {
+    items.forEach(function (it, i) {
+      var n = i + 1, act = n === S.paso;
+      it.li.classList.toggle('is-active', act);
+      it.li.classList.toggle('is-done', n < S.paso);
+      if (act) it.btn.setAttribute('aria-current', 'step'); else it.btn.removeAttribute('aria-current');
+      it.btn.setAttribute('aria-expanded', act ? 'true' : 'false');
+      if (!act) it.bar.style.transform = 'scaleX(0)';
+      var sb = segs[i];
+      if (act) sb.btn.setAttribute('aria-current', 'step'); else sb.btn.removeAttribute('aria-current');
+      sb.btn.classList.toggle('done', n < S.paso);
+      if (!act) sb.bar.style.transform = '';
+    });
+    $('btnGeneral').setAttribute('aria-pressed', S.paso === 0 ? 'true' : 'false');
+  }
+  $('btnPrev').addEventListener('click', prev);
+  $('btnNext').addEventListener('click', next);
+  $('btnPlay').addEventListener('click', function () { setPlaying(!S.playing); });
+  $('btnGeneral').addEventListener('click', function () { setPlaying(false); go(0); });
+  window.addEventListener('hashchange', function () {
+    var mm = /^#(?:paso-(\d+)|general)$/.exec(location.hash);
+    if (mm) { var n = mm[1] == null ? 0 : clamp(parseInt(mm[1], 10), 0, N); if (n !== S.paso) go(n); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var tgt = e.target, tn = tgt && tgt.tagName;
+    if (tn === 'INPUT' || tn === 'TEXTAREA' || tn === 'SELECT') return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    else if (e.key === ' ' || e.key === 'Spacebar') {
+      if (tn === 'BUTTON' || tn === 'A') return;
+      e.preventDefault(); setPlaying(!S.playing);
+    }
+  });
+
+  /* ---------- inclinación 3D con el puntero ---------- */
+  if (finePointer && !reduced) {
+    stage3d.addEventListener('pointermove', function (e) {
+      var r = stage3d.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      tilt.style.setProperty('--ry', ((x - 0.5) * 5).toFixed(2) + 'deg');
+      tilt.style.setProperty('--rx', ((0.5 - y) * 3.6).toFixed(2) + 'deg');
+      tilt.style.setProperty('--gx', (x * 100).toFixed(1) + '%');
+      tilt.style.setProperty('--gy', (y * 100).toFixed(1) + '%');
+      stage3d.classList.add('is-hover');
+    });
+    stage3d.addEventListener('pointerleave', function () {
+      tilt.style.setProperty('--ry', '0deg'); tilt.style.setProperty('--rx', '0deg'); stage3d.classList.remove('is-hover');
+    });
+  }
+
+  /* ---------- bucle: el reloj avanza aquí; el dibujo sale de renderAt(t, estado) ---------- */
+  var last = null;
+  function frame(now) {
+    if (last == null) last = now;
+    var dt = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now;
+    if (!reduced) S.t += dt;
+    if (S.apertura < 1) S.apertura = Math.min(1, S.apertura + dt / OPEN_DUR);
+    else {
+      if (S.autoStart) { S.autoStart = false; S.playing = true; setPlaying(true); S.clock = 0; }
+      var d = dur();
+      S.intro = Math.min(S.intro + dt, Math.max(INTRO * d, S.intro));
+      if (S.playing) {
+        S.clock += dt;
+        if (S.clock >= d) {
+          if (S.paso >= N) { go(0, false); setPlaying(false); }
+          else go(S.paso + 1);
+        }
+      }
+    }
+    var d2 = dur(), prog = reduced ? 1 : Math.min(1, Math.max(S.clock, S.intro) / d2);
+    if (reduced && !dirty) { requestAnimationFrame(frame); return; }
+    dirty = false;
+    cut.renderAt(S.t, { paso: S.paso, progreso: prog, desde: S.desde, apertura: S.apertura, tag: S.tag, instantaneo: reduced, etiquetas: true });
+    if (S.paso > 0) {
+      var k = Math.min(1, S.clock / d2).toFixed(4);
+      items[S.paso - 1].bar.style.transform = 'scaleX(' + k + ')';
+      segs[S.paso - 1].bar.style.transform = 'scaleX(' + k + ')';
+    }
+    requestAnimationFrame(frame);
+  }
+  sync();
+  setPlaying(false);
+  requestAnimationFrame(frame);
+  // API mínima para pruebas / captura (no forma parte del contrato del módulo)
+  window.WTSeparador = { go: go, play: setPlaying, state: S, cut: cut };
+})();
+</script>
+</body>
+</html>

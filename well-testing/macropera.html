@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vista aérea de la macropera · Well Testing · R.B. Tec México</title>
+<meta name="description" content="Vista aérea interactiva de la macropera durante un aforo de R.B. Tec México: árbol de válvulas, cabezal/manifold, separador bifásico, líneas temporales, caseta de medición, RTU, zona de seguridad y ruta de acceso.">
+<link rel="stylesheet" href="css/wt.css">
+<style>
+  :root { --panel-w: 340px; --gap: 16px; }
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; overflow: hidden; background: var(--bg); }
+  .wt-topbar .wt-brand { display: inline-flex; border-radius: var(--r-sm); }
+  :focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: 2px; }
+
+  .mp { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; background: #0a1f3d; }
+  #mp-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  #mp-canvas.is-drag { cursor: grabbing; }
+  .mp-vignette { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(140% 100% at 60% 45%, transparent 62%, rgba(6,22,49,0.32) 100%),
+                linear-gradient(180deg, rgba(6,22,49,0.28), transparent 12%, transparent 88%, rgba(6,22,49,0.32)); }
+
+  /* ---------- etiquetas ancladas ---------- */
+  .mp-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .mp-labels svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; opacity: 0; transition: opacity 0.5s var(--ease); }
+  .mp-labels.is-in svg { opacity: 1; }
+  .mp-leader { stroke: rgba(255,255,255,0.85); stroke-width: 1.25; fill: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6)); }
+  .mp-dot { fill: var(--rb-amarillo); stroke: #061631; stroke-width: 1.5; }
+  .mp-lab {
+    position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 7px;
+    padding: 4px 9px 4px 4px; border-radius: 999px; white-space: nowrap; pointer-events: auto; cursor: pointer;
+    background: rgba(6,22,49,0.86); border: 1px solid rgba(169,220,247,0.35); color: var(--fg);
+    font: 600 13px/1.1 var(--font-body); box-shadow: 0 8px 20px -10px rgba(0,0,0,0.8);
+    opacity: 0; transform: translate(var(--x), var(--y)) scale(0.85); transform-origin: var(--ox, 0) 50%;
+    transition: opacity 0.45s var(--ease) var(--d, 0ms), transform 0.45s var(--ease) var(--d, 0ms), background 0.2s, border-color 0.2s;
+    backdrop-filter: blur(6px);
+  }
+  .mp-lab b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 800 12px/1 var(--font-mono); background: var(--rb-amarillo); color: var(--rb-marino); }
+  .mp-labels.is-in .mp-lab { opacity: 1; transform: translate(var(--x), var(--y)) scale(1); }
+  .mp-labels.is-moving .mp-lab { transition: opacity 0.45s var(--ease) var(--d, 0ms), background 0.2s, border-color 0.2s; }
+  .mp-lab.is-hidden, .mp-labels.is-in .mp-lab.is-hidden { opacity: 0; pointer-events: none; }
+  .mp-lab:hover, .mp-lab.is-sel { background: rgba(19,49,92,0.96); border-color: var(--rb-amarillo); }
+  .mp-lab.is-sel b { box-shadow: 0 0 0 3px rgba(255,194,14,0.35); }
+  .mp-labels.is-compact .mp-lab { padding: 3px; gap: 0; }
+  .mp-labels.is-compact .mp-lab span { display: none; }
+  .mp-cota { position: absolute; left: 0; top: 0; transform: translate(var(--x), var(--y)) translate(-50%, -50%); pointer-events: none;
+    font: 700 12px/1 var(--font-mono); color: #061631; background: #fff; padding: 3px 6px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); white-space: nowrap; }
+  .mp-cota small { font-weight: 500; color: #7a5a00; margin-left: 4px; }
+
+  /* ---------- panel lateral ---------- */
+  .mp-panel {
+    position: absolute; z-index: 5; left: var(--gap); top: var(--gap); bottom: var(--gap); width: var(--panel-w);
+    display: flex; flex-direction: column; overflow: hidden;
+    background: linear-gradient(180deg, rgba(15,42,80,0.94), rgba(10,31,61,0.94)); backdrop-filter: blur(10px);
+    animation: mp-in 0.8s var(--ease) both 0.2s;
+  }
+  .mp-panel-scroll { overflow-y: auto; padding: 16px 16px 18px; scrollbar-width: thin; scrollbar-color: rgba(169,220,247,0.3) transparent; }
+  .mp-panel h1 { margin: 6px 0 6px; font: 800 26px/1.02 var(--font-display); text-transform: uppercase; letter-spacing: 0.01em; }
+  .mp-panel h1 em { font-style: normal; color: var(--rb-amarillo); }
+  .mp-lead { margin: 0 0 14px; font-size: 14px; color: var(--fg-2); }
+  .mp-sec { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
+  .mp-sec h2 { margin: 0 0 8px; font: 700 13px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--rb-celeste-200); }
+  .mp-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 10px; background: rgba(6,22,49,0.7); border: 1px solid var(--line); }
+  .mp-seg button { min-height: 38px; border: 0; border-radius: 7px; background: transparent; color: var(--fg-2); font: 700 14px/1 var(--font-body); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+  .mp-seg button svg { width: 17px; height: 17px; }
+  .mp-seg button[aria-pressed="true"] { background: var(--rb-amarillo); color: var(--rb-marino); }
+  .mp-seg button:not([aria-pressed="true"]):hover { color: var(--fg); background: rgba(79,179,232,0.12); }
+  .mp-switches { display: grid; gap: 2px; }
+  .mp-sw { display: flex; align-items: center; gap: 10px; padding: 6px 4px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--fg); }
+  .mp-sw:hover { background: rgba(79,179,232,0.08); }
+  .mp-sw input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .mp-sw i { position: relative; flex: none; width: 34px; height: 20px; border-radius: 999px; background: rgba(127,151,179,0.35); transition: background 0.2s var(--ease); }
+  .mp-sw i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.25s var(--ease); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+  .mp-sw input:checked + i { background: var(--rb-celeste); }
+  .mp-sw input:checked + i::after { transform: translateX(14px); }
+  .mp-sw input:focus-visible + i { outline: 3px solid var(--rb-amarillo); outline-offset: 2px; }
+  .mp-sw .sw-ico { margin-left: auto; width: 14px; height: 14px; border-radius: 3px; }
+  .mp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .mp-list button { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; padding: 7px 8px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--fg); font: 500 14px/1.2 var(--font-body); cursor: pointer; }
+  .mp-list button b { flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 800 12px/1 var(--font-mono); background: rgba(255,194,14,0.16); color: var(--rb-amarillo); border: 1px solid rgba(255,194,14,0.5); }
+  .mp-list button:hover { background: rgba(79,179,232,0.1); }
+  .mp-list button[aria-pressed="true"] { border-color: rgba(255,194,14,0.6); background: rgba(255,194,14,0.1); }
+  .mp-list button[aria-pressed="true"] b { background: var(--rb-amarillo); color: var(--rb-marino); }
+  .mp-legend { display: grid; gap: 6px; font-size: 13px; color: var(--fg-2); }
+  .mp-legend div { display: flex; align-items: center; gap: 9px; }
+  .mp-legend .ln { flex: none; width: 34px; height: 8px; border-radius: 4px; position: relative; overflow: hidden; }
+  .mp-legend .ln::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,255,255,0.75) 8px 11px, transparent 11px 14px); animation: mp-flow 1.2s linear infinite; }
+  .ln.mezcla { background: var(--st-mezcla); } .ln.gas { background: var(--st-gas); } .ln.liquido { background: linear-gradient(90deg, var(--st-liquido), #3a2614); box-shadow: inset 0 0 0 1px var(--st-liquido-ambar); }
+  .ln.salida { background: var(--st-salida); } .ln.senal { background: var(--st-senal); height: 4px; }
+  .ln.zona { background: repeating-linear-gradient(135deg, #d6262e 0 5px, #ffc20e 5px 10px); }
+  .ln.zona::after, .ln.acceso::after { display: none; }
+  .ln.acceso { background: #b9a888; }
+  .mp-note { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
+  .mp-note strong { color: var(--warn); font-weight: 600; }
+
+  /* ---------- herramientas y brújula ---------- */
+  .mp-tools { position: absolute; z-index: 4; right: var(--gap); top: var(--gap); display: flex; flex-direction: column; gap: 8px; align-items: flex-end; animation: mp-in 0.8s var(--ease) both 0.35s; }
+  .mp-tools .row { display: flex; gap: 8px; }
+  .mp-ibtn { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(6,22,49,0.86); color: var(--fg); cursor: pointer; backdrop-filter: blur(6px); }
+  .mp-ibtn:hover { border-color: var(--rb-celeste); }
+  .mp-ibtn svg, .wt-btn svg { width: 18px; height: 18px; }
+  .mp-tools .wt-btn { box-shadow: 0 10px 24px -12px rgba(0,0,0,0.8); }
+  .mp-hud { position: absolute; z-index: 4; right: var(--gap); bottom: var(--gap); display: flex; align-items: flex-end; gap: 12px; pointer-events: none; animation: mp-in 0.8s var(--ease) both 0.45s; }
+  .mp-compass { width: 74px; height: 74px; border-radius: 50%; background: rgba(6,22,49,0.82); border: 1px solid var(--line-strong); display: grid; place-items: center; backdrop-filter: blur(6px); box-shadow: var(--shadow); }
+  .mp-compass svg { width: 64px; height: 64px; transition: transform 0.12s linear; }
+  .mp-scale { padding: 8px 10px 7px; border-radius: 10px; background: rgba(6,22,49,0.82); border: 1px solid var(--line-strong); font: 700 12px/1 var(--font-mono); color: var(--fg); backdrop-filter: blur(6px); transition: opacity 0.3s var(--ease); min-width: 96px; }
+  .mp-scale .bar { height: 8px; margin-top: 6px; border: 2px solid #fff; border-top: 0; background: linear-gradient(90deg, #fff 50%, transparent 50%) bottom / 100% 3px no-repeat; }
+  .mp-scale small { display: block; margin-top: 5px; font: 500 10.5px/1.2 var(--font-body); color: var(--muted); }
+  .mp-scale.is-off { opacity: 0; }
+
+  /* ---------- tarjeta de elemento ---------- */
+  .mp-card { position: absolute; z-index: 6; left: calc(var(--panel-w) + var(--gap) * 2); bottom: var(--gap); width: min(460px, calc(100% - var(--panel-w) - 230px)); max-height: min(52%, 420px); overflow-y: auto; padding: 14px 16px 14px;
+    opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity 0.35s var(--ease), transform 0.35s var(--ease); }
+  .mp-card.is-open { opacity: 1; transform: none; pointer-events: auto; }
+  .mp-card h3 { margin: 4px 36px 6px 0; font: 800 22px/1.05 var(--font-display); text-transform: uppercase; }
+  .mp-card p { margin: 0 0 10px; font-size: 14px; color: var(--fg-2); }
+  .mp-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; margin: 0 0 12px; font-size: 13px; }
+  .mp-card dl div { min-width: 0; border-left: 2px solid rgba(79,179,232,0.45); padding-left: 8px; }
+  .mp-card dl div.wide { grid-column: 1 / -1; }
+  .mp-card dt { color: var(--muted); font-size: 11.5px; letter-spacing: 0.02em; } .mp-card dd { margin: 1px 0 0; color: var(--fg); font-weight: 600; }
+  .mp-card h3 { font-size: 21px; } .mp-card p { font-size: 13.5px; }
+  .mp-card .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mp-card .x { position: absolute; right: 10px; top: 10px; width: 34px; height: 34px; }
+  .mp-panel-toggle { display: none; }
+
+  .mp-intro-hint { position: absolute; z-index: 3; left: 50%; bottom: 22px; transform: translateX(-50%); font: 600 13px var(--font-body); color: var(--fg-2); background: rgba(6,22,49,0.8); border: 1px solid var(--line); padding: 7px 12px; border-radius: 999px; pointer-events: none; transition: opacity 0.6s var(--ease); white-space: nowrap; }
+  .mp-intro-hint.is-off { opacity: 0; }
+
+  @keyframes mp-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes mp-flow { from { transform: translateX(-14px); } to { transform: translateX(0); } }
+
+  /* ---------- móvil / pantallas angostas ---------- */
+  @media (max-width: 760px) {
+    :root { --gap: 10px; }
+    .wt-topbar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 12px 6px; }
+    .wt-topbar .wt-title { font-size: 17px; line-height: 1.1; }
+    .wt-topbar .wt-title small { display: none; }
+    .wt-topbar nav { order: 3; gap: 2px; }
+    .wt-topbar nav a { padding: 5px 8px; font-size: 13px; white-space: nowrap; }
+    .mp-panel { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: 64%; border-radius: 16px 16px 0 0; transform: translateY(calc(100% - 56px)); transition: transform 0.4s var(--ease); animation: none; }
+    .mp-panel.is-open { transform: none; }
+    .mp-panel-toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 56px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--fg); font: 700 15px var(--font-body); cursor: pointer; }
+    .mp-panel-toggle svg { width: 18px; height: 18px; transition: transform 0.3s var(--ease); }
+    .mp-panel.is-open .mp-panel-toggle svg { transform: rotate(180deg); }
+    .mp-panel h1 { font-size: 22px; }
+    .mp-panel .mp-head-desk { display: none; }
+    .mp-tools { top: var(--gap); }
+    .mp-tools .wt-btn span { display: none; }
+    .mp-hud { bottom: 66px; right: var(--gap); gap: 8px; }
+    .mp-compass { width: 56px; height: 56px; } .mp-compass svg { width: 48px; height: 48px; }
+    .mp-card { left: var(--gap); right: var(--gap); width: auto; bottom: 66px; }
+    .mp-modefloat { display: grid !important; }
+    .mp-intro-hint { bottom: 134px; font-size: 12px; white-space: normal; text-align: center; width: max-content; max-width: calc(100% - 24px); border-radius: 12px; }
+  }
+  .mp-modefloat { display: none; position: absolute; z-index: 4; left: var(--gap); top: var(--gap); width: 190px; }
+  @media (prefers-reduced-motion: reduce) {
+    .mp-legend .ln::after { animation: none; }
+    .mp-lab { transition: opacity 0.2s linear; }
+  }
+</style>
+</head>
+<body>
+<header class="wt-topbar">
+  <a class="wt-brand" href="index.html"><img class="wt-logo" src="assets/logo-rbtec-blanco.svg" alt="R.B. Tec México · Well Testing — ir al inicio"></a>
+  <div class="wt-title">Vista aérea de la macropera<small>Entregable 3 · Layout de la locación de aforo</small></div>
+  <nav aria-label="Entregables">
+    <a href="index.html">Inicio</a>
+    <a href="proceso.html">1 · Proceso</a>
+    <a href="separador.html">2 · Separador</a>
+    <a href="macropera.html" aria-current="page">3 · Macropera</a>
+    <a href="dti.html">4 · DTI</a>
+  </nav>
+</header>
+
+<main class="mp" id="mp">
+  <canvas id="mp-canvas" role="img" aria-label="Vista 3D de la macropera: pozo en prueba con árbol de válvulas, estrangulador, cabezal, líneas temporales hacia el separador bifásico sobre remolque, línea de salida a batería, caseta de medición con RTU, zona de seguridad y camino de acceso."></canvas>
+  <div class="mp-vignette" aria-hidden="true"></div>
+  <div class="mp-labels" id="labels" aria-hidden="true"><svg id="leaders"></svg></div>
+
+  <div class="mp-seg mp-modefloat" role="group" aria-label="Tipo de vista (móvil)">
+    <button type="button" data-mode="planta" aria-pressed="false">Planta</button>
+    <button type="button" data-mode="3d" aria-pressed="true">3D</button>
+  </div>
+
+  <aside class="mp-panel wt-card" id="panel" aria-label="Capas y elementos de la macropera">
+    <button type="button" class="mp-panel-toggle" id="panelToggle" aria-expanded="false" aria-controls="panelBody">
+      <span>Capas · Elementos · Leyenda</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+    </button>
+    <div class="mp-panel-scroll" id="panelBody">
+      <div class="mp-head-desk">
+        <div class="wt-eyebrow">Entregable 3 · Macropera</div>
+        <h1>Vista aérea <em>de la locación</em></h1>
+        <p class="mp-lead" id="lead"></p>
+      </div>
+      <div class="mp-seg" role="group" aria-label="Tipo de vista">
+        <button type="button" data-mode="planta" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/></svg>Planta</button>
+        <button type="button" data-mode="3d" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>3D</button>
+      </div>
+
+      <section class="mp-sec" aria-labelledby="h-capas">
+        <h2 id="h-capas">Capas</h2>
+        <div class="mp-switches" id="switches"></div>
+      </section>
+
+      <section class="mp-sec" aria-labelledby="h-elem">
+        <h2 id="h-elem">Elementos</h2>
+        <ul class="mp-list" id="elements"></ul>
+      </section>
+
+      <section class="mp-sec" aria-labelledby="h-ley">
+        <h2 id="h-ley">Leyenda de corrientes</h2>
+        <div class="mp-legend" id="legend"></div>
+        <p class="mp-note" id="note"></p>
+      </section>
+    </div>
+  </aside>
+
+  <div class="mp-tools">
+    <div class="row">
+      <button type="button" class="mp-ibtn" id="zoomIn" aria-label="Acercar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button type="button" class="mp-ibtn" id="zoomOut" aria-label="Alejar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+      <button type="button" class="mp-ibtn" id="reset" aria-label="Restablecer vista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg></button>
+    </div>
+    <button type="button" class="wt-btn primary" id="png"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span>Descargar PNG</span></button>
+  </div>
+
+  <div class="mp-hud" aria-hidden="true">
+    <div class="mp-scale" id="scale"><span id="scaleTxt">20 m</span><div class="bar" id="scaleBar" style="width:80px"></div><small>Escala aprox. en planta</small></div>
+    <div class="mp-compass"><svg id="compass" viewBox="-32 -32 64 64">
+      <circle r="27" fill="none" stroke="rgba(169,220,247,0.35)" stroke-width="1.5"/>
+      <path d="M0 -24 L7 2 L0 -3 L-7 2 Z" fill="#ffc20e"/><path d="M0 24 L7 2 L0 -3 L-7 2 Z" fill="rgba(255,255,255,0.55)"/>
+      <text y="-12" text-anchor="middle" font-family="Barlow Condensed, Arial" font-weight="800" font-size="11" fill="#061631" dy="0.9">N</text>
+    </svg></div>
+  </div>
+
+  <article class="mp-card wt-card" id="card" aria-live="polite" aria-hidden="true">
+    <button type="button" class="mp-ibtn x" id="cardClose" aria-label="Cerrar descripción"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="wt-eyebrow" id="cardEyebrow">Elemento</div>
+    <h3 id="cardTitle"></h3>
+    <p id="cardDesc"></p>
+    <dl id="cardFacts"></dl>
+    <div class="acts">
+      <button type="button" class="wt-btn primary" id="card3d">Ver en 3D</button>
+      <button type="button" class="wt-btn" id="cardPlan">Ubicar en planta</button>
+    </div>
+  </article>
+
+  <div class="mp-intro-hint" id="hint">Arrastre para orbitar · rueda o pellizco para acercar · clic en una etiqueta para ver detalles</div>
+</main>
+
+<script src="js/vendor/three.min.js"></script>
+<script src="js/vendor/gsap.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/scene3d.js"></script>
+<script>
+(function () {
+  'use strict';
+  var D = WT.data, U = WT.util, MP = D.macropera, PL = MP.plataforma, C = D.colores;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var main = document.getElementById('mp'), canvas = document.getElementById('mp-canvas');
+  var labelsEl = document.getElementById('labels'), leaders = document.getElementById('leaders');
+  var panel = document.getElementById('panel');
+  function eq(id) { return U.equipo(id) || {}; }
+  function narrow() { return main.clientWidth < 760; }
+
+  /* ---------- elementos de la vista (descripciones extra = constantes de esta página) ---------- */
+  var EXTRA = {
+    caseta: { nombre: 'Caseta de medición / PC de campo', desc: 'Camper de remolque donde opera el personal de medición. Aquí está la PC de campo con el ' + String(eq('scada').nombre || '').replace(/\s*\(.*\)\s*/, '') + ', que ' + (eq('scada').desc || '').charAt(0).toLowerCase() + (eq('scada').desc || '').slice(1) },
+    zonaSeguridad: { nombre: 'Zona de seguridad', desc: 'Perímetro delimitado con delineadores y cinta de barricada alrededor del pozo, el cabezal, las líneas temporales y el separador. Solo entra personal autorizado con EPP; se señaliza la presencia de hidrocarburo amargo (H₂S).' },
+    acceso: { nombre: 'Ruta de acceso', desc: 'Camino de terracería por el que entran las unidades a la macropera; llega junto a la caseta de medición, fuera de la zona de seguridad. Velocidad máxima dentro de la locación.' },
+    puntoReunion: { nombre: 'Punto de reunión', desc: 'Área de concentración del personal en caso de emergencia, ubicada lejos del pozo y del separador y, de preferencia, contra el viento (ver manga de viento).' },
+    mangaViento: { nombre: 'Manga de viento', desc: 'Indica la dirección del viento para definir rutas de evacuación y la ubicación segura del personal ante una fuga de gas amargo.' },
+    pozosInactivos: { nombre: 'Otros pozos de la macropera', desc: 'Pozos de la misma pera que no están en prueba durante este aforo; se mantienen cerrados y protegidos.' },
+    lineaEntrada: { nombre: 'Líneas temporales', desc: (eq('lineaEntrada').desc || '') + ' Se tienden sobre soportes tipo burro, con uniones de golpe, desde el pozo y el cabezal hasta el separador, y del separador a la línea a batería.' }
+  };
+  var ELEMS = [
+    { id: 'arbol', dir: [-1, -1] }, { id: 'estrangulador', dir: [1, -1.15] }, { id: 'manifold', dir: [-1, 0.9] },
+    { id: 'lineaEntrada', dir: [-0.25, 1.1] }, { id: 'separador', dir: [0.2, 1.15] }, { id: 'caseta', dir: [-1.1, 0.75] },
+    { id: 'rtu', dir: [-0.6, -1.15] }, { id: 'zonaSeguridad', dir: [-0.9, -1], anchor: [MP.zonaSeguridad.x0, 0.2, MP.zonaSeguridad.z0] },
+    { id: 'acceso', dir: [0.3, -1.2] }, { id: 'puntoReunion', dir: [-1.1, 0.55] }, { id: 'lineaBateria', dir: [0.15, -1.2] },
+    { id: 'mangaViento', dir: [1, 1] }, { id: 'pozosInactivos', dir: [0, 1.2] }
+  ];
+  ELEMS.forEach(function (e, i) {
+    var x = EXTRA[e.id] || {}, q = eq(e.id);
+    e.n = i + 1;
+    e.nombre = x.nombre || q.nombre || e.id;
+    e.desc = x.desc || q.desc || '';
+    if (e.id === 'separador') e.nombre = q.nombre + ' ' + D.separador.tagDefault;
+  });
+
+  /* ---------- escena ---------- */
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Calidad según el GPU: los renderizadores por software (SwiftShader/llvmpipe) usan 'medium'
+  function gpuQuality() {
+    try {
+      var c = document.createElement('canvas'), gl = c.getContext('webgl2') || c.getContext('webgl');
+      var ext = gl && gl.getExtension('WEBGL_debug_renderer_info'), name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
+      if (gl && gl.getExtension('WEBGL_lose_context')) gl.getExtension('WEBGL_lose_context').loseContext();
+      if (/swiftshader|llvmpipe|software/i.test(name)) return 'medium';
+    } catch (err) { /* sin información: calidad estándar */ }
+    return narrow() ? 'high' : 'ultra';
+  }
+  var S = WT.Scene3D.create({ canvas: canvas, width: main.clientWidth, height: main.clientHeight, pixelRatio: dpr, quality: gpuQuality() });
+  var controls = new THREE.OrbitControls(S.camera, canvas);
+  controls.enableDamping = !reduce; controls.dampingFactor = 0.08; controls.minDistance = 3; controls.maxDistance = 260;
+  controls.maxPolarAngle = 1.42; controls.screenSpacePanning = false; controls.enabled = false;
+  controls.zoomToCursor = true;
+
+  var PLAN_C0 = [(PL.x0 + PL.x1) / 2 + 5, (PL.z0 + PL.z1) / 2 + 1];
+  var state = {
+    camera: null, ortho: 0, nivel: 0.45, rayosX: 0, corte: 0, ajusteVertical: false,
+    flujo: { mezcla: 1, gas: 1, liquido: 1, salida: 1 },
+    capas: { zonaSeguridad: true, acceso: true, lineas: true, cotas: false, cinta: true, entorno: true },
+    resaltar: null,
+    planta: { centro: PLAN_C0.slice(), ancho: null, padding: { left: 0, right: 0, top: 0, bottom: 0 } }
+  };
+  var ui = { etiquetas: true, mode: '3d', sel: null, busy: false };
+  state.camera = shot('establecimiento');
+  function clone(p) { return { pos: p.pos.slice(), target: p.target.slice(), fov: p.fov || 40 }; }
+  /* Las poses de la escena están pensadas para 16:9; en pantallas verticales se aleja la cámara.
+     (La página maneja la cámara con OrbitControls, por eso desactiva el ajuste automático de la escena.) */
+  function fit(p) {
+    var q = clone(p), asp = main.clientWidth / Math.max(1, main.clientHeight);
+    if (asp < 1.25) { var f = Math.pow(1.25 / asp, 0.85); for (var i = 0; i < 3; i++) q.pos[i] = q.target[i] + (q.pos[i] - q.target[i]) * f; }
+    return q;
+  }
+  function shot(id) { return fit(S.shots[id] || S.poseFor(id)); }
+
+  function updatePadding() {
+    var w = main.clientWidth, n = narrow();
+    state.planta.padding = n ? { left: 8, right: 8, top: 64, bottom: 120 }
+      : { left: panel.offsetWidth + 40, right: 70, top: 24, bottom: 30 };
+    state.encuadre = n ? { left: 0, right: 0, top: 40, bottom: 60 } : { left: panel.offsetWidth + 16, right: 0, top: 0, bottom: 0 };
+  }
+
+  /* ---------- capas ---------- */
+  var LAYERS = [
+    { k: 'zonaSeguridad', t: 'Zona de seguridad', sw: 'zona' },
+    { k: 'acceso', t: 'Ruta de acceso', sw: 'acceso' },
+    { k: 'lineas', t: 'Líneas temporales / flujo', sw: 'mezcla' },
+    { k: 'cotas', t: 'Cotas aproximadas', sw: null },
+    { k: 'etiquetas', t: 'Etiquetas', sw: null },
+    { k: 'entorno', t: 'Entorno (vegetación)', sw: null }
+  ];
+  var swBox = document.getElementById('switches');
+  LAYERS.forEach(function (L) {
+    var lab = document.createElement('label'); lab.className = 'mp-sw';
+    var on = L.k === 'etiquetas' ? ui.etiquetas : !!state.capas[L.k];
+    lab.innerHTML = '<input type="checkbox"' + (on ? ' checked' : '') + '><i aria-hidden="true"></i><span>' + L.t + '</span>' + (L.sw ? '<span class="sw-ico ln ' + L.sw + '" aria-hidden="true"></span>' : '');
+    lab.querySelector('input').addEventListener('change', function (e) {
+      if (L.k === 'etiquetas') ui.etiquetas = e.target.checked;
+      else { state.capas[L.k] = e.target.checked; if (L.k === 'lineas') { var v = e.target.checked ? 1 : 0; state.flujo = { mezcla: v, gas: v, liquido: v, salida: v }; } }
+      if (L.k === 'cinta' || L.k === 'zonaSeguridad') state.capas.cinta = state.capas.zonaSeguridad;
+    });
+    swBox.appendChild(lab);
+  });
+
+  /* ---------- lista de elementos, leyenda, nota ---------- */
+  var list = document.getElementById('elements');
+  ELEMS.forEach(function (e) {
+    var li = document.createElement('li');
+    li.innerHTML = '<button type="button" aria-pressed="false" data-id="' + e.id + '"><b>' + e.n + '</b><span>' + e.nombre + '</span></button>';
+    li.firstChild.addEventListener('click', function () { select(e.id, true); });
+    list.appendChild(li);
+  });
+  var lg = document.getElementById('legend');
+  [['mezcla', 'Mezcla del pozo (aceite + agua + gas)'], ['gas', 'Gas separado'], ['liquido', 'Líquido (aceite + agua)'], ['salida', 'Salida reincorporada → batería'], ['senal', 'Cable de señal → RTU'],
+   ['zona', 'Zona de seguridad'], ['acceso', 'Camino de terracería']].forEach(function (r) {
+    var d = document.createElement('div'); d.innerHTML = '<span class="ln ' + r[0] + '" aria-hidden="true"></span><span>' + r[1] + '</span>'; lg.appendChild(d);
+  });
+  document.getElementById('note').innerHTML = (MP.confirmar ? '<strong>Por confirmar:</strong> ' : '') + MP.nota + ' Circuito cerrado: el gas y el líquido medidos regresan a la línea; no hay quemador ni venteo.';
+  document.getElementById('lead').textContent = 'Distribución típica de equipos durante un aforo con separador bifásico de circuito cerrado. Active capas y seleccione un elemento para ubicarlo.';
+
+  /* ---------- etiquetas ancladas ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  ELEMS.forEach(function (e, i) {
+    var el = document.createElement('div'); el.className = 'mp-lab'; el.style.setProperty('--d', (i * 70) + 'ms');
+    el.innerHTML = '<b>' + e.n + '</b><span>' + e.nombre + '</span>';
+    el.addEventListener('click', function () { select(e.id, true); });
+    labelsEl.appendChild(el); e.el = el;
+    e.line = document.createElementNS(NS, 'path'); e.line.setAttribute('class', 'mp-leader'); leaders.appendChild(e.line);
+    e.dot = document.createElementNS(NS, 'circle'); e.dot.setAttribute('class', 'mp-dot'); e.dot.setAttribute('r', '3.6'); leaders.appendChild(e.dot);
+    e.anchor = e.anchor || S.anchors[e.id];
+  });
+  var cotaEls = S.cotas.map(function (c) {
+    var el = document.createElement('div'); el.className = 'mp-cota';
+    el.textContent = '≈ ' + c.m + ' m';
+    labelsEl.appendChild(el); return el;
+  });
+
+  function layoutLabels() {
+    var W = main.clientWidth, H = main.clientHeight, compact = narrow();
+    labelsEl.classList.toggle('is-compact', compact);
+    var show = ui.etiquetas, placed = [];
+    var sideL = narrow() || ui.exporting ? 0 : panel.offsetLeft + panel.offsetWidth;
+    ELEMS.forEach(function (e) { var p = S.project(e.anchor); e.pp = show && p.visible ? p : null; });
+    if (state.capas.cotas) S.cotas.forEach(function (c) { var p = S.project(c.p); if (p.visible) placed.push({ x: p.x - 34, y: p.y - 12, w: 68, h: 24 }); });
+    ELEMS.forEach(function (e) {
+      var p = S.project(e.anchor), vis = show && p.visible && p.x > sideL + 6;
+      e.el.classList.toggle('is-hidden', !vis);
+      e.line.style.display = e.dot.style.display = vis ? '' : 'none';
+      e.el.classList.toggle('is-sel', ui.sel === e.id);
+      if (!vis) return;
+      var w = e.w || (e.w = e.el.offsetWidth), h = e.h || (e.h = e.el.offsetHeight);
+      if (compact) { w = e.el.offsetWidth; h = e.el.offsetHeight; }
+      var len = compact ? 24 : 40, a0 = Math.atan2(e.dir[1], e.dir[0]), best = null;
+      // probar la dirección preferida y luego giros de ±30°, ±60°… hasta encontrar un hueco libre
+      for (var c = 0; c < 13; c++) {
+        var step = Math.ceil(c / 2) * (c % 2 ? 1 : -1), an = a0 + step * Math.PI / 6, L2 = len * (c > 8 ? 1.8 : 1);
+        var dx = Math.cos(an), dy = Math.sin(an), ex = p.x + dx * L2, ey = p.y + dy * L2;
+        var cbx = dx < -0.35 ? ex - w : dx > 0.35 ? ex : ex - w / 2, cby = dy < -0.35 ? ey - h : dy > 0.35 ? ey : ey - h / 2;
+        cbx = Math.max(sideL + 6, Math.min(W - w - 6, cbx)); cby = Math.max(6, Math.min(H - h - 6, cby));
+        var hit = false;
+        for (var k = 0; k < placed.length && !hit; k++) { var q = placed[k]; if (cbx < q.x + q.w + 6 && cbx + w + 6 > q.x && cby < q.y + q.h + 4 && cby + h + 4 > q.y) hit = true; }
+        for (k = 0; k < ELEMS.length && !hit; k++) { var o = ELEMS[k]; if (o !== e && o.pp && o.pp.x > cbx - 4 && o.pp.x < cbx + w + 4 && o.pp.y > cby - 4 && o.pp.y < cby + h + 4) hit = true; }
+        if (!hit) { best = [cbx, cby]; break; }
+        if (!best) best = [cbx, cby];
+      }
+      var bx = best[0], by = best[1];
+      bx = Math.max(sideL + 6, Math.min(W - w - 6, bx)); by = Math.max(6, Math.min(H - h - 6, by));
+      placed.push({ x: bx, y: by, w: w, h: h });
+      e.el.style.setProperty('--x', bx.toFixed(1) + 'px'); e.el.style.setProperty('--y', by.toFixed(1) + 'px');
+      var cx = Math.max(bx, Math.min(bx + w, p.x)), cy = Math.max(by, Math.min(by + h, p.y));
+      if (cx > bx && cx < bx + w && cy > by && cy < by + h) cy = by + h;
+      e.line.setAttribute('d', 'M' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + 'L' + cx.toFixed(1) + ' ' + cy.toFixed(1));
+      e.dot.setAttribute('cx', p.x.toFixed(1)); e.dot.setAttribute('cy', p.y.toFixed(1));
+      e.box = { x: bx, y: by, w: w, h: h, px: p.x, py: p.y, cx: cx, cy: cy };
+    });
+    S.cotas.forEach(function (c, i) {
+      var p = S.project(c.p), vis = state.capas.cotas && p.visible;
+      cotaEls[i].style.display = vis ? '' : 'none';
+      if (vis) { cotaEls[i].style.setProperty('--x', p.x.toFixed(1) + 'px'); cotaEls[i].style.setProperty('--y', p.y.toFixed(1) + 'px'); }
+      c.box = vis ? p : null;
+    });
+  }
+
+  /* ---------- brújula y escala ---------- */
+  var compass = document.getElementById('compass'), scaleEl = document.getElementById('scale'), scaleBar = document.getElementById('scaleBar'), scaleTxt = document.getElementById('scaleTxt');
+  var northAng = 0;
+  function updateHud() {
+    var pose = S.cameraPose(), t = pose.target, a = S.project(t), b = S.project([t[0], t[1], t[2] - 10]);
+    northAng = Math.atan2(b.x - a.x, -(b.y - a.y)) * 180 / Math.PI;
+    compass.style.transform = 'rotate(' + northAng.toFixed(1) + 'deg)';
+    var mpp = S.metersPerPixel(), nice = [1, 2, 5, 10, 20, 25, 50, 100, 200], m = nice[0];
+    for (var i = 0; i < nice.length; i++) if (nice[i] / mpp <= 150) m = nice[i];
+    scaleBar.style.width = Math.round(m / mpp) + 'px'; scaleTxt.textContent = m + ' m';
+    scaleEl.classList.toggle('is-off', state.ortho < 0.85);
+  }
+
+  /* ---------- modos de vista ---------- */
+  var segBtns = document.querySelectorAll('[data-mode]');
+  function setModeUI(m) { ui.mode = m; segBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === m)); }); }
+  segBtns.forEach(function (b) { b.addEventListener('click', function () { b.dataset.mode === 'planta' ? toPlan() : to3D(); }); });
+  var tweens = [];
+  function killTweens() { tweens.forEach(function (t) { t.kill(); }); tweens = []; }
+  function tw(o, v) { if (reduce) { v.duration = 0.001; } var t = gsap.to(o, v); tweens.push(t); return t; }
+  function syncControls() {
+    controls.target.fromArray(state.camera.target); S.camera.position.fromArray(state.camera.pos);
+    controls.update();
+  }
+  function toPlan(opts) {
+    killTweens(); setModeUI('planta'); controls.enabled = false; labelsEl.classList.add('is-moving');
+    if (ui.mode3dPose) state.camera = clone(ui.mode3dPose);
+    tw(state, { ortho: 1, duration: (opts && opts.duration) || 1.6, ease: 'power2.inOut', onComplete: function () { labelsEl.classList.remove('is-moving'); } });
+  }
+  function to3D(pose, dur) {
+    killTweens(); setModeUI('3d'); controls.enabled = false; labelsEl.classList.add('is-moving');
+    var from = clone(state.camera), to = pose ? clone(pose) : clone(ui.mode3dPose || shot('aerea')), k = { v: 0 };
+    tw(state, { ortho: 0, duration: dur || 1.6, ease: 'power2.inOut' });
+    tw(k, { v: 1, duration: dur || 1.6, ease: 'power2.inOut', onUpdate: function () { state.camera = S.lerpShot(from, to, k.v, { ease: false }); },
+      onComplete: function () { state.camera = to; ui.mode3dPose = clone(to); syncControls(); controls.enabled = true; labelsEl.classList.remove('is-moving'); } });
+  }
+
+  /* ---------- selección de elementos ---------- */
+  var card = document.getElementById('card');
+  function facts(id) {
+    var f = [];
+    if (id === 'separador') {
+      var sp = D.separador;
+      f.push(['Tipo', sp.tipo], ['Orientación', sp.orientacion], ['Montaje', sp.montaje], ['Servicio', sp.servicio], ['Equipos tipo', sp.tags.join(' · ')]);
+      if (sp.diametro) f.push(['Diámetro', sp.diametro]); if (sp.longitud) f.push(['Longitud', sp.longitud]); if (sp.presionDiseno) f.push(['Presión de diseño', sp.presionDiseno]);
+    }
+    if (id === 'rtu') f.push(['Señales (' + D.instrumentos.length + ')', D.instrumentos.map(function (x) { return x.tag; }).join(' · '), 1], ['Visualización', eq('scada').nombre, 1]);
+    if (id === 'arbol') f.push(['Transmisor TDP', U.instrumento('TDP').variable, 1]);
+    if (id === 'lineaBateria') f.push(['Transmisor TPL', U.instrumento('TPL').variable, 1]);
+    if (id === 'caseta') f.push(['RTU', eq('rtu').nombre, 1]);
+    (MP.distancias || []).forEach(function (d) {
+      var SHORT = { arbol: 'árbol', separador: 'separador', caseta: 'caseta', manifold: 'cabezal', rtu: 'RTU' };
+      if (d.de === id || d.a === id) { var o = d.de === id ? d.a : d.de; f.push(['Distancia al ' + (SHORT[o] || o), '≈ ' + d.m + ' m']); }
+    });
+    return f;
+  }
+  function select(id, fly) {
+    var e = ELEMS.filter(function (x) { return x.id === id; })[0]; if (!e) return;
+    ui.sel = id; state.resaltar = id;
+    list.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.id === id)); });
+    document.getElementById('cardEyebrow').textContent = 'Elemento ' + e.n;
+    document.getElementById('cardTitle').textContent = e.nombre;
+    document.getElementById('cardDesc').textContent = e.desc;
+    document.getElementById('cardFacts').innerHTML = facts(id).map(function (f) { return '<div' + (f[2] ? ' class="wide"' : '') + '><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>'; }).join('');
+    card.classList.add('is-open'); card.setAttribute('aria-hidden', 'false');
+    if (narrow()) panel.classList.remove('is-open'), document.getElementById('panelToggle').setAttribute('aria-expanded', 'false');
+    if (!fly) return;
+    if (ui.mode === 'planta') focusPlan(id); else to3D(shot(id), 1.8);
+  }
+  function focusPlan(id) {
+    var e = ELEMS.filter(function (x) { return x.id === id; })[0], a = e.anchor;
+    killTweens(); setModeUI('planta'); controls.enabled = false;
+    var w0 = state.planta.ancho || currentPlanWidth();
+    var span = { zonaSeguridad: 60, acceso: 50, lineaEntrada: 50, separador: 30, caseta: 34, puntoReunion: 34, mangaViento: 34, pozosInactivos: 54, lineaBateria: 50 }[id] || 26;
+    var o = { cx: state.planta.centro[0], cz: state.planta.centro[1], w: w0 };
+    tw(state, { ortho: 1, duration: 1.2, ease: 'power2.inOut' });
+    tw(o, { cx: a[0], cz: a[2], w: span, duration: 1.4, ease: 'power3.inOut', onUpdate: function () { state.planta.centro = [o.cx, o.cz]; state.planta.ancho = o.w; } });
+  }
+  function currentPlanWidth() {
+    var p = state.planta.padding, aw = main.clientWidth - p.left - p.right, ah = main.clientHeight - p.top - p.bottom;
+    return Math.max((PL.x1 - PL.x0 + 24), (PL.z1 - PL.z0 + 12) * aw / ah);
+  }
+  document.getElementById('cardClose').addEventListener('click', clearSel);
+  document.getElementById('card3d').addEventListener('click', function () { if (ui.sel) to3D(shot(ui.sel), 1.8); });
+  document.getElementById('cardPlan').addEventListener('click', function () { if (ui.sel) focusPlan(ui.sel); });
+  function clearSel() {
+    ui.sel = null; state.resaltar = null; card.classList.remove('is-open'); card.setAttribute('aria-hidden', 'true');
+    list.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+  }
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') clearSel(); });
+
+  /* ---------- zoom / pan en planta (OrbitControls en 3D) ---------- */
+  function planMpp() { return S.metersPerPixel(); }
+  function availCenter() { var p = state.planta.padding; return [p.left + (main.clientWidth - p.left - p.right) / 2, p.top + (main.clientHeight - p.top - p.bottom) / 2]; }
+  function zoomPlanAt(f, sx, sy) {
+    var mpp = planMpp(), ac = availCenter(), p = state.planta.padding, aw = main.clientWidth - p.left - p.right;
+    var c = state.planta.centro; if (sx == null) { sx = ac[0]; sy = ac[1]; }
+    var wx = c[0] + (sx - ac[0]) * mpp, wz = c[1] + (sy - ac[1]) * mpp;
+    var w = U.clamp((state.planta.ancho || mpp * aw) * f, 12, 260), mpp2 = w / aw;
+    state.planta.ancho = w; state.planta.centro = [wx - (sx - ac[0]) * mpp2, wz - (sy - ac[1]) * mpp2];
+  }
+  function zoomBtn(f) {
+    if (ui.mode === 'planta') { killTweens(); zoomPlanAt(f); return; }
+    var off = S.camera.position.clone().sub(controls.target).multiplyScalar(f);
+    var d = U.clamp(off.length(), controls.minDistance, controls.maxDistance); off.setLength(d);
+    S.camera.position.copy(controls.target).add(off); controls.update();
+  }
+  document.getElementById('zoomIn').addEventListener('click', function () { zoomBtn(0.75); });
+  document.getElementById('zoomOut').addEventListener('click', function () { zoomBtn(1.33); });
+  document.getElementById('reset').addEventListener('click', function () {
+    clearSel();
+    if (ui.mode === 'planta') { killTweens(); var o = { cx: state.planta.centro[0], cz: state.planta.centro[1], w: state.planta.ancho || currentPlanWidth() }; var w1 = currentPlanWidth();
+      tw(o, { cx: PLAN_C0[0], cz: PLAN_C0[1], w: w1, duration: 1, ease: 'power2.inOut', onUpdate: function () { state.planta.centro = [o.cx, o.cz]; state.planta.ancho = o.w; }, onComplete: function () { state.planta.ancho = null; } }); }
+    else to3D(shot('aerea'), 1.4);
+  });
+  var ptrs = {}, drag = null;
+  canvas.addEventListener('wheel', function (ev) {
+    if (ui.mode !== 'planta' || state.ortho < 0.99) return;
+    ev.preventDefault(); killTweens();
+    var r = canvas.getBoundingClientRect(); zoomPlanAt(Math.exp(ev.deltaY * 0.0015), ev.clientX - r.left, ev.clientY - r.top);
+  }, { passive: false });
+  canvas.addEventListener('pointerdown', function (ev) {
+    canvas.classList.add('is-drag');
+    if (ui.mode !== 'planta' || state.ortho < 0.99) return;
+    killTweens(); canvas.setPointerCapture(ev.pointerId);
+    ptrs[ev.pointerId] = [ev.clientX, ev.clientY];
+    drag = { pts: JSON.parse(JSON.stringify(ptrs)) };
+  });
+  canvas.addEventListener('pointermove', function (ev) {
+    if (!ptrs[ev.pointerId] || ui.mode !== 'planta') return;
+    var prev = ptrs[ev.pointerId]; ptrs[ev.pointerId] = [ev.clientX, ev.clientY];
+    var ids = Object.keys(ptrs), mpp = planMpp();
+    if (ids.length === 1) { state.planta.centro = [state.planta.centro[0] - (ev.clientX - prev[0]) * mpp, state.planta.centro[1] - (ev.clientY - prev[1]) * mpp]; }
+    else if (ids.length === 2) {
+      var a = ptrs[ids[0]], b = ptrs[ids[1]], pa = ids[0] === String(ev.pointerId) ? prev : a, pb = ids[1] === String(ev.pointerId) ? prev : b;
+      var d0 = Math.hypot(pa[0] - pb[0], pa[1] - pb[1]), d1 = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      var r = canvas.getBoundingClientRect(); if (d0 > 0 && d1 > 0) zoomPlanAt(d0 / d1, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top);
+    }
+  });
+  function endPtr(ev) { delete ptrs[ev.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('is-drag'); }
+  canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+  canvas.addEventListener('pointerleave', function () { if (!Object.keys(ptrs).length) canvas.classList.remove('is-drag'); });
+  controls.addEventListener('start', function () { hint.classList.add('is-off'); });
+
+  /* ---------- panel colapsable (móvil) ---------- */
+  var toggle = document.getElementById('panelToggle');
+  toggle.addEventListener('click', function () { var o = panel.classList.toggle('is-open'); toggle.setAttribute('aria-expanded', String(o)); });
+
+  /* ---------- exportar PNG ---------- */
+  function exportPNG() {
+    // la exportación no lleva el panel: se centra el encuadre en todo el lienzo
+    var savePad = state.planta.padding, saveEnc = state.encuadre;
+    state.planta.padding = { left: 24, right: 24, top: 24, bottom: 24 }; state.encuadre = null; ui.exporting = true;
+    S.renderAt(T, state); layoutLabels(); updateHud();
+    try { exportNow(); } finally { state.planta.padding = savePad; state.encuadre = saveEnc; ui.exporting = false; }
+  }
+  function exportNow() {
+    var W = main.clientWidth, H = main.clientHeight, k = canvas.width / W, head = Math.round(64 * k), foot = Math.round(40 * k);
+    var out, g;
+    function draw(withLogo) {
+      // lienzo nuevo en cada intento: si el logo (file://) contamina el lienzo, el reintento sin logo parte de cero
+      out = document.createElement('canvas'); out.width = canvas.width; out.height = canvas.height + head + foot; g = out.getContext('2d');
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = C.marino900; g.fillRect(0, 0, out.width, out.height);
+      g.drawImage(canvas, 0, head);
+      g.fillStyle = C.marino; g.fillRect(0, 0, out.width, head); g.fillStyle = C.amarillo; g.fillRect(0, head - 3 * k, out.width, 3 * k);
+      var x0 = 16 * k;
+      if (withLogo) { var img = document.querySelector('.wt-logo'); var lh = 44 * k, lw = lh * (img.naturalWidth / img.naturalHeight || 3.75); g.drawImage(img, x0, (head - lh) / 2, lw, lh); x0 += lw + 16 * k; }
+      else { var brand = D.empresa.nombre.toUpperCase(); g.fillStyle = '#fff'; g.font = '800 ' + 26 * k + 'px "Barlow Condensed", Arial'; g.textBaseline = 'middle'; g.fillText(brand, x0, head / 2); x0 += g.measureText(brand).width + 16 * k; }
+      g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.font = '700 ' + 22 * k + 'px "Barlow Condensed", Arial';
+      g.fillText(('Vista aérea de la macropera · ' + D.empresa.servicio + ' (' + D.empresa.servicioEs + ')').toUpperCase(), x0, head / 2 - 9 * k);
+      g.fillStyle = C.celeste200; g.font = '500 ' + 13 * k + 'px Barlow, Arial'; g.fillText(ui.mode === 'planta' ? 'Vista en planta (norte arriba)' : 'Vista 3D', x0, head / 2 + 13 * k);
+      g.save(); g.translate(0, head); g.scale(k, k);
+      if (ui.etiquetas) ELEMS.forEach(function (e) {
+        if (!e.box || e.el.classList.contains('is-hidden')) return; var b = e.box;
+        g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 1.25; g.beginPath(); g.moveTo(b.px, b.py); g.lineTo(b.cx, b.cy); g.stroke();
+        g.fillStyle = C.amarillo; g.beginPath(); g.arc(b.px, b.py, 3.6, 0, Math.PI * 2); g.fill();
+        g.fillStyle = 'rgba(6,22,49,0.9)'; rr(g, b.x, b.y, b.w, b.h, b.h / 2); g.fill();
+        g.fillStyle = C.amarillo; g.beginPath(); g.arc(b.x + 15, b.y + b.h / 2, 11, 0, Math.PI * 2); g.fill();
+        g.fillStyle = C.marino; g.font = '800 12px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText(String(e.n), b.x + 15, b.y + b.h / 2 + 0.5);
+        if (!narrow()) { g.fillStyle = '#fff'; g.font = '600 13px Barlow, Arial'; g.textAlign = 'left'; g.fillText(e.nombre, b.x + 33, b.y + b.h / 2 + 0.5); }
+      });
+      S.cotas.forEach(function (c) { if (!c.box) return; var t = '≈ ' + c.m + ' m'; g.font = '700 12px "JetBrains Mono", monospace'; var tw2 = g.measureText(t).width + 12; g.fillStyle = '#fff'; rr(g, c.box.x - tw2 / 2, c.box.y - 10, tw2, 20, 4); g.fill(); g.fillStyle = C.marino900; g.textAlign = 'center'; g.fillText(t, c.box.x, c.box.y + 0.5); });
+      // brújula
+      g.save(); g.translate(W - 46, H - 46); g.fillStyle = 'rgba(6,22,49,0.85)'; g.beginPath(); g.arc(0, 0, 32, 0, Math.PI * 2); g.fill(); g.rotate(northAng * Math.PI / 180);
+      g.fillStyle = C.amarillo; g.beginPath(); g.moveTo(0, -24); g.lineTo(7, 2); g.lineTo(0, -3); g.lineTo(-7, 2); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.6)'; g.beginPath(); g.moveTo(0, 24); g.lineTo(7, 2); g.lineTo(0, -3); g.lineTo(-7, 2); g.closePath(); g.fill();
+      g.fillStyle = C.marino900; g.font = '800 11px "Barlow Condensed", Arial'; g.textAlign = 'center'; g.fillText('N', 0, -11); g.restore();
+      if (state.ortho > 0.85) { var bw = parseFloat(scaleBar.style.width), sx = W - 120 - bw; g.fillStyle = 'rgba(6,22,49,0.85)'; rr(g, sx, H - 56, bw + 24, 40, 6); g.fill(); g.fillStyle = '#fff'; g.fillRect(sx + 12, H - 26, bw, 3); g.fillRect(sx + 12, H - 32, 2, 9); g.fillRect(sx + 10 + bw, H - 32, 2, 9); g.font = '700 12px "JetBrains Mono", monospace'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(scaleTxt.textContent, sx + 12, H - 43); }
+      g.restore();
+      // pie: leyenda y nota
+      var fy = head + canvas.height, lx = 16 * k; g.fillStyle = C.marino900; g.fillRect(0, fy, out.width, foot);
+      g.font = '600 ' + 12 * k + 'px Barlow, Arial'; g.textBaseline = 'middle'; g.textAlign = 'left';
+      [['Mezcla', C.mezcla], ['Gas', C.gas], ['Líquido', C.liquidoAmbar], ['Salida a batería', C.salida], ['Señal', C.senal]].forEach(function (s) {
+        g.fillStyle = s[1]; g.fillRect(lx, fy + foot / 2 - 3 * k, 22 * k, 6 * k); g.fillStyle = '#dfe9f3'; g.fillText(s[0], lx + 28 * k, fy + foot / 2); lx += 28 * k + g.measureText(s[0]).width + 18 * k;
+      });
+      g.fillStyle = '#8fa6bf'; g.font = '500 ' + 11 * k + 'px Barlow, Arial'; g.textAlign = 'right';
+      g.fillText('Medidas aproximadas · ilustrativo · ' + D.empresa.nombre, out.width - 16 * k, fy + foot / 2);
+    }
+    function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+    var url;
+    try { draw(true); url = out.toDataURL('image/png'); }
+    catch (err) { S.renderAt(T, state); draw(false); url = out.toDataURL('image/png'); }
+    var a = document.createElement('a'); a.href = url; a.download = 'macropera-' + (ui.mode === 'planta' ? 'planta' : '3d') + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  document.getElementById('png').addEventListener('click', exportPNG);
+
+  /* ---------- tamaño ---------- */
+  function resize() {
+    var w = main.clientWidth, h = main.clientHeight;
+    S.resize(w, h); updatePadding(); ELEMS.forEach(function (e) { e.w = e.h = 0; });
+  }
+  window.addEventListener('resize', resize);
+  updatePadding();
+
+  /* ---------- bucle ---------- */
+  var T = 0, last = performance.now(), hint = document.getElementById('hint'), started = false;
+  if (window.matchMedia && matchMedia('(pointer: coarse)').matches) hint.textContent = 'Arrastre para orbitar · pellizque para acercar · toque una etiqueta para ver detalles';
+  function frame(now) {
+    var dt = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now; T += dt * (reduce ? 0.35 : 1);
+    if (ui.mode === '3d' && controls.enabled) {
+      controls.update();
+      state.camera = { pos: S.camera.position.toArray(), target: controls.target.toArray(), fov: 40 };
+      ui.mode3dPose = state.camera;
+    }
+    S.renderAt(T, state); layoutLabels(); updateHud();
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- arranque: vista oblicua → planta, etiquetas escalonadas ---------- */
+  function intro() {
+    var h = (location.hash || '').replace('#', ''), m = /elemento=([\w]+)/.exec(h);
+    if (h === '3d') { state.camera = shot('aerea'); ui.mode3dPose = shot('aerea'); setModeUI('3d'); syncControls(); controls.enabled = true; labelsEl.classList.add('is-in'); return; }
+    if (h === 'planta' || reduce || m) { state.ortho = 1; state.camera = shot('aerea'); ui.mode3dPose = shot('aerea'); setModeUI('planta'); labelsEl.classList.add('is-in'); if (m) select(m[1], true); return; }
+    setModeUI('planta'); ui.mode3dPose = shot('aerea');
+    var from = shot('establecimiento'), to = shot('aerea'), k = { v: 0 };
+    tw(k, { v: 1, duration: 3.6, ease: 'power2.inOut', onUpdate: function () { state.camera = S.lerpShot(from, to, k.v, { ease: false, hop: 0.1 }); } });
+    tw(state, { ortho: 1, duration: 3.0, delay: 1.0, ease: 'power3.inOut', onComplete: function () { labelsEl.classList.add('is-in'); } });
+    setTimeout(function () { hint.classList.add('is-off'); }, 9000);
+  }
+  S.ready.then(function () { if (started) return; started = true; intro(); requestAnimationFrame(function (n) { last = n; frame(n); }); });
+
+  /* Ganchos para pruebas/capturas: estado final inmediato sin animación */
+  window.WTMacropera = {
+    scene: S, state: state,
+    jump: function (o) {
+      o = o || {}; killTweens();
+      if (o.modo === '3d') { state.ortho = 0; state.camera = o.pose ? clone(o.pose) : shot(o.toma || 'aerea'); ui.mode3dPose = clone(state.camera); setModeUI('3d'); syncControls(); controls.enabled = true; }
+      else if (o.modo === 'planta') { state.ortho = 1; setModeUI('planta'); controls.enabled = false; }
+      if (o.capas) Object.keys(o.capas).forEach(function (k) { if (k === 'etiquetas') ui.etiquetas = o.capas[k]; else state.capas[k] = o.capas[k]; });
+      swBox.querySelectorAll('input').forEach(function (inp, i) { var L = LAYERS[i]; inp.checked = L.k === 'etiquetas' ? ui.etiquetas : !!state.capas[L.k]; });
+      if (o.sel) select(o.sel, false); else if (o.sel === null) clearSel();
+      if (o.panel != null) { panel.classList.toggle('is-open', !!o.panel); toggle.setAttribute('aria-expanded', String(!!o.panel)); }
+      labelsEl.classList.add('is-in'); labelsEl.classList.remove('is-moving'); hint.classList.add('is-off');
+      S.renderAt(T, state); layoutLabels(); updateHud();
+    },
+    exportPNG: exportPNG
+  };
+})();
+</script>
+</body>
+</html>
