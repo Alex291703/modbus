@@ -1376,6 +1376,7 @@
     c.eqLabel(c.rg(Ls.lbl, TL.s1[0], xTee, yL + 40), xTee + 12, yL + 36, 'Reincorporación', 'gas + líquido', { eq: 'recombinacion', size: 12.5, subSize: 11 });
     var gLim = c.rg(Ls.zone, TL.s1[1], xLim, yL);
     E('line', { x1: xLim, y1: yL - 22, x2: xLim, y2: yL + 22, class: 'sym-l', 'stroke-width': 2.2 }, gLim);
+    c.T(gLim, xLim + 7, yL + 32, 'Empate', { size: 10.5, anchor: 'start', cls: 'tmu' });
     var gBat = c.eqGroup('lineaBateria', Ls.eq, TL.s2[1] - 0.01, xOff + 60, yL);
     c.offPage(gBat, xOff, yL, 126, 36, 'right', 'A BATERÍA', { acc: true, size: 15 });
     c.eqLabel(c.rg(Ls.lbl, TL.s2[0] + 0.03, xOff, yL + 40), xOff + 63, yL + 40, eqN('lineaBateria'), c.K.dn + ' · circuito cerrado', { eq: 'lineaBateria', size: 12.5, subSize: 11 });
@@ -1614,6 +1615,7 @@
     c.eqLabel(c.rg(Ls.lbl, TL.s1[0], xTee, yGs + 40), xTee - 6, yGs + 30, 'Reincorporación', 'gas + líquido → línea de salida', { eq: 'recombinacion', size: 12.5, subSize: 11, anchor: 'end' });
     var gLim = c.rg(Ls.zone, TL.s1[1], xSal, yLim);
     E('line', { x1: xSal - 22, y1: yLim, x2: xSal + 22, y2: yLim, class: 'sym-l', 'stroke-width': 2.2 }, gLim);
+    c.T(gLim, xSal - 28, yLim + 4, 'Empate', { size: 10.5, anchor: 'end', cls: 'tmu' });
     var gBat = c.eqGroup('lineaBateria', Ls.eq, TL.s2[1] - 0.01, xSal, yOff + 24);
     c.offPage(gBat, xSal, yOff, 108, 44, 'down', '', { acc: true });
     T(gBat, xSal, yOff + 19, 'A BATERÍA', { font: 'c', size: 15, weight: 800, anchor: 'middle', cls: 'ton', ls: 0.5 });

@@ -112,7 +112,7 @@
        `tag`  = tag de campo usado por R.B. Tec. La asignación tag ↔ variable
        es una interpretación a partir de las variables reportadas: confirmar. */
     instrumentos: [
-      { tag: 'TDP', isa: 'PIT', variable: 'Presión en boca de pozo', punto: 'Árbol de válvulas, aguas arriba del estrangulador', unidad: 'kg/cm²', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
+      { tag: 'TDP', isa: 'PIT', variable: 'Presión en boca de pozo', punto: 'Línea lateral (TP) del árbol, aguas arriba del estrangulador', unidad: 'kg/cm²', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
       { tag: 'TPS', isa: 'PIT', variable: 'Presión del separador', punto: 'Domo del separador', unidad: 'kg/cm²', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
       { tag: 'TT', isa: 'TIT', variable: 'Temperatura del separador', punto: 'Termopozo en el separador', unidad: '°C', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: false },
       { tag: 'TN', isa: 'LIT', variable: 'Nivel del separador', punto: 'Separador (control de nivel → LV)', unidad: '%', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },

@@ -9,7 +9,8 @@
       Composición HyperFrames. El código y los estilos se comparten con la otra
       composición en src/film.js y src/film.css; los datos salen de lib/data.js.
       Render (desde well-testing/video, con HYPERFRAMES_BROWSER_PATH apuntando a Chromium):
-        npx hyperframes render -q delivery -o ../entregables/well-testing-16x9.mp4
+        npx --yes hyperframes@0.8.143 render -o renders/master-16x9.mp4
+        y luego compresión con ffmpeg a ../entregables/well-testing-16x9.mp4 (ver README).
       3D en un canvas WebGL fuera del DOM copiado a un canvas 2D (evita huecos en la captura).
     -->
     <style>
