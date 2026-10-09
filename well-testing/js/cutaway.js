@@ -1458,7 +1458,7 @@
     if (plate) {   // placa de fondo: ninguna varilla ni línea atraviesa el texto
       var tw = ctx.measureText(txt).width, ph = size * 1.35, pw = tw + size * 0.9;
       var px = align === 'left' ? x - size * 0.45 : align === 'right' ? x - tw - size * 0.45 : x - pw / 2;
-      ctx.fillStyle = 'rgba(6,22,49,0.8)'; roundRect(ctx, px, y - ph / 2, pw, ph, ph / 2); ctx.fill();
+      ctx.fillStyle = 'rgba(6,22,49,0.88)'; roundRect(ctx, px, y - ph / 2, pw, ph, ph / 2); ctx.fill();
     }
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(6,22,49,0.85)'; ctx.strokeText(txt, x, y);
     ctx.fillStyle = col; ctx.fillText(txt, x, y); ctx.restore();
@@ -1495,7 +1495,8 @@
       ctx.beginPath(); ctx.moveTo(-412, y); ctx.lineTo(292, y); ctx.moveTo(-412, y - 8); ctx.lineTo(-412, y + 8); ctx.moveTo(292, y - 8); ctx.lineTo(292, y + 8); ctx.stroke();
       ctx.restore();
       arrow(ctx, [[-60, y], [-404, y]], C.celeste200, 1.4, k, 7); arrow(ctx, [[-60, y], [284, y]], C.celeste200, 1.4, k, 7);
-      worldText(ctx, S.long ? 'baja velocidad · tiempo de residencia' : 'tiempo de residencia', -60, y - 15, 16, C.celeste200, k, 'center', true);
+      // texto de la cota entre el termopozo (TT) y la sonda del TN: ninguna varilla lo cruza
+      worldText(ctx, S.long ? 'baja velocidad · tiempo de residencia' : 'tiempo de residencia', (G.tt + G.tn) / 2, y - 15, 16, C.celeste200, k, 'center', true);
       worldText(ctx, 'gotas ↓', -232, -44, 16, C.ambar, k);
       worldText(ctx, 'burbujas ↑', 110, G.Ri - 18, 16, C.gas, k);
     }
@@ -1699,7 +1700,7 @@
         var tw = ctx.measureText(txt).width;
         if (p.x - tw / 2 < m || p.x + tw / 2 > W - m) { ctx.restore(); continue; }
         var zh = zs * 1.6, zw = tw + zs * 1.1;   // placa de fondo: las varillas de TT / TN no atraviesan el texto
-        ctx.fillStyle = 'rgba(6,22,49,0.78)'; roundRect(ctx, p.x - zw / 2, p.y - zh / 2, zw, zh, zh / 2); ctx.fill();
+        ctx.fillStyle = 'rgba(6,22,49,0.86)'; roundRect(ctx, p.x - zw / 2, p.y - zh / 2, zw, zh, zh / 2); ctx.fill();
         ctx.strokeStyle = 'rgba(169,220,247,0.22)'; ctx.lineWidth = 1; ctx.stroke();
         ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(6,22,49,0.7)'; ctx.strokeText(txt, p.x, p.y);
         ctx.fillStyle = C.celeste200; ctx.fillText(txt, p.x, p.y);
@@ -2173,7 +2174,7 @@
 
   /* Fuentes que usa el lienzo (para precargarlas antes de capturar cuadros de video) */
   WT.Cutaway.fuentes = ['600 20px "Barlow Condensed"', '700 20px "Barlow Condensed"', '800 20px "Barlow Condensed"', '400 20px "Barlow"',
-    '500 20px "Barlow"', '600 20px "Barlow"', '700 20px "JetBrains Mono"'];
+    '500 20px "Barlow"', '600 20px "Barlow"', '700 20px "Barlow"', '700 20px "JetBrains Mono"'];
   WT.Cutaway.cargarFuentes = function () {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
     return Promise.all(WT.Cutaway.fuentes.map(function (f) { return document.fonts.load(f).catch(function () { return null; }); }));

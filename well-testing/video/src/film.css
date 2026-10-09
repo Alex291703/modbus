@@ -61,17 +61,19 @@
   -webkit-font-smoothing: antialiased;
 }
 .wt-film.fmt-v {
+  /* zonas seguras de TikTok / Reels / Shorts: nada importante en los ~380 px inferiores ni bajo la
+     columna de botones (x > 940 entre y ≈ 1000 y 1650); ver VSAFE en film.js */
   --m: 64px;
   --mt: 210px;            /* franja superior de interfaz de redes (salvo el logo) */
-  --mb: 270px;            /* franja inferior de interfaz de redes */
+  --mb: 400px;            /* franja inferior de interfaz de redes (la leyenda termina en y ≈ 1526) */
   --fs-hero: 150px;
   --fs-h1: 100px;
   --fs-h2: 62px;
   --fs-h3: 46px;
   --fs-body: 34px;
   --fs-lab: 28px;
-  --fs-tag: 25px;
-  --fs-small: 24px;
+  --fs-tag: 30px;         /* texto secundario ≥ 30 px en el formato para teléfono */
+  --fs-small: 30px;
 }
 
 html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #061631; overflow: hidden; }
@@ -91,7 +93,16 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0616
 
 /* --------------------------------------------------------------- capas de módulo */
 #f-gl canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-#f-cut .wt-cutaway { position: absolute; left: 0; top: 0; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 70px), rgba(0, 0, 0, 0)); mask-image: linear-gradient(to bottom, #000 calc(100% - 70px), rgba(0, 0, 0, 0)); }
+#f-cut .cut-back { position: absolute; inset: 0; background: linear-gradient(180deg, #0a2142 0%, #081b38 55%, #050f22 100%); }
+/* bordes del lienzo fundidos con el fondo (arriba 40 px, abajo 16 px; en 16:9 también el borde derecho) */
+#f-cut .wt-cutaway { position: absolute; left: 0; top: 0;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, #000 40px, #000 calc(100% - 16px), rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, #000 40px, #000 calc(100% - 16px), rgba(0, 0, 0, 0)); }
+.fmt-h #f-cut .wt-cutaway {
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, #000 40px, #000 calc(100% - 16px), rgba(0, 0, 0, 0)), linear-gradient(to right, #000 calc(100% - 90px), rgba(0, 0, 0, 0));
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, #000 40px, #000 calc(100% - 16px), rgba(0, 0, 0, 0)), linear-gradient(to right, #000 calc(100% - 90px), rgba(0, 0, 0, 0));
+  mask-composite: intersect; }
 #f-scada .mon { position: absolute; }
 #f-pid .sheet { position: absolute; }
 #f-pid .sheet svg { width: 100%; height: 100%; display: block; }
@@ -118,7 +129,9 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0616
 .f-legend { position: absolute; display: flex; gap: 14px; align-items: center; padding: 12px 18px; border-radius: 14px;
   background: var(--panel); border: 2px solid var(--line); }
 .fmt-h .f-legend { left: var(--m); bottom: var(--mb); }
-.fmt-v .f-legend { left: var(--m); bottom: calc(var(--mb) - 6px); flex-wrap: wrap; width: 952px; justify-content: center; }
+.fmt-v .f-legend { left: var(--m); bottom: calc(var(--mb) - 6px); flex-wrap: wrap; width: 876px; justify-content: center; gap: 6px; padding: 10px 12px; }
+.fmt-v .f-legend .it { gap: 8px; padding: 2px 6px 2px 4px; }
+.fmt-v .f-legend .sw { width: 28px; }
 .f-legend .lg-t { font-family: var(--f-mono); font-weight: 700; font-size: 18px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--celeste-200); margin-right: 4px; }
 .f-legend .lg-t { display: none; }
 .f-legend .it { display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 6px; border-radius: 8px; font-family: var(--f-body); font-weight: 600;
@@ -169,6 +182,11 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0616
 .alab .tg.c { background: var(--celeste); }
 .alab .nm { font-family: var(--f-display); font-weight: 700; font-size: calc(var(--fs-lab) + 3px); letter-spacing: 0.02em; text-transform: uppercase; color: #ffffff; }
 .alab .ds { font-family: var(--f-body); font-weight: 500; font-size: var(--fs-small); color: var(--celeste-200); }
+.fmt-v .alab .ds { white-space: normal; max-width: 600px; line-height: 1.2; }
+.alab .chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: 470px; margin-top: 6px; }
+.fmt-v .alab .chips { max-width: 600px; }
+.alab .chips i { font-style: normal; font-family: var(--f-mono); font-weight: 700; font-size: calc(var(--fs-tag) - 4px); line-height: 1.3; color: #061631;
+  background: var(--celeste); padding: 0 7px; border-radius: 5px; }
 .alab .vl { font-family: var(--f-mono); font-weight: 700; font-size: 40px; line-height: 1.05; color: #ffffff; font-variant-numeric: tabular-nums; }
 .fmt-v .alab .vl { font-size: 42px; }
 .alab .vl u { text-decoration: none; font-size: 0.55em; font-weight: 500; color: var(--celeste-200); margin-left: 8px; }
@@ -191,8 +209,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0616
 #s1 svg.s1-streams { position: absolute; inset: 0; width: 100%; height: 100%; }
 #s1 svg.s1-streams path { fill: none; stroke-linecap: round; }
 #s1 .s1-lock { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-#s1 .s1-mark { position: relative; width: 720px; height: 192px; }
-.fmt-v #s1 .s1-mark { width: 840px; height: 224px; }
+#s1 .s1-mark { position: relative; }   /* tamaño en film.js, con la proporción del logotipo */
 #s1 .s1-mark img, #s1 .s1-mark svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 #s1 .s1-t1 { margin-top: 40px; font-family: var(--f-display); font-weight: 800; font-size: var(--fs-hero); line-height: 0.92; letter-spacing: -0.01em; text-transform: uppercase; color: #ffffff; }
 #s1 .s1-t2 { margin-top: 6px; font-family: var(--f-display); font-weight: 700; font-size: var(--fs-h2); line-height: 1; letter-spacing: 0.04em; text-transform: uppercase; color: var(--amarillo); }
@@ -213,9 +230,16 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0616
 .f-step .pn { display: flex; align-items: center; gap: 16px; }
 .f-step .pn b { display: flex; align-items: center; justify-content: center; width: 68px; height: 68px; border-radius: 50%; background: var(--amarillo);
   color: #061631; font-family: var(--f-display); font-weight: 800; font-size: 46px; }
-.f-step .pn span { font-family: var(--f-mono); font-weight: 700; font-size: 22px; letter-spacing: 0.14em; color: var(--amarillo); text-transform: uppercase; }
+.f-step .pn .pl { font-family: var(--f-mono); font-weight: 700; font-size: 22px; letter-spacing: 0.14em; color: var(--amarillo); text-transform: uppercase; }
 .f-step .st { display: block; margin-top: 14px; font-family: var(--f-display); font-weight: 700; font-size: 54px; line-height: 1; text-transform: uppercase; color: #ffffff; }
-.f-step .sx { display: block; margin-top: 14px; font-family: var(--f-body); font-weight: 500; font-size: var(--fs-body); line-height: 1.34; color: var(--fg-2); }
+.f-step .sx { display: block; margin-top: 14px; font-family: var(--f-body); font-weight: 500; font-size: 32px; line-height: 1.3; color: #ffffff; }
+/* 9:16: número a la izquierda del rótulo "Paso n de 6" + título (tarjeta compacta encima del corte) */
+.fmt-v .f-step .pn { align-items: center; gap: 20px; }
+.fmt-v .f-step .pn b { width: 76px; height: 76px; flex: 0 0 76px; font-size: 50px; }
+.fmt-v .f-step .pn .pt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fmt-v .f-step .pn .pl { font-size: 28px; }
+.fmt-v .f-step .st { margin-top: 0; font-size: 52px; }
+.fmt-v .f-step .sx { margin-top: 14px; font-size: 36px; line-height: 1.25; }
 .f-steps-bar { position: absolute; display: flex; gap: 10px; }
 .f-steps-bar i { display: block; flex: 1 1 0; height: 8px; border-radius: 4px; background: rgba(169, 220, 247, 0.25); overflow: hidden; }
 .f-steps-bar i em { display: block; width: 100%; height: 100%; background: var(--amarillo); transform-origin: 0 50%; transform: scaleX(0); }
@@ -261,6 +285,12 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0616
 #f-scada .mon .scr { position: relative; overflow: hidden; border-radius: 8px; background: #1e2328; }
 #f-scada .mon .stand { position: absolute; left: 50%; bottom: -54px; width: 220px; height: 54px; margin-left: -110px; background: linear-gradient(#2b3a4d, #1a2430); border-radius: 0 0 10px 10px; }
 .f-hudp { position: absolute; display: flex; flex-direction: column; gap: 16px; }
+.f-hrow { display: flex; gap: 16px; align-items: stretch; }
+.f-hrow > * { flex: 1 1 0; min-width: 0; }
+.fmt-v .f-state small, .fmt-v .f-clock small { font-size: 20px; }
+.fmt-v .f-tots { gap: 10px; }
+.fmt-v .f-tot { padding: 8px 16px 10px; }
+.fmt-v .f-tot .tv { font-size: 38px; }
 .f-state { display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-radius: 14px; background: var(--panel-2); border: 3px solid var(--warn); }
 .f-state i { width: 22px; height: 22px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 6px rgba(255, 176, 32, 0.25); }
 .f-state span { font-family: var(--f-display); font-weight: 800; font-size: 52px; line-height: 1; text-transform: uppercase; color: #fff; }

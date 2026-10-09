@@ -113,15 +113,20 @@
   .pr-badge.is-hot { animation: pr-hot 1.6s var(--ease) infinite; }
   .pr-leg { display: grid; gap: 5px; margin-top: 10px; font-size: 12.5px; color: var(--fg-2); transition: opacity 0.3s; }
   .pr-leg div { display: flex; align-items: center; gap: 9px; transition: opacity 0.35s var(--ease); }
-  .pr-leg div.is-off { opacity: 0.38; }
+  .pr-leg div.is-off { color: var(--muted); }
+  .pr-leg div.is-off .ln { opacity: 0.45; }
+  .pr-leg .ls { display: none; }
   .pr-leg .ln { flex: none; width: 30px; height: 7px; border-radius: 4px; position: relative; overflow: hidden; }
   .pr-leg div:not(.is-off) .ln::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,255,255,0.7) 8px 11px, transparent 11px 14px); animation: pr-flow 1.1s linear infinite; }
   .ln.mezcla { background: var(--st-mezcla); } .ln.gas { background: var(--st-gas); }
   .ln.liquido { background: linear-gradient(90deg, var(--st-liquido), #3a2614); box-shadow: inset 0 0 0 1px var(--st-liquido-ambar); }
   .ln.salida { background: var(--st-salida); } .ln.senal { background: var(--st-senal); height: 4px; }
   .pr-legnote { margin: 9px 0 0; font-size: 11.5px; line-height: 1.35; color: var(--muted); }
-  .pr-legend.is-mini .pr-leg { grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 4px; }
-  .pr-legend.is-mini .pr-leg span:not(.ln) { display: none; }
+  .pr-legend.is-mini .pr-leg { grid-template-columns: repeat(3, auto); justify-content: start; gap: 6px 14px; font-size: 12px; }
+  .pr-legend.is-mini .pr-leg div { gap: 6px; }
+  .pr-legend.is-mini .pr-leg .ln { width: 18px; }
+  .pr-legend.is-mini .pr-leg .lt { display: none; }
+  .pr-legend.is-mini .pr-leg .ls { display: inline; }
   .pr-legend.is-mini .pr-legnote { display: none; }
   .pr-legend.is-hide { opacity: 0; visibility: hidden; }
 
@@ -206,8 +211,8 @@
   .pr-tl { position: relative; flex: 1 1 auto; min-width: 0; height: 46px; cursor: pointer; touch-action: none; border-radius: 6px; }
   .pr-tl:focus-visible { outline-offset: 4px; }
   .pr-segs { display: flex; gap: 4px; height: 100%; }
-  .pr-seg { flex: var(--g) 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 7px; padding-bottom: 6px; }
-  .pr-seg span { font: 600 11.5px/1 var(--font-body); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.25s; }
+  .pr-seg { flex: var(--g) 1 0; min-width: min-content; display: flex; flex-direction: column; justify-content: flex-end; gap: 7px; padding-bottom: 6px; }
+  .pr-seg span { padding-right: 6px; font: 600 11.5px/1 var(--font-body); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.25s; }
   .pr-seg span b { font: 700 11px/1 var(--font-mono); color: var(--rb-celeste-200); margin-right: 4px; }
   .pr-seg i { position: relative; display: block; height: 6px; border-radius: 3px; background: rgba(169,220,247,0.16); overflow: hidden; }
   .pr-seg i::after { content: ""; position: absolute; inset: 0; background: var(--rb-celeste); transform-origin: left; transform: scaleX(var(--p, 0)); }
@@ -215,6 +220,9 @@
   .pr-seg.is-cur span b { color: var(--rb-amarillo); }
   .pr-seg.is-cur i::after { background: var(--rb-amarillo); }
   .pr-seg:hover span { color: var(--fg); }
+  .pr-tl.is-compact .pr-seg span { font-size: 0; }
+  .pr-tl.is-compact .pr-seg span b { font-size: 11px; }
+  .pr-tl.is-compact .pr-seg.is-cur span { font-size: 11.5px; }
   .pr-head { position: absolute; left: 0; bottom: 2px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #fff; pointer-events: none;
     box-shadow: 0 0 0 4px rgba(255,194,14,0.35), 0 2px 6px rgba(0,0,0,0.6); }
   .pr-time { flex: none; font: 600 12.5px/1 var(--font-mono); color: var(--fg-2); font-variant-numeric: tabular-nums; min-width: 82px; text-align: right; }
@@ -249,13 +257,17 @@
   }
 
   /* ---------- móvil y tableta vertical: escena arriba, panel y controles abajo ---------- */
-  @media (max-width: 760px), (max-width: 1024px) and (orientation: portrait) {
-    :root { --gap: 8px; --panel-w: 0px; }
+  /* barra superior: css/wt.css trae las reglas móviles comunes hasta 720 px; aquí se extienden igual al rango 721–1024 vertical */
+  @media (min-width: 721px) and (max-width: 760px), (min-width: 721px) and (max-width: 1024px) and (orientation: portrait) {
     .wt-topbar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 12px 6px; }
     .wt-topbar .wt-title { font-size: 17px; line-height: 1.1; }
     .wt-topbar .wt-title small { display: none; }
-    .wt-topbar nav { order: 3; gap: 2px; }
+    .wt-topbar .wt-logo { height: 32px; }
+    .wt-topbar nav { order: 3; width: 100%; margin-left: 0; gap: 2px; overflow-x: auto; flex-wrap: nowrap; }
     .wt-topbar nav a { padding: 5px 8px; font-size: 13px; white-space: nowrap; }
+  }
+  @media (max-width: 760px), (max-width: 1024px) and (orientation: portrait) {
+    :root { --gap: 8px; --panel-w: 0px; }
     .pr { display: flex; flex-direction: column; }
     .pr-stage { position: relative; inset: auto; flex: 0 0 auto; height: clamp(220px, 44dvh, 460px); }
     .pr-dock { position: relative; left: auto; right: auto; bottom: auto; height: auto; flex: none; flex-wrap: wrap; gap: 6px 8px; padding: 8px 12px 6px;
@@ -269,7 +281,7 @@
     .pr-tlw { order: 3; flex: 1 1 100%; gap: 8px; }
     .pr-tl { height: 34px; }
     .pr-seg { gap: 5px; padding-bottom: 5px; }
-    .pr-seg span { font-size: 0; text-align: center; }
+    .pr-seg span { font-size: 0; text-align: center; padding-right: 0; }
     .pr-seg span b { font-size: 10.5px; margin: 0; }
     .pr-seg.is-cur span b { margin-right: 4px; }
     .pr-time { min-width: 0; font-size: 11.5px; }
@@ -456,6 +468,11 @@
   var A = S.anchors;
   // ancla propia de la página: llegada de la línea de entrada al remolque (pie de la subida a la boquilla)
   A.lineaEntradaFin = [A.separador[0] - 2.55, 0.7, A.separador[2] - 0.45];
+  // rótulo del separador: en el casco, cerca de la tapa de entrada (fuera de la placa naranja del tag)
+  A.separadorRot = (function () {
+    var m = D.macropera.separador, r = -(m.rot || 0) * Math.PI / 180, lx = -1.72, ly = 2.24, lz = 0.17;   // coordenadas locales del remolque
+    return [m.x + lx * Math.cos(r) + lz * Math.sin(r), ly, m.z - lx * Math.sin(r) + lz * Math.cos(r)];
+  })();
   var controls = new THREE.OrbitControls(S.camera, canvas);
   controls.enableDamping = !reduce; controls.dampingFactor = 0.08; controls.minDistance = 1.2; controls.maxDistance = 240;
   controls.maxPolarAngle = 1.48; controls.screenSpacePanning = false; controls.enabled = false; controls.zoomToCursor = true;
@@ -490,7 +507,7 @@
   var STEP0 = 8.0, STEPD = 3.15;                  // pasos del corte en el capítulo 4
   var STEP_HL = { choque: 'deflector', liberacion: 'TPS', asentamiento: null, niebla: 'extractor', nivel: 'TN', gas: 'PV' };
   var SC_H = [[5.0, 0], [6.8, 2], [12.2, 26], [13.2, 27]];   // capítulo 7: u (s) → h simulada (time-lapse de 24 h)
-  var vLV = valvula('LV'), vPV = valvula('PV'), fLIC = funcion('LIC'), fPIC = funcion('PIC');
+  var vLV = valvula('LV'), vPV = valvula('PV'), fLIC = funcion('LIC'), fPIC = funcion('PIC'), fFQI = funcion('FQI');
   var scadaNm = eqName('scada'), rtuNm = eqName('rtu');
 
   var CH = [
@@ -498,15 +515,15 @@
       lead: 'El aforo se realiza en la macropera: el pozo en prueba se alinea al separador bifásico de ' + D.empresa.corto + ' montado en remolque. La caseta de medición con la PC de campo y el RTU quedan fuera de la zona de seguridad.',
       keys: function () { var a = pose('aerea'); return [[0, orbit(a, 0.62, -0.3, 1.5)], [5.6, a], [11, orbit(a, -0.16, 0.02, 0.9)]]; },
       beats: [
-        { at: 4.6, id: 'arbol', n: '1', nombre: 'Pozo en prueba', desc: 'Pozo de la macropera que se alinea al separador durante el aforo; los demás pozos permanecen cerrados.' },
+        { at: 4.6, id: 'arbol', n: '1', nombre: 'Pozo en prueba', desc: 'Solo el pozo en prueba se alinea al separador durante el aforo; los demás pozos de la pera continúan produciendo a batería por su línea.' },
         { at: 6.4, id: 'separador', n: '2', nombre: 'Separador de prueba ' + TAG, desc: SEP.tipo + ', ' + SEP.orientacion.toLowerCase() + ', montado en ' + lc(SEP.montaje) + '.' },
         { at: 8.0, id: 'caseta', n: '3', nombre: 'Caseta de medición y RTU', desc: 'Camper donde opera el personal de medición: aquí está la PC de campo con el ' + scadaNm + '. Junto a ella, el ' + rtuNm + ' concentra las señales de campo.' },
-        { at: 9.6, id: 'zonaSeguridad', n: '4', nombre: 'Zona de seguridad', desc: 'Perímetro con delineadores y cinta alrededor del pozo, el cabezal, las líneas y el separador. Solo entra personal autorizado con EPP: ' + lc(SEP.servicio) + ' (H₂S).' }
+        { at: 9.6, id: 'zonaSeguridad', n: '4', nombre: 'Zona de seguridad', desc: 'Perímetro con delineadores y cinta alrededor del pozo, el ' + lc(eqName('manifold')) + ', las líneas y el separador. Solo entra personal autorizado con EPP: ' + lc(SEP.servicio) + ' (H₂S).' }
       ],
       labels: [['pozo', 2.4], ['manifold', 2.8], ['lineas', 3.2], ['separador', 3.6], ['caseta', 4.0], ['rtu', 4.4], ['zonaSeguridad', 4.8], ['acceso', 5.2], ['lineaBateria', 5.6]] },
 
     { titulo: 'Pozo y estrangulador', corto: 'Pozo', dur: 11, fly: 2.6, poster: 4.6,
-      lead: 'Se abre el pozo: la mezcla de aceite, agua y gas sale del árbol de válvulas por TP o TR, pasa por el estrangulador y el cabezal la alinea hacia el separador de prueba.',
+      lead: 'Se abre el pozo: la mezcla de aceite, agua y gas sale del árbol de válvulas por TP o TR, pasa por el estrangulador y el ' + lc(eqName('manifold')) + ' la alinea hacia el separador de prueba.',
       keys: function () { var a = pose('arbol'), e = pose('estrangulador'), m = pose('manifold'); return [[2.6, a], [5.6, orbit(a, 0.22, 0.03, 0.95)], [7.0, e], [8.4, orbit(e, -0.12, 0.02, 0.96)], [10.0, m], [11, orbit(m, -0.08, 0.02, 0.97)]]; },
       beats: [
         { at: 2.6, id: 'arbol', live: 'TDP' },
@@ -515,7 +532,7 @@
       ],
       labels: [['arbol', 2.8], ['TDP', 3.4], ['estrangulador', 6.0], ['manifold', 8.8]] },
 
-    { titulo: 'Línea de entrada', corto: 'Línea de entrada', dur: 8, fly: 1.8, poster: 6.0,
+    { titulo: 'Línea de entrada', corto: 'Entrada', dur: 8, fly: 1.8, poster: 6.0,
       lead: 'La mezcla multifásica viaja por la línea temporal' + (LINEA ? ' de ' + LINEA : '') + ', tendida sobre soportes, hasta la boquilla de entrada del separador.',
       keys: function () {
         var l = pose('lineaEntrada'), t = [A.deflector[0] - 0.5, 1.4, A.deflector[2]];
@@ -545,18 +562,20 @@
     { titulo: 'Medición', corto: 'Medición', dur: 14, fly: 2.4, poster: 6.0,
       lead: 'Cada corriente se mide por separado y después pasa por su válvula de control: el líquido por el Coriolis y luego la LV; el gas por la placa de orificio y luego la PV.',
       keys: function () {
-        var l = pull(pose('medicionLiquido'), 1.45, 1.6), g = pull(pose('medicionGas'), 1.3);
+        // más abierta y más alta que la toma base: se ve el recipiente completo y las fichas caben sobre el remolque, no sobre los equipos
+        var l = pull(pose('medicionLiquido'), 1.9, 2.5), g = pull(pose('medicionGas'), 1.55, 1.9);
+        l.pos[1] += 0.12; l.target[1] += 0.12;
         return [[2.4, l], [4.8, orbit(l, 0.1, 0.02, 1.02)], [7.2, orbit(l, 0.18, 0.04, 1.08)], [8.8, g], [11.4, orbit(g, -0.1, 0.02, 1.02)], [14, orbit(g, -0.18, 0.04, 1.06)]];
       },
       beats: [
         { at: 2.4, id: 'coriolis', live: 'coriolis' },
         { at: 4.9, id: 'LV', n: 'LV', nombre: vLV.nombre, desc: vLV.ubicacion + '. Lazo ' + fLIC.tag + ' en el RTU: con la lectura del ' + fLIC.mide + ' abre o cierra para mantener el nivel del separador.', live: 'LV' },
-        { at: 8.8, id: 'placa', live: 'placa' },
+        { at: 8.8, id: 'placa', live: 'placa', desc: eqd('placa').desc + (fFQI.tag ? ' En el RTU, la función ' + fFQI.tag + ' calcula el ' + lc(fFQI.desc) + '.' : '') },
         { at: 11.4, id: 'PV', n: 'PV', nombre: vPV.nombre, desc: vPV.ubicacion + '. Lazo ' + fPIC.tag + ' en el RTU: con la lectura del ' + fPIC.mide + ' ajusta la apertura para sostener la presión del separador.', live: 'PV' }
       ],
       labels: [['CORIOLIS', 2.6, 8.4], ['LV', 4.9, 8.4], ['placa', 8.9], ['TDG', 9.3], ['PV', 11.4]] },
 
-    { titulo: 'Circuito cerrado → batería', corto: 'Circuito cerrado', dur: 10, fly: 2.2, poster: 7.0,
+    { titulo: 'Circuito cerrado → batería', corto: 'Batería', dur: 10, fly: 2.2, poster: 7.0,
       lead: 'El gas y el líquido ya medidos se reincorporan en la línea de salida y la producción continúa hacia la batería. Circuito cerrado: no se ventea ni se quema.',
       keys: function () {
         var r = pose('recombinacion'), lb = A.lineaBateria, bt = pose('bateria');
@@ -606,7 +625,7 @@
     manifold: { k: 'eq', a: 'manifold', nombre: eqName('manifold'), dir: [-1, 0.7] },
     lineas: { k: 'eq', a: 'lineaEntrada', nombre: 'Líneas temporales', dir: [-0.3, 1] },
     lineaEntrada: { k: 'eq', a: 'lineaEntradaFin', nombre: eqName('lineaEntrada'), sub: 'Mezcla multifásica' + (LINEA ? ' · ' + LINEA : ''), dir: [-0.4, 1] },
-    separador: { k: 'eq', a: 'separador', nombre: 'Separador ' + TAG, sub: String(SEP.tipo).split(' (')[0], dir: [0.3, -1] },
+    separador: { k: 'eq', a: 'separadorRot', nombre: 'Separador ' + TAG, sub: String(SEP.tipo).split(' (')[0], dir: [0.3, -1] },
     caseta: { k: 'eq', a: 'caseta', nombre: 'Caseta de medición', sub: 'PC de campo · ' + scadaNm, dir: [1, -0.6] },
     rtu: { k: 'eq', a: 'rtu', nombre: rtuNm, sub: D.instrumentos.length + ' señales de campo', dir: [-0.5, -1] },
     zonaSeguridad: { k: 'eq', a: 'zonaSeguridad', nombre: 'Zona de seguridad', dir: [0.5, 1] },
@@ -616,19 +635,19 @@
     deflector: { k: 'eq', a: 'deflector', nombre: interno('deflector').nombre, dir: [-1, -0.8] },
     extractor: { k: 'eq', a: 'extractor', nombre: interno('extractor').nombre, dir: [0.4, -1] },
     recombinacion: { k: 'eq', a: 'recombinacion', nombre: eqName('recombinacion'), sub: 'Gas + líquido medidos', dir: [-1, -0.6] },
-    placa: { k: 'eq', a: 'placa', nombre: eqName('placa'), dir: [-1, 0.7] },
+    placa: { k: 'eq', a: 'placa', nombre: eqName('placa'), dir: [0.25, 1], len: 2.2 },
     scada: { k: 'eq', a: 'scada', nombre: scadaNm, sub: 'PC de campo', dir: [0.6, -1] },
     TDP: { k: 'inst', tag: 'TDP', vals: function (v) { return [[fmt(v.pPozo, 1), 'kg/cm²']]; }, dir: [1, -1] },
     TPS: { k: 'inst', tag: 'TPS', vals: function (v) { return [[fmt(v.pSep, 2), 'kg/cm²']]; }, dir: [1, -1] },
     TT: { k: 'inst', tag: 'TT', vals: function (v) { return [[fmt(v.tSep, 1), '°C']]; }, dir: [-0.4, -1] },
     TN: { k: 'inst', tag: 'TN', vals: function (v) { return [[fmt(v.nivel, 1), '%']]; }, dir: [0.5, -1] },
-    CORIOLIS: { k: 'inst', tag: 'CORIOLIS', vals: function (v) { return [[fmt(v.masico, 0), 'kg/h'], [fmt(v.densidad, 1), 'kg/m³'], [fmt(v.pctAgua, 1), '% agua']]; }, dir: [-0.5, 1] },
-    TDG: { k: 'inst', tag: 'TDG', vals: function (v) { return [[fmt(v.dpGas, 1), 'inH₂O'], [fmt(v.qGas, 2), 'MMpcd gas']]; }, dir: [0.4, -1] },
+    CORIOLIS: { k: 'inst', tag: 'CORIOLIS', vals: function (v) { return [[fmt(v.masico, 0), 'kg/h'], [fmt(v.densidad, 1), 'kg/m³'], [fmt(v.pctAgua, 1), '% agua']]; }, dir: [0.55, 1], len: 2.6 },
+    TDG: { k: 'inst', tag: 'TDG', vals: function (v) { return [[fmt(v.dpGas, 1), 'inH₂O'], [fmt(v.qGas, 2), 'MMpcd gas']]; }, dir: [0.4, -1], len: 1.6 },
     TDM: { k: 'inst', tag: 'TDM', vals: function (v) { return [[fmt(v.pSalida, 2), 'kg/cm²']]; }, dir: [-1, -0.5] },
     TPL: { k: 'inst', tag: 'TPL', vals: function (v) { return [[fmt(v.pBateria, 2), 'kg/cm²']]; }, dir: [0.4, -1] },
-    LV: { k: 'valve', tag: 'LV', sub: (fLIC.desc || '') + ' · ' + (fLIC.tag || ''), vals: function (v) { return [[fmt(v.aperturaLV, 0) + ' %', 'apertura']]; }, dir: [1, 0.6] },
-    PV: { k: 'valve', tag: 'PV', sub: 'Contrapresión · ' + (fPIC.tag || ''), vals: function (v) { return [[fmt(v.aperturaPV, 0) + ' %', 'apertura']]; }, dir: [1, -0.7] },
-    sepInst: { k: 'grp', a: 'separador', nombre: 'Instrumentos del separador', tags: ['TPS', 'TT', 'TN', 'CORIOLIS', 'TDG', 'TDM'], dir: [-0.5, -1] },
+    LV: { k: 'valve', tag: 'LV', sub: (fLIC.desc || '') + ' · ' + (fLIC.tag || ''), vals: function (v) { return [[fmt(v.aperturaLV, 0) + ' %', 'apertura']]; }, dir: [-0.75, -1], len: 2.2 },
+    PV: { k: 'valve', tag: 'PV', sub: 'Contrapresión · ' + (fPIC.tag || ''), vals: function (v) { return [[fmt(v.aperturaPV, 0) + ' %', 'apertura']]; }, dir: [-0.7, -1], len: 2 },
+    sepInst: { k: 'grp', a: 'separadorRot', nombre: 'Instrumentos del separador', tags: ['TPS', 'TT', 'TN', 'CORIOLIS', 'TDG', 'TDM'], dir: [-0.5, -1] },
     cTDP: { k: 'chip', a: 'TDP', tag: 'TDP', dir: [0.6, -1] },
     cTPL: { k: 'chip', a: 'TPL', tag: 'TPL', dir: [0.6, -1] }
   };
@@ -690,9 +709,9 @@
   /* =====================================================================
      Panel del capítulo, leyenda, línea de tiempo
      ===================================================================== */
-  var STREAMS = [['mezcla', 'Mezcla del pozo (aceite + agua + gas)'], ['gas', 'Gas separado'], ['liquido', 'Líquido (aceite + agua)'], ['salida', 'Salida reincorporada → batería'], ['senal', 'Señal de instrumento → RTU']];
+  var STREAMS = [['mezcla', 'Mezcla del pozo (aceite + agua + gas)', 'Mezcla'], ['gas', 'Gas separado', 'Gas'], ['liquido', 'Líquido (aceite + agua)', 'Líquido'], ['salida', 'Salida reincorporada → batería', 'Salida'], ['senal', 'Señal de instrumento → RTU', 'Señal']];
   function buildLegend(box) {
-    box.innerHTML = STREAMS.map(function (s) { return '<div data-s="' + s[0] + '"><span class="ln ' + s[0] + '" aria-hidden="true"></span><span>' + s[1] + '</span></div>'; }).join('');
+    box.innerHTML = STREAMS.map(function (s) { return '<div data-s="' + s[0] + '"><span class="ln ' + s[0] + '" aria-hidden="true"></span><span class="lt">' + s[1] + '</span><span class="ls">' + s[2] + '</span></div>'; }).join('');
     return Array.prototype.slice.call(box.children);
   }
   var legRows = buildLegend($('leg')).concat(buildLegend(document.querySelector('#legendM .pr-leg')));
@@ -722,6 +741,7 @@
   segsEl.innerHTML = CH.map(function (c, i) { return '<div class="pr-seg" style="--g:' + (c.dur + 9) + '" title="' + esc((i + 1) + ' · ' + c.titulo) + '"><span><b>' + (i + 1) + '</b>' + esc(c.corto) + '</span><i></i></div>'; }).join('');
   var segEls = Array.prototype.slice.call(segsEl.children);
   var segGeo = [];
+  function fitTl() { tl.classList.remove('is-compact'); if (segsEl.scrollWidth > segsEl.clientWidth + 1) tl.classList.add('is-compact'); }
   function measureTl() { var r = tl.getBoundingClientRect(); segGeo = segEls.map(function (s) { var q = s.getBoundingClientRect(); return [q.left - r.left, q.width]; }); }
   function mmss(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
@@ -938,10 +958,10 @@
         if (txt !== L.vtxt) { L.vtxt = txt; L.valsEl.innerHTML = rows.map(function (r) { return '<div><strong>' + esc(r[0]) + '</strong><span>' + esc(r[1]) + '</span></div>'; }).join(''); }
       }
       if (!L.w || measureTick === 0) { L.w = L.el.firstChild.offsetWidth; L.h = L.el.firstChild.offsetHeight; }
-      var w = L.w, h = L.h, a0 = Math.atan2(L.dir[1], L.dir[0]), best = null, bestHit = 1e9, bestC = 0;
+      var w = L.w, h = L.h, a0 = Math.atan2(L.dir[1], L.dir[0]), best = null, bestHit = 1e9, bestC = 0, lenL = len * (L.len ? (n ? Math.min(L.len, 1.6) : L.len) : 1);
       for (var cc = 0; cc < 14; cc++) {
         var cIdx = cc === 0 ? L.cand : cc - 1;
-        var step = Math.ceil(cIdx / 2) * (cIdx % 2 ? 1 : -1), an = a0 + step * Math.PI / 6, L2 = len * (cIdx > 8 ? 1.9 : 1);
+        var step = Math.ceil(cIdx / 2) * (cIdx % 2 ? 1 : -1), an = a0 + step * Math.PI / 6, L2 = lenL * (cIdx > 8 ? 1.9 : 1);
         var dx = Math.cos(an), dy = Math.sin(an), ex = p.x + dx * L2, ey = p.y + dy * L2;
         var bx = dx < -0.35 ? ex - w : dx > 0.35 ? ex : ex - w / 2, by = dy < -0.35 ? ey - h : dy > 0.35 ? ey : ey - h / 2;
         bx = clamp(bx, safe.x0, Math.max(safe.x0, safe.x1 - w)); by = clamp(by, safe.y0, Math.max(safe.y0, safe.y1 - h));
@@ -1025,6 +1045,7 @@
     curCh = ci; var c = CH[ci];
     renderPanel(ci);
     segEls.forEach(function (s, i) { s.classList.toggle('is-cur', i === ci); });
+    if (tl.classList.contains('is-compact')) measureTl();   // en modo compacto el ancho depende del capítulo actual
     canvas.setAttribute('aria-label', 'Vista 3D · capítulo ' + (ci + 1) + ' de ' + CH.length + ': ' + c.titulo + '. ' + c.lead);
     liveEl.textContent = 'Capítulo ' + (ci + 1) + ' de ' + CH.length + ': ' + c.titulo;
     var hs = '#capitulo-' + (ci + 1);
@@ -1150,7 +1171,7 @@
       scadaBox.style.setProperty('--inset-w', Math.max(320, Math.round(wSc)) + 'px');
     } else { cutBox.style.removeProperty('--inset-w'); scadaBox.style.removeProperty('--inset-w'); }
     for (var id in LB) LB[id].w = 0;
-    segGeo = []; cutSize = [0, 0]; if (cut) sizeCut();
+    fitTl(); segGeo = []; cutSize = [0, 0]; if (cut) sizeCut();
     dirty = true;
   }
   window.addEventListener('resize', resize);
@@ -1173,6 +1194,7 @@
     if (hi >= 0) T = CH[hi].t0 + (reduce ? CH[hi].poster : CH[hi].fly);
     else T = reduce ? CH[0].poster : 0;
     syncToggles();
+    fitTl(); segGeo = [];                            // con las fuentes ya cargadas
     setPlaying(!reduce);
     $('loading').style.display = 'none';
     var hint = $('hint');

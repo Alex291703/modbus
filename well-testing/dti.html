@@ -76,8 +76,11 @@
   .zoombar button:hover { background: var(--surface-2); border-color: var(--line-strong); }
   .zoombar button svg { width: 20px; height: 20px; }
   .zoombar output { min-width: 40px; text-align: center; font: 700 11px var(--font-mono); color: var(--fg-2); padding: 2px 0; }
-  .hint { position: absolute; left: 12px; bottom: 12px; z-index: 3; font-size: 12px; color: var(--fg-2); padding: 6px 10px; border-radius: 8px;
-    background: rgba(6,22,49,.72); border: 1px solid var(--line); pointer-events: none; transition: opacity .4s; }
+  .streams .hint { margin-left: auto; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+  .toast { position: absolute; left: 50%; bottom: 14px; z-index: 6; transform: translate(-50%, 8px); max-width: min(560px, calc(100% - 24px)); padding: 9px 14px; border-radius: 10px;
+    background: rgba(6,22,49,.94); border: 1px solid var(--line-strong); color: var(--fg); font-size: 13px; box-shadow: 0 16px 40px -18px #000;
+    opacity: 0; pointer-events: none; transition: opacity .25s var(--ease), transform .25s var(--ease); }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
   .badge-live { position: absolute; left: 12px; top: 12px; z-index: 3; display: inline-flex; align-items: center; gap: 8px; font: 700 11px var(--font-mono);
     letter-spacing: .12em; text-transform: uppercase; color: var(--rb-celeste-200); padding: 6px 10px; border-radius: 999px; background: rgba(6,22,49,.78); border: 1px solid var(--line-strong); pointer-events: none; }
   .badge-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(60,207,142,.6); animation: pulse 1.8s infinite; }
@@ -152,10 +155,6 @@
   @media (max-width: 1180px) { .c-leer, .c-lazos { grid-column: span 6; } .c-desc { grid-column: span 12; } }
   @media (max-width: 720px) {
     :root { --gut: 16px; }
-    .wt-topbar { flex-wrap: wrap; row-gap: 6px; }
-    .wt-topbar .wt-title { font-size: 17px; line-height: 1.15; }
-    .wt-topbar .wt-title small { display: none; }
-    .wt-topbar nav a { white-space: nowrap; }
     .dti-head p { font-size: 14px; }
     .seg > span { position: static !important; width: auto; height: auto; clip: auto; min-width: 54px; }
     .tools { gap: 8px; padding: 8px; }
@@ -185,14 +184,14 @@
   @media (prefers-reduced-motion: reduce) {
     .dti-head, .tools, .stage-wrap, .streams { animation: none; }
     .badge-live i { animation: none; }
-    .ficha { transition: none; }
+    .ficha, .toast { transition: none; }
   }
 
   /* ---------- exportación (PNG/PDF) ---------- */
   body.export { background: #fff; margin: 0; overflow: hidden; }
   body.export *, body.export *::before, body.export *::after { animation: none !important; transition: none !important; }
   body.export .wt-topbar, body.export .dti-head, body.export .tools, body.export .streams, body.export .info,
-  body.export .zoombar, body.export .hint, body.export .badge-live, body.export .ficha, body.export .sheen { display: none !important; }
+  body.export .zoombar, body.export .toast, body.export .badge-live, body.export .ficha, body.export .sheen { display: none !important; }
   body.export .dti { padding: 0; max-width: none; }
   body.export .stage { position: fixed; inset: 0; height: 100vh; border: 0; border-radius: 0; box-shadow: none; background: none; }
   body.export .pz, body.export .sheet3d { position: absolute; inset: 0; transform: none !important; width: 100% !important; height: 100% !important; }
@@ -202,7 +201,7 @@
   @media print {
     body { background: #fff !important; }
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    .wt-topbar, .dti-head, .tools, .streams, .info, .zoombar, .hint, .badge-live, .ficha, .sheen, .layers { display: none !important; }
+    .wt-topbar, .dti-head, .tools, .streams, .info, .zoombar, .toast, .badge-live, .ficha, .sheen, .layers { display: none !important; }
     .dti { padding: 0 !important; max-width: none !important; }
     .stage-wrap { animation: none !important; }
     .stage { position: static !important; height: auto !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: none !important; overflow: visible !important; }
@@ -214,7 +213,7 @@
 </head>
 <body>
 <header class="wt-topbar">
-  <a class="wt-brand" href="index.html"><img class="wt-logo" src="assets/logo-rbtec-blanco.svg" alt="R.B. Tec México · Well Testing — ir al inicio" width="150" height="40"></a>
+  <a class="wt-brand" href="index.html"><img class="wt-logo" src="assets/logo-rbtec-blanco.svg" alt="R.B. Tec México · Well Testing — ir al inicio"></a>
   <div class="wt-title">DTI del aforo<small>Entregable 4 · P&amp;ID con simbología ISA</small></div>
   <nav aria-label="Entregables">
     <a href="index.html">Inicio</a>
@@ -259,7 +258,7 @@
     <button type="button" class="wt-btn" id="btnTrazo" title="Volver a trazar el DTI en el orden del flujo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4.5v11l9-5.5z" fill="currentColor"/></svg>Trazar</button>
     <button type="button" class="wt-btn" id="btnCapas" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 18 6l-8 4-8-4zM2 10l8 4 8-4M2 14l8 4 8-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Capas 3D</button>
     <button type="button" class="wt-btn" id="btnPrint" title="Imprimir en A3 (tema papel)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8V2h10v6M5 15H3V9h14v6h-2M6 12h8v6H6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Imprimir</button>
-    <button type="button" class="wt-btn primary" id="btnSvg" title="Descargar la vista actual como SVG" aria-label="Descargar SVG"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SVG</button>
+    <button type="button" class="wt-btn primary" id="btnSvg" title="Guardar el DTI como SVG vectorial (logotipo incrustado)" aria-label="Guardar SVG"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>SVG</button>
   </div>
 
   <div class="stage-wrap">
@@ -271,7 +270,7 @@
         <div class="layers" id="layers" hidden></div>
       </div>
       <div class="badge-live" aria-hidden="true"><i></i><span id="liveTxt">Flujo animado</span></div>
-      <div class="hint" id="hint">Arrastre para mover · rueda o pellizco para zoom · doble clic para acercar</div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
       <div class="zoombar" role="group" aria-label="Zoom">
         <button type="button" id="zOut" aria-label="Alejar"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
         <output id="zVal" aria-live="polite">100%</output>
@@ -289,6 +288,7 @@
     <button type="button" class="chip" data-hl="liquido" aria-pressed="false"><i class="ln liquido"></i>Líquido (aceite + agua)</button>
     <button type="button" class="chip" data-hl="salida" aria-pressed="false"><i class="ln salida"></i>Reincorporada → batería</button>
     <button type="button" class="chip" data-hl="senal" aria-pressed="false"><i class="ln senal"></i>Señales al RTU</button>
+    <span class="hint" id="hint">Arrastre para mover · rueda o pellizco para zoom · doble clic para acercar</span>
   </div>
 
   <section class="info" aria-label="Guía de lectura">
@@ -308,21 +308,21 @@
       <div id="lazos"></div>
     </article>
     <article class="wt-card c-desc">
-      <div class="wt-eyebrow">Descargas</div>
+      <div class="wt-eyebrow">Descargas · abrir / guardar</div>
       <h2>Para imprimir y presentar</h2>
       <div class="dl-list">
-        <a href="entregables/dti-horizontal.pdf" download><span class="fx pdf">PDF</span>DTI horizontal · A3<small>vector</small></a>
-        <a href="entregables/dti-vertical.pdf" download><span class="fx pdf">PDF</span>DTI vertical · A3<small>vector</small></a>
-        <a href="entregables/dti-horizontal.png" download><span class="fx">PNG</span>Horizontal · papel<small>3840 × 2160</small></a>
-        <a href="entregables/dti-horizontal-pantalla.png" download><span class="fx">PNG</span>Horizontal · pantalla<small>3840 × 2160</small></a>
-        <a href="entregables/dti-vertical.png" download><span class="fx">PNG</span>Vertical · papel<small>2480 × 3508</small></a>
-        <a href="entregables/dti-horizontal.svg" download><span class="fx">SVG</span>Horizontal · editable<small>vector</small></a>
-        <a href="entregables/dti-vertical.svg" download><span class="fx">SVG</span>Vertical · editable<small>vector</small></a>
+        <a href="entregables/dti-vertical.pdf" target="_blank" rel="noopener"><span class="fx pdf">PDF</span>DTI vertical · A3 impresión<small>vector</small></a>
+        <a href="entregables/dti-horizontal.pdf" target="_blank" rel="noopener"><span class="fx pdf">PDF</span>DTI horizontal · 16:9<small>vector · 420 × 236 mm</small></a>
+        <a href="entregables/dti-horizontal.png" target="_blank" rel="noopener"><span class="fx">PNG</span>Horizontal · papel<small>3840 × 2160</small></a>
+        <a href="entregables/dti-horizontal-pantalla.png" target="_blank" rel="noopener"><span class="fx">PNG</span>Horizontal · pantalla<small>3840 × 2160</small></a>
+        <a href="entregables/dti-vertical.png" target="_blank" rel="noopener"><span class="fx">PNG</span>Vertical · papel<small>2480 × 3508</small></a>
+        <a href="entregables/dti-horizontal.svg" target="_blank" rel="noopener"><span class="fx">SVG</span>Horizontal · editable<small>vector</small></a>
+        <a href="entregables/dti-vertical.svg" target="_blank" rel="noopener"><span class="fx">SVG</span>Vertical · editable<small>vector</small></a>
       </div>
-      <p class="note">El botón «SVG» de la barra guarda la vista actual (formato, tema y equipo). Los SVG de esta lista llevan las fuentes incrustadas para abrirse en cualquier equipo.</p>
+      <p class="note">Cada archivo se abre en una pestaña nueva, desde donde se guarda o se imprime. Los SVG de esta lista llevan el logotipo y las fuentes incrustados. El botón «SVG» de la barra guarda la vista actual (formato, tema y equipo) con el logotipo incrustado.</p>
     </article>
     <article class="wt-card c-lista">
-      <div class="wt-eyebrow">Instrumentación E+H → RTU Honeywell ControlEdge 2020</div>
+      <div class="wt-eyebrow" id="listaEyebrow">Instrumentación E+H → RTU</div>
       <h2>Lista de instrumentos</h2>
       <div class="tbl-wrap">
         <table>
@@ -337,6 +337,7 @@
 
 <script src="js/vendor/gsap.min.js"></script>
 <script src="js/data.js"></script>
+<script src="js/logo.js"></script>
 <script src="js/pid.js"></script>
 <script>
 (function () {
@@ -408,10 +409,12 @@
   }
 
   /* ---------------- vista por capas 3D ---------------- */
+  var eqRtu = U.equipo('rtu') || { nombre: 'RTU' }, eqScada = U.equipo('scada') || { nombre: 'SCADA' };
+  var rtuCorto = String(eqRtu.corto || eqRtu.nombre).split(' ')[0], scadaCorto = String(eqScada.corto || eqScada.nombre).replace(/\s*\(.*\)/, '');
   var CAPAS = [
     { id: 'proceso', n: '1', t: 'Proceso', s: 'Tubería, equipos y válvulas' },
     { id: 'instrumentacion', n: '2', t: 'Instrumentación', s: 'Transmisores E+H en campo' },
-    { id: 'control', n: '3', t: 'Control', s: 'Señales → RTU → SCADA SAF-900' }
+    { id: 'control', n: '3', t: 'Control', s: 'Señales → ' + rtuCorto + ' → ' + scadaCorto }
   ];
   function buildLayers() {
     LAYERS.forEach(function (l) { l.destroy(); });
@@ -509,7 +512,6 @@
     var r = stage.getBoundingClientRect();
     if (hasGsap) gsap.killTweensOf(view);
     zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0016)), e.clientX - r.left, e.clientY - r.top, true);
-    hideHint();
   }, { passive: false });
 
   var ptrs = new Map(), drag = null, moved = false;
@@ -539,7 +541,7 @@
     }
     var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     if (!moved && Math.hypot(dx, dy) < 5) return;
-    moved = true; stage.classList.add('dragging'); hideFicha(); hideHint();
+    moved = true; stage.classList.add('dragging'); hideFicha();
     view.x = drag.vx + dx; view.y = drag.vy + dy; applyView();
   });
   function endPtr(e) {
@@ -564,8 +566,11 @@
     }
   });
   window.addEventListener('resize', function () { if (P && !EXPORT) fit(true); });
-  var hintEl = document.getElementById('hint');
-  function hideHint() { hintEl.style.opacity = 0; }
+  var toastEl = document.getElementById('toast'), toastT = 0;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 6000);
+  }
 
   /* ---------------- interacción con el SVG ---------------- */
   var ISA_V = { P: 'presión', T: 'temperatura', L: 'nivel', F: 'flujo', PD: 'presión diferencial' };
@@ -576,18 +581,23 @@
   }
   /* Funciones del RTU y válvulas de control desde WT.data (con respaldo) */
   function porTag(arr, t) { arr = arr || []; for (var i = 0; i < arr.length; i++) if (arr[i].tag === t) return arr[i]; return null; }
-  function fnD(t, def) { var f = porTag(D.funciones, t) || {}; return { tag: f.tag || t, mide: f.mide || def.mide, actua: f.actua || def.actua, desc: f.desc || def.desc }; }
+  function fnD(t, def) { var f = porTag(D.funciones, t) || {}; return { tag: f.tag || t, mide: f.mide || def.mide, actua: f.actua || def.actua, desc: f.desc || def.desc, compensa: f.compensa || def.compensa || [] }; }
   function valv(t) { return porTag(D.valvulasControl, t) || { tag: t }; }
   var fLIC = fnD('LIC', { mide: 'TN', actua: 'LV', desc: 'Control de nivel del separador' });
   var fPIC = fnD('PIC', { mide: 'TPS', actua: 'PV', desc: 'Control de presión del separador (contrapresión)' });
-  var fFQI = fnD('FQI', { mide: 'TDG', desc: 'Cálculo de gasto y acumulado de gas' });
+  var fFQI = fnD('FQI', { mide: 'TDG', compensa: ['TPS', 'TT'], desc: 'Gasto y acumulado de gas' });
+  // «compensado por la presión (TPS) y la temperatura (TT) del separador», desde la variable ISA de cada instrumento
+  var compTxt = (function () {
+    var nom = { P: 'la presión', T: 'la temperatura' }, ps = fFQI.compensa.map(function (t) { var i = U.instrumento(t); return (i && nom[i.isa.charAt(0)] || t) + ' (' + t + ')'; });
+    return ps.length ? ', compensado por ' + (ps.length > 1 ? ps.slice(0, -1).join(', ') + ' y ' + ps[ps.length - 1] : ps[0]) + ' del separador' : '';
+  })();
   var vLV = valv(fLIC.actua), vPV = valv(fPIC.actua);
   var eqCor = U.equipo('coriolis'), eqPlaca = U.equipo('placa');
   function minus(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
   var FUNCS = {};
   FUNCS[fLIC.tag] = { isa: fLIC.tag, sub: fLIC.mide, t: fLIC.desc, d: 'Función en el RTU: compara el nivel del ' + fLIC.mide + ' con el punto de ajuste y posiciona la ' + fLIC.actua + ' (' + minus(vLV.ubicacion || 'salida de líquido') + ').' };
   FUNCS[fPIC.tag] = { isa: fPIC.tag, sub: fPIC.mide, t: fPIC.desc, d: 'Función en el RTU: con la presión del ' + fPIC.mide + ' posiciona la ' + fPIC.actua + ' (' + minus(vPV.ubicacion || 'salida de gas') + ') para mantener la contrapresión del separador.' };
-  FUNCS[fFQI.tag] = { isa: fFQI.tag, sub: fFQI.mide, t: fFQI.desc, d: 'Función en el RTU: calcula el gasto de gas a partir del diferencial de la placa de orificio (' + fFQI.mide + ') y lo acumula para el SCADA.' };
+  FUNCS[fFQI.tag] = { isa: fFQI.tag, sub: fFQI.mide, t: 'Gasto y acumulado de gas', d: 'Función en el RTU: calcula el gasto de gas con el ΔP de la placa de orificio (' + fFQI.mide + ')' + compTxt + '. Presenta en el ' + scadaCorto + ' el gasto en MMpcd y el acumulado en MMpc.' };
   FUNCS.PI = { isa: 'PI', sub: 'local', t: 'Manómetro local', d: 'Indicación local de presión en la línea de entrada al separador (sin señal al RTU).' };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function showFicha(tag, anchorEl) {
@@ -705,50 +715,62 @@
     a.href = URL.createObjectURL(blob); a.download = 'DTI-' + st.tag + '-' + st.orient + '-' + st.tema + '.svg';
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
+  function logoData() { var L = WT.logo; return L ? (st.tema === 'papel' ? L.color : L.blanco) : null; }  // js/logo.js (data:)
+  function abrir(href) {
+    var a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 0);
+  }
   document.getElementById('btnSvg').addEventListener('click', function () {
-    var logo = P.svg.querySelector('image.logo'), logoUrl = logo ? new URL(logo.getAttribute('href'), location.href).href : null;
+    var logo = logoData();
     if (/^https?:/.test(location.protocol)) {
-      // servido por http(s): fuentes y logo se incrustan → SVG autónomo
+      // servido por http(s): las fuentes se leen y se incrustan → SVG autónomo
       Promise.all(WT.PID.FUENTES.map(function (f) {
         return toDataURL('assets/' + f.file).then(function (d) { return '@font-face{font-family:"' + f.family + '";font-weight:' + f.weight + ';src:url(' + d + ') format("woff2")}'; });
-      }).concat([logoUrl ? toDataURL(logoUrl) : Promise.resolve(null)])).then(function (r) {
-        var logoData = r.pop();
-        saveSvg(P.toSVGString({ fontCSS: r.join('\n'), logoHref: logoData }));
-      }).catch(function () { saveSvg(P.toSVGString({ logoHref: logoUrl })); });
+      })).then(function (r) {
+        saveSvg(P.toSVGString({ fontCSS: r.join('\n'), logoHref: logo }));
+      }).catch(function () { saveSvg(P.toSVGString({ logoHref: logo })); });
+    } else if (st.tema === 'papel' && st.tag === D.separador.tagDefault) {
+      // abierto con doble clic (file://): el navegador no deja leer las fuentes, pero esta vista es la misma que el SVG
+      // de entregables/, que ya trae logotipo y fuentes incrustados → se abre ese archivo en otra pestaña
+      abrir('entregables/dti-' + st.orient + '.svg');
+      toast('Se abrió el SVG ' + st.orient + ' con logotipo y fuentes incrustados; guárdelo desde esa pestaña.');
     } else {
-      // abierto con doble clic (file://): el navegador no deja leer las fuentes; el logo se enlaza con ruta absoluta.
-      // Las versiones con fuentes incrustadas están en entregables/dti-*.svg
-      saveSvg(P.toSVGString({ logoHref: logoUrl }));
+      saveSvg(P.toSVGString({ logoHref: logo }));
+      toast('SVG de la vista actual guardado con el logotipo incrustado. Para un SVG con las fuentes incrustadas, use ' + D.separador.tagDefault + ' · Papel o los archivos de «Descargas».');
     }
   });
   var printStyle = document.createElement('style'); document.head.appendChild(printStyle);
   var prevTema = null;
   function beforePrint() {
+    if (EXPORT) return;   // exportación (PDF de tools/export-stills.mjs): el tamaño de página lo fija el exportador, sin márgenes
     printStyle.textContent = '@page { size: A3 ' + (st.orient === 'vertical' ? 'portrait' : 'landscape') + '; margin: 8mm; }';
     if (st.tema !== 'papel') { prevTema = st.tema; P.setTema('papel'); }
     P.renderAt(0, { trazo: 1, pulsos: 0 });
   }
-  function afterPrint() { if (prevTema) { P.setTema(prevTema); prevTema = null; } kick(); }
+  function afterPrint() { if (EXPORT) return; if (prevTema) { P.setTema(prevTema); prevTema = null; } kick(); }
   window.addEventListener('beforeprint', beforePrint);
   window.addEventListener('afterprint', afterPrint);
   document.getElementById('btnPrint').addEventListener('click', function () { if (st.capas) setCapas(false); beforePrint(); window.print(); });
 
   /* ---------------- tarjetas: lazos y lista ---------------- */
   var lz = document.getElementById('lazos');
+  var gasIn = [[fFQI.mide, '']].concat(fFQI.compensa.map(function (t) { return [t, '']; }));
   [
     { k: 'Nivel', c: [[fLIC.mide, ''], [fLIC.tag, 'fn'], [fLIC.actua, 'v']], p: 'El líquido se mide primero en el ' + ((eqCor && eqCor.corto) || 'Coriolis') + ' y después pasa por la ' + fLIC.actua + ': al subir el nivel, el ' + fLIC.tag + ' abre la ' + fLIC.actua + '.' },
     { k: 'Presión', c: [[fPIC.mide, ''], [fPIC.tag, 'fn'], [fPIC.actua, 'v']], p: 'El gas se mide primero en la ' + minus((eqPlaca && eqPlaca.corto) || 'Placa de orificio') + ' y después pasa por la ' + fPIC.actua + ', que mantiene la contrapresión del separador.' },
-    { k: 'Gas', c: [[fFQI.mide, ''], [fFQI.tag, 'fn']], p: 'El ΔP en la placa de orificio se convierte en gasto y acumulado de gas (MMpcd).' },
-    { k: 'Monitoreo', c: [['8 tags', ''], ['RTU', 'fn'], ['SAF-900', 'fn']], p: 'Todas las señales llegan al ' + U.equipo('rtu').nombre + ' y se visualizan en el ' + U.equipo('scada').nombre + '.' }
+    { k: 'Gas', c: gasIn.concat([[fFQI.tag, 'fn']]), sep: gasIn.map(function (x, i) { return i < gasIn.length - 1 ? '+' : '→'; }), p: 'El ' + rtuCorto + ' calcula el gasto de gas con el ΔP de la placa (' + fFQI.mide + ')' + compTxt + ': gasto en MMpcd y acumulado en MMpc.' },
+    { k: 'Monitoreo', c: [[D.instrumentos.length + ' tags', '', 'senal'], [rtuCorto, 'fn', 'senal'], [scadaCorto, 'fn', 'senal']], p: 'Todas las señales llegan al ' + eqRtu.nombre + ' y se visualizan en el ' + eqScada.nombre + '.' }
   ].forEach(function (L) {
     var d = document.createElement('div'); d.className = 'loop';
-    var ch = L.c.map(function (n) {
-      var target = U.instrumento(n[0]) || FUNCS[n[0]] ? n[0] : n[1] === 'v' ? (n[0] === fLIC.actua ? 'lv' : n[0] === fPIC.actua ? 'pv' : valv(n[0]).corriente || null) : n[0] === 'RTU' || n[0] === 'SAF-900' || n[0] === '8 tags' ? 'senal' : null;
-      return '<button type="button" class="n' + (n[1] === 'fn' ? ' fn' : '') + '" data-go="' + (target || '') + '" style="font:inherit">' + esc(n[0]) + '</button>';
-    }).join('<span class="a" aria-hidden="true">→</span>');
+    var ch = L.c.map(function (n, i) {
+      var target = n[2] || (U.instrumento(n[0]) || FUNCS[n[0]] ? n[0] : n[1] === 'v' ? (n[0] === fLIC.actua ? 'lv' : n[0] === fPIC.actua ? 'pv' : valv(n[0]).corriente || null) : null);
+      return (i ? '<span class="a" aria-hidden="true">' + ((L.sep && L.sep[i - 1]) || '→') + '</span>' : '') +
+        '<button type="button" class="n' + (n[1] === 'fn' ? ' fn' : '') + '" data-go="' + (target || '') + '" style="font:inherit">' + esc(n[0]) + '</button>';
+    }).join('');
     d.innerHTML = '<span class="k">' + L.k + '</span><span class="chain">' + ch + '</span><p>' + esc(L.p) + '</p>';
     lz.appendChild(d);
   });
+  document.getElementById('listaEyebrow').textContent = 'Instrumentación E+H → ' + eqRtu.nombre;
   lz.addEventListener('click', function (e) {
     var b = e.target.closest('[data-go]'); if (!b) return;
     var id = b.getAttribute('data-go'); if (!id) return;
@@ -789,7 +811,6 @@
     });
   } else {
     (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { fit(true); intro(); });
-    setTimeout(hideHint, 7000);
   }
   window.WT_DTI = { get pid() { return P; }, estado: st, setHl: setHl, setCapas: setCapas, fit: fit };
 })();

@@ -95,7 +95,7 @@
 
     /* Equipos del proceso, en el orden del recorrido del fluido */
     equipos: [
-      { id: 'arbol', nombre: 'Árbol de válvulas', desc: 'Cabezal del pozo con válvulas maestras, cruz y válvulas laterales; de aquí sale la producción por TP (tubería de producción) o TR (tubería de revestimiento).' },
+      { id: 'arbol', nombre: 'Árbol de válvulas', desc: 'Conjunto de válvulas del pozo (válvulas maestras, cruz y válvulas laterales); de aquí sale la producción por TP (tubería de producción) o TR (tubería de revestimiento).' },
       { id: 'estrangulador', nombre: 'Estrangulador TP / TR', corto: 'Estrangulador TP/TR', desc: 'Restricción calibrada que controla el gasto y la presión de flujo del pozo.' },
       { id: 'manifold', nombre: 'Cabezal / manifold', desc: 'Arreglo de válvulas que alinea la producción del pozo hacia el separador de prueba.' },
       { id: 'lineaEntrada', nombre: 'Línea de entrada', desc: 'Línea temporal que conduce la mezcla multifásica hasta la boquilla del separador.' },
@@ -131,7 +131,7 @@
     funciones: [
       { tag: 'LIC', en: 'RTU', mide: 'TN', actua: 'LV', desc: 'Control de nivel del separador' },
       { tag: 'PIC', en: 'RTU', mide: 'TPS', actua: 'PV', desc: 'Control de presión del separador (contrapresión)', confirmar: true },
-      { tag: 'FQI', en: 'RTU', mide: 'TDG', compensa: ['TPS', 'TT'], desc: 'Gasto de gas (MMpcd) y acumulado (MMpc) con el ΔP de la placa (TDG), compensado por presión (TPS) y temperatura (TT)' }
+      { tag: 'FQI', en: 'RTU', mide: 'TDG', compensa: ['TPS', 'TT'], desc: 'Gasto de gas (MMpcd) y el acumulado (MMpc) con el ΔP de la placa (TDG), compensado por presión (TPS) y temperatura (TT)' }
     ],
     rtu: { modelo: 'Honeywell ControlEdge 2020', modulo: 'Controller & Mixed I/O SC-UCMX02', enlaceScada: 'Ethernet' },
     lineas: { diametroNominal: '4"', fuente: 'Rotulado en la tubería del equipo (fotografía)' },

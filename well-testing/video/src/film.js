@@ -63,87 +63,87 @@
       '3d:separador:12.50': [80, -80],
       '3d:rtu:12.70': [80, -80],
       '3d:caseta:12.90': [80, 80],
-      '3d:zonaSeguridad:13.10': [-80, -80],
+      '3d:zonaSeguridad:13.10': [-80, 80],
       '3d:acceso:13.30': [-80, -130],
       '3d:lineaBateria:13.50': [-80, -80],
       '3d:arbol:17.00': [80, -80],
-      '3d:TDP:17.90': [-80, 80],
+      '3d:TDP:17.90': [80, 80],
       '3d:estrangulador:19.70': [140, 260],
       '3d:manifold:22.00': [-80, -80],
       '3d:lineaEntrada:25.00': [80, -80],
       '3d:deflector:28.90': [80, -80],
-      '3d:deflector:33.30': [80, 130],
-      '3d:extractor:33.55': [-140, -260],
-      '3d:nivel:33.80': [-80, -80],
-      'cut:deflector:36.05': [-80, -80],
-      'cut:extractor:44.52': [-80, -80],
-      'cut:CORIOLIS:47.05': [80, -80],
-      'cut:LV:47.27': [-80, 80],
-      'cut:TN:47.49': [80, 80],
-      'cut:PV:49.80': [80, 130],
-      'cut:placa:50.24': [-80, -80],
-      'L:CORIOLIS:53.20': [-80, -80],
-      'L:LV:53.60': [80, 130],
-      'R:placa:54.30': [-80, 130],
-      'R:TDG:54.60': [80, 190],
+      'cut:deflector:35.95': [80, -80],
+      'cut:extractor:44.05': [80, -80],
+      'cut:TN:46.75': [80, 80],
+      'cut:CORIOLIS:46.97': [80, -80],
+      'cut:LV:47.19': [80, 80],
+      'cut:placa:49.45': [-80, -80],
+      'cut:TDG:49.67': [-80, -80],
+      'cut:PV:49.89': [80, 80],
+      'L:CORIOLIS:53.20': [80, -110],
+      'L:LV:53.60': [-80, 130],
+      'R:placa:54.30': [-80, -80],
+      'R:TDG:54.60': [80, -80],
       'R:PV:54.90': [-80, -80],
       '3d:recombinacion:64.60': [-80, -80],
-      '3d:TDM:65.50': [80, -130],
+      '3d:TDM:65.50': [80, -80],
       '3d:TPL:67.90': [-80, -80],
-      '3d:lineaBateria:68.60': [80, 260],
+      '3d:letreroBateria:68.60': [-80, 80],
       '3d:rtu:72.30': [-80, -80],
-      '3d:scada:72.80': [-140, 190]
+      '3d:scada:72.80': [-80, -80]
     },
     v: {
       '3d:arbol:11.90': [-80, 80],
       '3d:manifold:12.10': [80, 80],
       '3d:lineaEntrada:12.30': [-80, -80],
-      '3d:separador:12.50': [80, -80],
-      '3d:rtu:12.70': [80, -190],
-      '3d:caseta:12.90': [80, 190],
-      '3d:zonaSeguridad:13.10': [-80, -80],
-      '3d:acceso:13.30': [80, -130],
-      '3d:lineaBateria:13.50': [-80, 130],
+      '3d:separador:12.50': [-80, -80],
+      '3d:rtu:12.70': [80, -80],
+      '3d:caseta:12.90': [80, 80],
+      '3d:zonaSeguridad:13.10': [80, 80],
+      '3d:accesoV:13.30': [-80, -80],
+      '3d:lineaBateria:13.50': [-80, -190],
       '3d:arbol:17.00': [80, -80],
-      '3d:TDP:17.90': [80, 0],
-      '3d:estrangulador:19.70': [80, 80],
+      '3d:TDP:17.90': [80, 80],
+      '3d:estrangulador:19.70': [80, 130],
       '3d:manifold:22.00': [-80, -80],
       '3d:lineaEntrada:25.00': [80, -80],
       '3d:deflector:28.90': [80, -80],
-      '3d:deflector:33.30': [80, -80],
-      '3d:extractor:33.55': [-80, 80],
-      '3d:nivel:33.80': [140, -190],
-      'cut:deflector:36.05': [-80, -80],
-      'cut:extractor:44.52': [80, -80],
-      'cut:CORIOLIS:47.05': [-80, 80],
-      'cut:LV:47.27': [-80, 190],
-      'cut:TN:47.49': [140, -190],
-      'cut:PV:49.80': [-80, 80],
-      'cut:placa:50.24': [80, -80],
+      'cut:deflector:35.95': [-80, -80],
+      'cut:extractor:44.05': [80, -80],
+      'cut:TN:46.75': [80, -80],
+      'cut:CORIOLIS:46.97': [-80, -80],
+      'cut:LV:47.19': [80, 80],
+      'cut:placa:49.45': [-80, -80],
+      'cut:TDG:49.67': [-80, -80],
+      'cut:PV:49.89': [80, -80],
       'L:CORIOLIS:53.20': [80, 110],
       'L:LV:53.60': [-80, 140],
-      'R:placa:54.30': [80, 100],
-      'R:TDG:54.60': [80, -130],
-      'R:PV:54.90': [-80, -110],
-      '3d:recombinacion:64.60': [80, -190],
-      '3d:TDM:65.50': [-80, -260],
-      '3d:TPL:67.90': [80, -130],
-      '3d:lineaBateria:68.60': [-80, -260],
-      '3d:rtu:72.30': [80, -80],
-      '3d:scada:72.80': [80, -80]
+      'R:placa:54.30': [80, 60],
+      'R:TDG:54.60': [-80, -70],
+      'R:PV:54.90': [-80, 40],
+      '3d:recombinacion:64.60': [-80, -80],
+      '3d:TDM:65.50': [80, -80],
+      '3d:TPL:67.90': [80, -80],
+      '3d:letreroBateria:68.60': [-80, -210],
+      '3d:rtu:72.30': [-80, 130],
+      '3d:scada:72.80': [80, 80]
     }
   };
   /* LABEL_OFFSETS:END */
 
   /* ------------------------------------------------------------ tiempos */
   var CUT = [0, 6, 15, 24, 31, 52, 64, 71, 83, 90];
-  var STEP_T = [35.6, 38.35, 41.1, 43.85, 46.6, 49.35, 52.1];   // pasos 1..6 del corte
+  var STEP_T = [35.5, 38.2, 40.9, 43.6, 46.3, 49.0, 51.7];   // pasos 1..6 del corte (2.7 s c/u)
 
   /* ================================================================== */
   F.boot = function (cfg) {
     var D = WT.data, U = WT.util, COL = D.colores;
     var V = cfg.layout === 'portrait';
     var W = V ? 1080 : 1920, H = V ? 1920 : 1080;
+    // 9:16: zonas que tapa la interfaz de TikTok / Reels / Shorts. Etiquetas, tarjetas y KPI quedan
+    // entre y = top y y = bottom; por debajo de rightY0 tampoco pasan de x = right (columna de botones).
+    var VSAFE = { top: 200, bottom: 1530, right: 940, rightY0: 1000 };
+    var VFOOT = 1395;   // borde inferior de tarjetas / insignia / HUD en 9:16 (encima del aviso y la leyenda)
     var TAG = D.separador.tagDefault;
     var root = document.getElementById('root');
     var $ = function (id) { return document.getElementById(id); };
@@ -200,12 +200,19 @@
     function make(name, fn, stub) {
       try { return fn(); } catch (err) { if (window.console) console.error('WTFilm: no se pudo crear ' + name + ': ' + (err && err.message)); return stub; }
     }
-    var CUTH = V ? 1610 : H - 130;
-    var cut = make('corte', function () { return WT.Cutaway.create(cutWrap, { width: W, height: CUTH, layout: V ? 'portrait' : 'landscape', labels: false, tag: TAG, pixelRatio: 1 }); },
+    // Lienzo del corte (px del cuadro):
+    //   16:9 → un poco más bajo y angosto (centro óptico corrido a la izquierda/abajo) para que la
+    //          placa del logo (esquina superior derecha) no tape el PIC / PV de la vista general;
+    //   9:16 → debajo de la tarjeta de pasos y por encima de la leyenda / franja inferior de interfaz
+    //          (la tarjeta de presiones del paso 2 se dibuja en el borde inferior del lienzo).
+    var CUTR = V ? { x: 0, y: 584, w: W, h: 876 } : { x: 0, y: 86, w: W - 140, h: 864 };
+    var cutBack = hx('div', 'cut-back', cutWrap);   // fondo continuo detrás del lienzo (sin costuras en los bordes)
+    var cut = make('corte', function () { return WT.Cutaway.create(cutWrap, { width: CUTR.w, height: CUTR.h, layout: V ? 'portrait' : 'landscape', labels: false, aviso: false, tag: TAG, pixelRatio: 1 }); },
       { renderAt: function () {}, anchor: function () { return null; } });
+    if (cut.el) { cut.el.style.left = px(CUTR.x); cut.el.style.top = px(CUTR.y); }
 
     // SCADA dentro de un monitor
-    var SC = V ? { x: 52, y: 380, w: 952, h: 536, pad: 12 } : { x: 80, y: 262, w: 1184, h: 666, pad: 16 };
+    var SC = V ? { x: 52, y: 366, w: 952, h: 536, pad: 12 } : { x: 80, y: 262, w: 1184, h: 666, pad: 16 };
     var mon = hx('div', 'mon', scadaWrap);
     // la pantalla SAF-900 es un módulo con odómetros y capas propias: sus traslapes internos son intencionales
     mon.setAttribute('data-layout-allow-occlusion', ''); mon.setAttribute('data-layout-allow-overlap', '');
@@ -216,7 +223,7 @@
       { renderAt: function () {} });
 
     // DTI
-    var PIDL = V ? { x: 72, y: 214, w: 936, h: 1324, o: 'vertical' } : { x: 100, y: 150, w: 1720, h: 967, o: 'horizontal' };
+    var PIDL = V ? { x: 72, y: 312, w: 936, h: 1208, o: 'vertical' } : { x: 100, y: 150, w: 1720, h: 967, o: 'horizontal' };
     var sheet = hx('div', 'sheet', pidWrap);
     sheet.setAttribute('data-layout-allow-overflow', '');
     sheet.style.left = px(PIDL.x); sheet.style.top = px(PIDL.y); sheet.style.width = px(PIDL.w); sheet.style.height = px(PIDL.h);
@@ -247,11 +254,22 @@
        HUD: logo en esquina, leyenda de corrientes, ruta del fluido
        ================================================================ */
     var LOGO = 'assets/logo-rbtec-blanco.svg';
+    // proporción del logotipo: se lee del viewBox de WT.logo (js/logo.js, generado desde assets/);
+    // así, si se reemplaza el logo provisional por el oficial, los vuelos y el cierre se ajustan solos
+    var LAR = (function () {
+      try {
+        var u = WT.logo && WT.logo.blanco, b64 = u && u.split(',')[1];
+        var m = b64 && /viewBox="\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(atob(b64));
+        if (m && +m[1] > 0 && +m[2] > 0) return +m[1] / +m[2];
+      } catch (err) { /* se usa la proporción del logo provisional */ }
+      return 256 / 96;
+    })();
     var cornerLogo = hx('img', 'f-logo', hud); cornerLogo.src = LOGO; cornerLogo.alt = D.empresa.nombre;
-    // geometría del logo (viewBox 360×96) para los vuelos esquina ↔ centro
+    // geometría del logo para los vuelos esquina ↔ centro (alto de la esquina: 72 px en 16:9, 76 px en 9:16; ver film.css)
+    var LGH = V ? 76 : 72, LGW = LGH * LAR;
     var LG = V
-      ? { corner: { cx: 64 + 76 * 3.75 / 2, cy: 92 + 38, w: 76 * 3.75 }, big: { cx: 540, cy: 640, w: 840 }, close: { cx: 540, cy: 560, w: 820 } }
-      : { corner: { cx: 1920 - 80 - 72 * 3.75 / 2, cy: 64 + 36, w: 72 * 3.75 }, big: { cx: 960, cy: 300, w: 720 }, close: { cx: 960, cy: 300, w: 760 } };
+      ? { corner: { cx: 64 + LGW / 2, cy: 92 + LGH / 2, w: LGW }, close: { cx: 540, cy: 690, w: 720 } }
+      : { corner: { cx: 1920 - 80 - LGW / 2, cy: 64 + LGH / 2, w: LGW }, close: { cx: 960, cy: 400, w: 600 } };
     init(cornerLogo, { autoAlpha: 0 });
 
     var legend = hx('div', 'f-legend', hud);
@@ -309,11 +327,12 @@
     }
 
     // nota de valores simulados (lugar fijo por formato)
+    // 9:16: centrada justo encima de la leyenda (termina en y = 1450, fuera de la franja inferior de redes)
     var simNote = hx('div', 'f-sim', hud, '<b>●</b> ' + esc(D.demo.aviso));
-    if (V) { simNote.style.left = '50%'; simNote.style.bottom = px(270 + 82); simNote.style.transform = 'translateX(-50%)'; }
-    else { simNote.style.right = '80px'; simNote.style.top = '152px'; }
+    if (V) { simNote.style.left = '50%'; simNote.style.bottom = px(H - 1450); simNote.style.transform = 'translateX(-50%)'; }
+    else { simNote.style.right = '80px'; simNote.style.top = '160px'; }
     init(simNote, { autoAlpha: 0 });
-    (V ? [[17.8, 21.6], [65.4, 71.0], [75.4, 82.45]] : [[17.8, 21.6], [52.6, 63.8], [65.4, 71.0], [75.4, 82.45]]).forEach(function (w) { fadeIn(simNote, w[0], 0.4); fadeOut(simNote, w[1], 0.3); });
+    (V ? [[17.8, 21.6], [65.4, 71.0], [75.0, 82.45]] : [[17.8, 21.6], [52.6, 62.95], [65.4, 71.0], [75.0, 82.45]]).forEach(function (w) { fadeIn(simNote, w[0], 0.4); fadeOut(simNote, w[1], 0.3); });
 
     /* ================================================================
        RÓTULOS DE CAPÍTULO (entran grandes y se compactan a la esquina)
@@ -358,12 +377,13 @@
       if (spec.tg) hx('span', 'tg' + (spec.tgc ? ' c' : ''), l1, esc(spec.tg));
       if (spec.nm) hx('span', 'nm', l1, esc(spec.nm));
       if (spec.ds) hx('span', 'ds', bx, esc(spec.ds));
+      if (spec.chips) hx('span', 'chips', bx, spec.chips.map(function (c) { return '<i>' + esc(c) + '</i>'; }).join(''));
       var vl = spec.val ? hx('span', 'vl', bx, '') : null;
       var g = sv('g', null, lead);
       var path = sv('path', { 'class': 'ld' + (spec.y ? ' y' : '') }, g);
       var ring = sv('circle', { 'class': 'ring' + (spec.y ? '' : ' c'), r: 10 }, g);
       var dot = sv('circle', { 'class': 'dot' + (spec.y ? '' : ' c'), r: 7 }, g);
-      el.style.opacity = '0'; g.style.opacity = '0';
+      el.style.opacity = '0'; g.style.opacity = '0'; g.style.display = 'none';   // guía oculta = fuera del pintado
       var key = spec.view + ':' + spec.a + ':' + spec.t0.toFixed(2);
       var o = (LOFF[V ? 'v' : 'h'] || {})[key] || (V ? spec.ov : spec.o) || spec.o || [120, -80];
       var L = { key: key, s: spec, el: el, bx: bx, vl: vl, g: g, path: path, ring: ring, dot: dot, dx: o[0], dy: o[1], w: 0, hh: 0, lastV: null, on: false };
@@ -403,21 +423,24 @@
     init(strSvg, { autoAlpha: 1, scale: 1, transformOrigin: '50% 50%' });
 
     // logotipo: hexágono que se dibuja, monograma que se revela, wordmark que entra
+    // el hexágono del logo ocupa x 10–86 de un alto de 96 (coordenadas del viewBox); el resto es el wordmark
     var mark = hx('div', 's1-mark', s1in);
-    var MK = V ? { x: 120, y: 528, w: 840, h: 224 } : { x: 600, y: 204, w: 720, h: 192 };
-    mark.style.position = 'absolute'; mark.style.left = px(MK.x); mark.style.top = px(MK.y);
+    var MKH = V ? 264 : 216, MKW = Math.round(MKH * LAR);
+    var MK = V ? { x: Math.round(540 - MKW / 2), y: 506, w: MKW, h: MKH } : { x: Math.round(960 - MKW / 2), y: 196, w: MKW, h: MKH };
+    mark.style.position = 'absolute'; mark.style.left = px(MK.x); mark.style.top = px(MK.y); mark.style.width = px(MK.w); mark.style.height = px(MK.h);
     var imA = hx('img', '', mark); imA.src = LOGO; imA.alt = '';
     var imB = hx('img', '', mark); imB.src = LOGO; imB.alt = D.empresa.nombre;
-    var hexSvg = sv('svg', { viewBox: '0 0 360 96' }, mark);
+    var VBW = 96 * LAR, HXC = (48 / VBW * 100).toFixed(2) + '%', HXR = (49 * (MK.h / 96) / (Math.hypot(MK.w, MK.h) / Math.SQRT2) * 100).toFixed(2) + '%', WMX = (92 / VBW * 100).toFixed(2) + '%';
+    var hexSvg = sv('svg', { viewBox: '0 0 ' + VBW.toFixed(1) + ' 96' }, mark);
     var hexP = sv('path', { d: 'M48 4 86 26v44L48 92 10 70V26Z', fill: 'none', stroke: COL.amarillo, 'stroke-width': 3, pathLength: 1, 'stroke-dasharray': '1 1', 'stroke-linejoin': 'round' }, hexSvg);
     var hexG = sv('path', { d: 'M48 4 86 26v44L48 92 10 70V26Z', fill: 'none', stroke: COL.celeste, 'stroke-width': 9, opacity: 0.35, pathLength: 1, 'stroke-dasharray': '1 1' }, hexSvg);
     init([hexP, hexG], { strokeDashoffset: 1 });
     init(hexSvg, { autoAlpha: 1 });
-    init(imA, { clipPath: 'circle(0% at 13.3% 50%)' });
-    init(imB, { clipPath: 'inset(0% 100% 0% 24%)' });
+    init(imA, { clipPath: 'circle(0% at ' + HXC + ' 50%)' });
+    init(imB, { clipPath: 'inset(0% 100% 0% ' + WMX + ')' });
     tl.to([hexP, hexG], { strokeDashoffset: 0, duration: 0.95, ease: 'power2.inOut' }, 0.35);
-    ft(imA, { clipPath: 'circle(0% at 13.3% 50%)' }, { clipPath: 'circle(20% at 13.3% 50%)', duration: 0.6, ease: 'power3.out' }, 1.05);
-    ft(imB, { clipPath: 'inset(0% 100% 0% 24%)' }, { clipPath: 'inset(0% 0% 0% 24%)', duration: 0.75, ease: 'power3.inOut' }, 1.45);
+    ft(imA, { clipPath: 'circle(0% at ' + HXC + ' 50%)' }, { clipPath: 'circle(' + HXR + ' at ' + HXC + ' 50%)', duration: 0.6, ease: 'power3.out' }, 1.05);
+    ft(imB, { clipPath: 'inset(0% 100% 0% ' + WMX + ')' }, { clipPath: 'inset(0% 0% 0% ' + WMX + ')', duration: 0.75, ease: 'power3.inOut' }, 1.45);
     ft(hexSvg, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.5 }, 1.7);
     init(mark, { x: 0, y: 0, scale: 1, transformOrigin: '50% 50%' });
 
@@ -488,7 +511,7 @@
       ['rtu', corto('rtu'), [210, -120], [120, -210]],
       ['caseta', 'Caseta · PC de medición', [180, 70], [-40, 170]],
       ['zonaSeguridad', 'Zona de seguridad', [-330, 140], [-120, 330]],
-      ['acceso', 'Ruta de acceso', [60, 110], [-220, 120]],
+      [V ? 'accesoV' : 'acceso', 'Ruta de acceso', [60, 110], [-220, 120]],   // 9:16: punto del camino dentro de la zona segura
       ['lineaBateria', eqp('lineaBateria').nombre, [140, -110], [-80, -140]]
     ];
     LOC.forEach(function (r, i) {
@@ -500,15 +523,17 @@
        ESCENA 3 — POZO Y ESTRANGULADOR (15–24 s)
        ================================================================ */
     var s3s = $('s3');
-    chapter(s3s, '02', 'Pozo', eqp('arbol').nombre + ' · ' + corto('estrangulador') + ' · cabezal', 15.15, 24.05);
+    chapter(s3s, '02', 'Pozo', eqp('arbol').nombre + ' · ' + corto('estrangulador') + ' · ' + eqp('manifold').nombre, 15.15, 24.05);
     label({ view: '3d', a: 'arbol', t0: 17.0, t1: 19.5, nm: eqp('arbol').nombre, ds: 'Salida por TP o TR', o: [-420, -150], ov: [-120, -330] });
     label({ view: '3d', a: 'TDP', t0: 17.9, t1: 21.5, tg: 'TDP', nm: ins('TDP').variable, val: 'pPozo', dec: 1, u: ins('TDP').unidad, y: true, o: [170, -190], ov: [-60, -300] });
     label({ view: '3d', a: 'estrangulador', t0: 19.7, t1: 22.0, nm: corto('estrangulador'), o: [-380, -140], ov: [-60, -280] });
     label({ view: '3d', a: 'manifold', t0: 22.0, t1: 24.2, nm: eqp('manifold').nombre, o: [-360, -170], ov: [-80, -300] });
-    var CARD = V ? { x: 64, y: 1236, w: 952 } : { x: 1300, y: 300, w: 540 };
+    // 9:16: las tarjetas se anclan por abajo (terminan en VFOOT) y respetan el margen derecho seguro
+    var CARD = V ? { x: 64, w: VSAFE.right - 64 } : { x: 1300, y: 300, w: 540 };
     function infoCard(scene, ey, ttl, txt, t0, t1) {
       var c = hx('div', 'f-card', scene, '<span class="ey">' + esc(ey) + '</span><span class="ct">' + esc(ttl) + '</span><span class="cx">' + esc(txt) + '</span>');
-      c.style.left = px(CARD.x); c.style.top = px(CARD.y); c.style.width = px(CARD.w);
+      c.style.left = px(CARD.x); c.style.width = px(CARD.w);
+      if (V) c.style.bottom = px(H - VFOOT); else c.style.top = px(CARD.y);
       init(c, { autoAlpha: 0, x: V ? 0 : 60, y: V ? 40 : 0 });
       ft(c, { autoAlpha: 0, x: V ? 0 : 60, y: V ? 40 : 0 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.55, ease: 'power3.out' }, t0);
       ft(c, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3, ease: 'power2.in' }, t1 - 0.3);
@@ -542,15 +567,14 @@
       '<div class="row"><span class="k">Orientación</span>' + esc(SEPD.orientacion) + '</div>' +
       '<div class="row"><span class="k">Montaje</span>' + esc(SEPD.montaje) + '</div>' +
       '<div class="row"><span class="k">Servicio</span>' + esc(SEPD.servicio) + '</div>');
-    var SPEC = V ? { x: 64, y: 1150, w: 952 } : { x: 80, y: 300, w: 560 };
-    spec.style.left = px(SPEC.x); spec.style.top = px(SPEC.y); spec.style.width = px(SPEC.w);
+    var SPEC = V ? { x: 64, w: VSAFE.right - 64 } : { x: 80, y: 300, w: 560 };
+    spec.style.left = px(SPEC.x); spec.style.width = px(SPEC.w);
+    if (V) spec.style.bottom = px(H - VFOOT); else spec.style.top = px(SPEC.y);
     init(spec, { autoAlpha: 0, x: V ? 0 : -60, y: V ? 40 : 0 });
     ft(spec, { autoAlpha: 0, x: V ? 0 : -60, y: V ? 40 : 0 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.6, ease: 'power3.out' }, 31.7);
-    ft(spec, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, 34.3);
+    ft(spec, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, 34.5);
+    // los internos (deflector, extractor, nivel) se rotulan en el corte, con tiempo para leerlos
     var INT = {}; (SEPD.internos || []).forEach(function (x) { INT[x.id] = x; });
-    label({ view: '3d', a: 'deflector', t0: 33.3, t1: 34.7, nm: INT.deflector ? INT.deflector.nombre : 'Deflector', o: [-200, -240], ov: [-60, -300] });
-    label({ view: '3d', a: 'extractor', t0: 33.55, t1: 34.7, nm: INT.extractor ? INT.extractor.nombre : 'Extractor de niebla', o: [160, -250], ov: [40, -360] });
-    label({ view: '3d', a: 'nivel', t0: 33.8, t1: 34.7, nm: 'Nivel de líquido', o: [180, 150], ov: [60, 260] });
 
     // transición 3D → corte (zoom a través)
     init(cutWrap, { autoAlpha: 0, scale: 1.18, transformOrigin: '50% 50%' });
@@ -558,42 +582,59 @@
     ft(glWrap, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.5, ease: 'power1.in' }, 35.1);
     flashAt(34.95, 0.55);
 
-    // tarjeta de pasos
-    var STEP = V ? { x: 64, y: 396, w: 952 } : { x: 80, y: 292, w: 560 };
-    var stepBox = hx('div', '', s5); stepBox.style.position = 'absolute'; stepBox.style.left = px(STEP.x); stepBox.style.top = px(STEP.y); stepBox.style.width = px(STEP.w);
-    var stepPlate = hx('div', 'f-card', stepBox); stepPlate.style.position = 'absolute'; stepPlate.style.left = '0'; stepPlate.style.top = '0'; stepPlate.style.width = '100%'; stepPlate.style.height = px(V ? 360 : 470);
-    var bar = hx('div', 'f-steps-bar', stepBox); bar.style.left = '30px'; bar.style.right = '30px'; bar.style.top = px(V ? 326 : 434);
+    // tarjeta de pasos: título + texto corto (pasosSeparacion[].textoCorto; el texto largo es para la página web).
+    // 9:16: compacta, arriba del corte (que empieza en CUTR.y) para no tapar lo que explica cada paso.
+    var STEP = V ? { x: 64, y: 318, w: 952 } : { x: 80, y: 292, w: 560 };
+    var stepBox = hx('div', 'f-stepbox', s5); stepBox.style.position = 'absolute'; stepBox.style.left = px(STEP.x); stepBox.style.top = px(STEP.y); stepBox.style.width = px(STEP.w);
+    var stepPlate = hx('div', 'f-card', stepBox); stepPlate.style.position = 'absolute'; stepPlate.style.left = '0'; stepPlate.style.top = '0'; stepPlate.style.width = '100%'; stepPlate.style.height = px(V ? 250 : 400);
+    var bar = hx('div', 'f-steps-bar', stepBox); bar.style.left = '30px'; bar.style.right = '30px'; bar.style.top = px(V ? 216 : 366);
     var barI = [];
     for (var b = 0; b < 6; b++) { var bi = hx('i', '', bar); barI.push(hx('em', '', bi)); }
     init(stepBox, { autoAlpha: 0, x: V ? 0 : -50, y: V ? -30 : 0 });
-    ft(stepBox, { autoAlpha: 0, x: V ? 0 : -50, y: V ? -30 : 0 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.6, ease: 'power3.out' }, STEP_T[0] - 0.2);
-    ft(stepBox, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, 51.7);
-    var PASOS = D.pasosSeparacion;
+    ft(stepBox, { autoAlpha: 0, x: V ? 0 : -50, y: V ? -30 : 0 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.5, ease: 'power3.out' }, STEP_T[0] - 0.3);
+    ft(stepBox, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, 51.75);
+    var PASOS = D.pasosSeparacion, STEPS = [];
     PASOS.forEach(function (p, i) {
+      var pl = '<span class="pl">Paso ' + p.n + ' de ' + PASOS.length + '</span>', ttl = '<span class="st">' + esc(p.titulo) + '</span>';
       var st = hx('div', 'f-step', stepBox,
-        '<div class="pn"><b>' + p.n + '</b><span>Paso ' + p.n + ' de ' + PASOS.length + '</span></div>' +
-        '<span class="st">' + esc(p.titulo) + '</span><span class="sx">' + esc(p.texto) + '</span>');
-      st.style.left = '30px'; st.style.top = '28px'; st.style.width = px(STEP.w - 60);
+        (V ? '<div class="pn"><b>' + p.n + '</b><div class="pt">' + pl + ttl + '</div></div>'
+           : '<div class="pn"><b>' + p.n + '</b>' + pl + '</div>' + ttl) +
+        '<span class="sx">' + esc(p.textoCorto || p.texto) + '</span>');
+      st.style.left = '30px'; st.style.top = px(V ? 24 : 28); st.style.width = px(STEP.w - 60);
+      STEPS.push(st);
       var a = STEP_T[i], z = STEP_T[i + 1];
-      init(st, { autoAlpha: 0, y: 24 });
-      ft(st, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power3.out' }, a + 0.05);
-      if (i < PASOS.length - 1) ft(st, { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: -16, duration: 0.25, ease: 'power2.in' }, z - 0.22);
+      init(st, { autoAlpha: 0, y: 18 });
+      ft(st, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power3.out' }, a);
+      if (i < PASOS.length - 1) ft(st, { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: -12, duration: 0.16, ease: 'power2.in' }, z - 0.17);
       init(barI[i], { scaleX: 0 });
       ft(barI[i], { scaleX: 0 }, { scaleX: 1, duration: z - a, ease: 'none' }, a);
     });
+    // alto de la tarjeta = el del paso más largo (se vuelve a medir con las fuentes cargadas)
+    function sizeSteps() {
+      var hmax = 0;
+      STEPS.forEach(function (st) { hmax = Math.max(hmax, st.offsetHeight); });
+      if (!hmax) return;
+      var top = V ? 24 : 28, gap = V ? 20 : 26;
+      bar.style.top = px(top + hmax + gap);
+      stepPlate.style.height = px(top + hmax + gap + 8 + (V ? 24 : 28));
+    }
+    sizeSteps();
     // etiquetas sobre el corte (anclas de WT.Cutaway)
+    var plcNm = eqp('placa').corto || 'Placa de orificio';
     var CL = [
       [0, 'deflector', '', INT.deflector ? INT.deflector.nombre : 'Deflector', [-60, -230], [-80, -260]],
       [3, 'extractor', '', INT.extractor ? INT.extractor.nombre : 'Extractor de niebla', [-120, -250], [-140, -300]],
       [4, 'TN', 'TN', 'Nivel', [-150, -150], [-100, -200]],
       [4, 'CORIOLIS', 'CORIOLIS', 'Promass 300', [-300, -40], [-180, -120]],
       [4, 'LV', 'LV', 'Control de nivel', [120, 110], [-40, 140]],
-      [5, 'placa', 'TDG', 'Placa de orificio', [-330, -110], [-160, -180]],
+      [5, 'placa', '', plcNm, [-330, -110], [-160, -180]],       // elemento primario (FE): sin tag de transmisor
+      [5, 'TDG', 'TDG', 'Presión diferencial', [-200, -150], [-140, -200]],
       [5, 'PV', 'PV', 'Contrapresión', [140, -150], [40, -200]]
     ];
-    CL.forEach(function (r, i) {
-      var a = STEP_T[r[0]];
-      label({ view: 'cut', a: r[1], t0: a + 0.45 + (i % 3) * 0.22, t1: Math.min(STEP_T[r[0] + 1] - 0.15, 51.25), tg: r[2], tgc: r[2] === 'TN' || r[2] === 'CORIOLIS' || r[2] === 'TDG', nm: r[3], o: r[4], ov: r[5], y: !r[2] });
+    var nPaso = {};
+    CL.forEach(function (r) {
+      var a = STEP_T[r[0]], j = nPaso[r[0]] = (nPaso[r[0]] || 0) + 1;   // escalonado dentro de cada paso
+      label({ view: 'cut', a: r[1], t0: a + 0.45 + (j - 1) * 0.22, t1: Math.min(STEP_T[r[0] + 1] - 0.15, 51.25), tg: r[2], tgc: r[2] === 'TN' || r[2] === 'CORIOLIS' || r[2] === 'TDG', nm: r[3], o: r[4], ov: r[5], y: !r[2] });
     });
 
     /* ================================================================
@@ -609,10 +650,13 @@
     var div = hx('div', 'f-split-div', s6);
     init(div, V ? { scaleX: 0 } : { scaleY: 0 });
     ft(div, V ? { scaleX: 0 } : { scaleY: 0 }, V ? { scaleX: 1, duration: 0.6, ease: 'power3.inOut' } : { scaleY: 1, duration: 0.6, ease: 'power3.inOut' }, 51.6);
-    ft(div, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.4 }, 63.3);
+    // toda la interfaz de la pantalla dividida sale ANTES de que la toma completa se abra (63.15 s)
+    var SPLIT_OUT = 62.85;
+    ft(div, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, SPLIT_OUT);
     var cor = eqp('coriolis'), plc = eqp('placa');
+    // 9:16: mitad de gas = encabezado → vista 3D → KPI (terminan en y≈1530, sobre la franja inferior y con margen derecho seguro)
     var HALF = V
-      ? { L: { x: 64, y: 346 }, R: { x: 64, y: 984 }, KL: { x: 64, y: 784 }, KR: { x: 64, y: 1486 } }
+      ? { L: { x: 64, y: 420 }, R: { x: 64, y: 984 }, KL: { x: 64, y: 784 }, KR: { x: 64, y: 1368 } }
       : { L: { x: 80, y: 250 }, R: { x: 1040, y: 250 }, KL: { x: 80, y: 760 }, KR: { x: 1040, y: 760 } };
     function halfHead(pos, sw, ttl, chain, t0) {
       var hd = hx('div', 'f-half-h', s6, '<div class="hh"><i class="sw ' + sw + '"></i>' + esc(ttl) + '</div><div class="chain">' + chain + '</div>');
@@ -620,39 +664,39 @@
       hd.querySelector('.sw').style.background = sw === 'gas' ? COL.gas : 'linear-gradient(90deg,' + COL.liquido + ' 0 50%,' + COL.liquidoAmbar + ' 50% 100%)';
       init(hd, { autoAlpha: 0, x: -40 });
       ft(hd, { autoAlpha: 0, x: -40 }, { autoAlpha: 1, x: 0, duration: 0.55, ease: 'power3.out' }, t0);
-      ft(hd, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, 63.4);
+      ft(hd, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, SPLIT_OUT);
     }
     var ar = ' <span class="ar">→</span> ';
-    if (V) HALF.L.y = 420;
     halfHead(HALF.L, 'liquido', 'Líquido · aceite + agua', 'Separador' + ar + '<span class="hl">' + esc(cor.corto || cor.nombre) + '</span>' + ar + '<span class="hl">LV</span>', 53.35);
     halfHead(HALF.R, 'gas', 'Gas', 'Separador' + ar + '<span class="hl">' + esc(plc.corto || plc.nombre) + ' + TDG</span>' + ar + '<span class="hl">PV</span>', 54.2);
     var COUNTERS = [];
     if (V) {
       // 9:16: durante la pantalla dividida la leyenda cede su lugar a la nota de valores simulados
       ft(legend, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, 51.7);
-      ft(legend, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }, 63.6);
+      ft(legend, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }, 63.3);
       var sim6 = hx('div', 'f-sim', s6, '<b>●</b> ' + esc(D.demo.aviso));
-      sim6.style.right = '64px'; sim6.style.top = '360px';
-      init(sim6, { autoAlpha: 0 }); fadeIn(sim6, 52.6, 0.4); fadeOut(sim6, 63.4, 0.3);
+      sim6.style.right = '64px'; sim6.style.top = '346px';   // arriba a la derecha (fuera de las franjas de interfaz)
+      init(sim6, { autoAlpha: 0 }); fadeIn(sim6, 53.45, 0.4); fadeOut(sim6, SPLIT_OUT, 0.3);   // tras el subtítulo del capítulo (antes de los valores)
     }
     function kpis(pos, cls, list, t0) {
       var box = hx('div', 'f-kpis', s6); box.style.left = px(pos.x); box.style.top = px(pos.y);
       list.forEach(function (k, i) {
         var c = hx('div', 'f-kpi ' + cls, box, '<span class="kk">' + esc(k[1]) + '</span><span class="kv">0</span><span class="ku">' + esc(k[2]) + '</span>');
-        if (V) c.style.width = '296px';
+        if (V) c.style.width = px(pos.y > 1000 ? 280 : 296);
         init(c, { autoAlpha: 0, y: 30, scale: 0.94 });
         ft(c, { autoAlpha: 0, y: 30, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.6)' }, t0 + i * 0.12);
-        ft(c, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, 63.35);
-        COUNTERS.push({ el: c.querySelector('.kv'), key: k[0], dec: k[3], t0: t0 + i * 0.12 + 0.1, dur: 1.4, h0: 9.2, rate: 0.06, w0: t0 - 0.5, w1: 64.2 });
+        ft(c, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.3 }, SPLIT_OUT);
+        // variables instantáneas: entran con su valor (sin contar desde 0); solo los acumulados cuentan
+        COUNTERS.push({ el: c.querySelector('.kv'), key: k[0], dec: k[3], t0: t0 + i * 0.12, h0: 9.2, rate: 0.06, w0: t0 - 0.5, w1: 63.4 });
       });
     }
     kpis(HALF.KL, 'l', [['masico', 'Flujo másico', 'kg/h', 0], ['densidad', 'Densidad', 'kg/m³', 1], ['pctAgua', '% agua', '% en volumen', 1]], 53.5);
-    kpis(HALF.KR, 'g', [['dpGas', 'Presión diferencial', 'inH₂O · TDG', 1], ['qGas', 'Q gas', 'MMpcd', 3], ['pSep', 'Presión separador', 'kg/cm² · TPS', 2]], 54.6);
-    label({ view: 'L', a: 'CORIOLIS', t0: 53.2, t1: 63.3, tg: 'CORIOLIS', tgc: true, nm: 'Promass 300', o: [-60, -150], ov: [-120, -140] });
-    label({ view: 'L', a: 'LV', t0: 53.6, t1: 63.3, tg: 'LV', nm: vc('LV').nombre.replace('Válvula de control', 'Control'), o: [60, -120], ov: [80, -110] });
-    label({ view: 'R', a: 'placa', t0: 54.3, t1: 63.3, nm: plc.corto || 'Placa de orificio', y: true, o: [-100, 120], ov: [-140, 120] });
-    label({ view: 'R', a: 'TDG', t0: 54.6, t1: 63.3, tg: 'TDG', tgc: true, nm: 'Presión diferencial', o: [-60, -140], ov: [-120, -130] });
-    label({ view: 'R', a: 'PV', t0: 54.9, t1: 63.3, tg: 'PV', nm: 'Contrapresión', o: [60, -120], ov: [80, -110] });
+    kpis(HALF.KR, 'g', [['dpGas', V ? 'ΔP en placa' : 'Presión diferencial', 'inH₂O · TDG', 1], ['qGas', 'Q gas', 'MMpcd', 3], ['pSep', V ? 'P. separador' : 'Presión separador', 'kg/cm² · TPS', 2]], 54.6);
+    label({ view: 'L', a: 'CORIOLIS', t0: 53.2, t1: SPLIT_OUT, tg: 'CORIOLIS', tgc: true, nm: 'Promass 300', o: [-60, -150], ov: [-120, -140] });
+    label({ view: 'L', a: 'LV', t0: 53.6, t1: SPLIT_OUT, tg: 'LV', nm: vc('LV').nombre.replace('Válvula de control', 'Control'), o: [60, -120], ov: [80, -110] });
+    label({ view: 'R', a: 'placa', t0: 54.3, t1: SPLIT_OUT, nm: plc.corto || 'Placa de orificio', y: true, o: [-100, 120], ov: [-140, 120] });
+    label({ view: 'R', a: 'TDG', t0: 54.6, t1: SPLIT_OUT, tg: 'TDG', tgc: true, nm: 'Presión diferencial', o: [-60, -140], ov: [-120, -130] });
+    label({ view: 'R', a: 'PV', t0: 54.9, t1: SPLIT_OUT, tg: 'PV', nm: 'Contrapresión', o: [60, -120], ov: [80, -110] });
 
     /* ================================================================
        ESCENA 7 — CIRCUITO CERRADO (64–71 s)
@@ -665,8 +709,9 @@
       '<path d="M14 18 30 34 10 38Z" fill="' + COL.amarillo + '"/><path d="M82 78 66 62 86 58Z" fill="' + COL.amarillo + '"/>' +
       '<circle cx="48" cy="48" r="9" fill="' + COL.celeste + '"/></svg>' +
       '<div><span class="bt">Circuito cerrado</span><span class="bs">No se ventea · no se quema</span></div>');
-    var BG = V ? { x: 64, y: 1290 } : { x: 1150, y: 300 };
-    badge.style.left = px(BG.x); badge.style.top = px(BG.y);
+    var BG = V ? { x: 64 } : { x: 1150, y: 300 };
+    badge.style.left = px(BG.x);
+    if (V) badge.style.bottom = px(H - VFOOT); else badge.style.top = px(BG.y);
     var bIcon = badge.querySelector('svg');
     init(badge, { autoAlpha: 0, scale: 0.6, transformOrigin: '50% 50%' });
     ft(badge, { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, duration: 0.7, ease: 'back.out(2.2)' }, 64.9);
@@ -675,18 +720,22 @@
     ft(bIcon, { rotation: 0 }, { rotation: 360, duration: 5.8, ease: 'none' }, 64.9);
     label({ view: '3d', a: 'recombinacion', t0: 64.6, t1: 67.6, nm: eqp('recombinacion').nombre, y: true, o: [-320, -150], ov: [-100, -260] });
     label({ view: '3d', a: 'TDM', t0: 65.5, t1: 68.4, tg: 'TDM', tgc: true, nm: 'Línea de salida', val: 'pSalida', dec: 2, u: 'kg/cm²', o: [150, -170], ov: [-60, -330] });
-    label({ view: '3d', a: 'TPL', t0: 67.9, t1: 71.1, tg: 'TPL', tgc: true, nm: 'Línea a batería', val: 'pBateria', dec: 2, u: 'kg/cm²', o: [-360, -160], ov: [-80, -300] });
-    label({ view: '3d', a: 'lineaBateria', t0: 68.6, t1: 71.1, nm: 'A batería →', ds: eqp('lineaBateria').desc, o: [80, 120], ov: [-300, 160] });
+    label({ view: '3d', a: 'TPL', t0: 67.9, t1: 70.7, tg: 'TPL', tgc: true, nm: 'Línea a batería', val: 'pBateria', dec: 2, u: 'kg/cm²', o: [-360, -160], ov: [-80, -300] });
+    // destino: el letrero "A BATERÍA" del lindero (toma shots.bateria); respaldo: la línea a batería
+    label({ view: '3d', a: s3.anchors.letreroBateria ? 'letreroBateria' : 'lineaBateria', t0: 68.6, t1: 70.7, nm: 'A batería', ds: 'Continúa a la batería de separación', y: true, o: [80, 120], ov: [-300, 160] });
 
     /* ================================================================
        ESCENA 8 — MONITOREO (71–83 s)
        ================================================================ */
     var s8 = $('s8');
-    chapter(s8, '05', 'Monitoreo', 'Instrumentos → ' + corto('rtu') + ' → ' + corto('scada'), 71.15, 83.05);
-    label({ view: '3d', a: 'rtu', t0: 72.3, t1: 74.25, nm: D.rtu.modelo, ds: 'Concentra las 8 señales 4–20 mA HART', y: true, o: [120, -170], ov: [-200, -260] });
+    // 9:16: el rótulo se compacta antes (las etiquetas del RTU y del SCADA quedan en la parte alta del cuadro)
+    chapter(s8, '05', 'Monitoreo', 'Instrumentos → ' + corto('rtu') + ' → ' + corto('scada'), 71.15, 83.05, V ? 1.2 : 2.3);
+    // "Concentra las 8 señales de campo (4–20 mA HART / Modbus)" + los 8 tags, todo desde WT.data.instrumentos
+    var SIG = D.instrumentos.map(function (x) { return x.tag; }), SENAL = [];
+    D.instrumentos.forEach(function (x) { String(x.senal || '').split('/').forEach(function (k) { k = k.trim(); if (k && SENAL.indexOf(k) < 0) SENAL.push(k); }); });
+    label({ view: '3d', a: 'rtu', t0: 72.3, t1: 74.25, nm: D.rtu.modelo, ds: 'Concentra las ' + SIG.length + ' señales de campo' + (SENAL.length ? ' (' + SENAL.join(' / ') + ')' : ''), chips: SIG, y: true, o: [120, -170], ov: [-200, -260] });
     label({ view: '3d', a: 'scada', t0: 72.8, t1: 74.25, nm: corto('scada'), ds: 'PC de campo en la caseta', o: [80, -230], ov: [-280, -220] });
-    var SIG = ['TDP', 'TPS', 'TT', 'TN', 'CORIOLIS', 'TDG', 'TDM', 'TPL'];
-    var sigG = sv('g', null, lead); sigG.style.opacity = '0';
+    var sigG = sv('g', null, lead); sigG.style.opacity = '0'; sigG.style.display = 'none';
     var SIGP = SIG.map(function () {
       var p = sv('path', { 'class': 'sg' }, sigG);
       var d1 = sv('circle', { 'class': 'sgd', r: 7 }, sigG), d2 = sv('circle', { 'class': 'sgd', r: 5 }, sigG);
@@ -704,11 +753,14 @@
     init(bg, { autoAlpha: 1 });
     ft(bg, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 74.4);
     flashAt(74.6, 0.45);
+    flashAt(70.94, 0.3);   // corte "A batería" → RTU
     // panel de lectura grande
-    var HUDP = V ? { x: 64, y: 1000, w: 952 } : { x: 1340, y: 262, w: 500 };
+    // 9:16: estado y reloj en una fila; el panel termina en VFOOT con margen derecho seguro
+    var HUDP = V ? { x: 64, y: 984, w: VSAFE.right - 64 } : { x: 1340, y: 262, w: 500 };
     var hp = hx('div', 'f-hudp', s8); hp.style.left = px(HUDP.x); hp.style.top = px(HUDP.y); hp.style.width = px(HUDP.w);
-    var stE = hx('div', 'f-state', hp, '<i></i><div><small>Estado de la medición</small><span></span></div>');
-    var clk = hx('div', 'f-clock', hp, '<small>Reloj de medición · ' + D.medicion.horasMedicion + ' h</small><span class="hms"></span><div class="bar"><em></em></div>');
+    var hrow = V ? hx('div', 'f-hrow', hp) : hp;
+    var stE = hx('div', 'f-state', hrow, '<i></i><div><small>Estado de la medición</small><span></span></div>');
+    var clk = hx('div', 'f-clock', hrow, '<small>Reloj de medición · ' + D.medicion.horasMedicion + ' h</small><span class="hms"></span><div class="bar"><em></em></div>');
     var tots = hx('div', 'f-tots', hp);
     var TOT = [
       ['acumMezcla', 'Q mezcla', 'bls', 1, 'linear-gradient(90deg,' + COL.liquido + ' 0 50%,' + COL.liquidoAmbar + ' 50% 100%)'],
@@ -721,7 +773,7 @@
     });
     [stE, clk, tots].forEach(function (e, i) {
       init(e, { autoAlpha: 0, x: V ? 0 : 50, y: V ? 30 : 0 });
-      ft(e, { autoAlpha: 0, x: V ? 0 : 50, y: V ? 30 : 0 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.55, ease: 'power3.out' }, 75.3 + i * 0.15);
+      ft(e, { autoAlpha: 0, x: V ? 0 : 50, y: V ? 30 : 0 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.45, ease: 'power3.out' }, 74.85 + i * 0.12);
     });
     init(hp, { autoAlpha: 1 });
     ft(hp, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.4 }, 82.7);
@@ -731,27 +783,51 @@
        ESCENA 9 — DTI Y CIERRE (83–90 s)
        ================================================================ */
     var s9 = $('s9');
+    // acercamiento final al separador y sus lazos (LIC/PIC, placa + TDG, Coriolis, LV/PV) para leer el DTI terminado.
+    // Se mide antes de aplicar transformaciones al pliego; el origen de transformación es 50% 100%.
+    var DZ = (function () {
+      try {
+        var sr = sheet.getBoundingClientRect(), x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, n = 0;
+        var E = pid.equipos || {}, I = pid.instrumentos || {}, Fn = pid.funciones || {};
+        [E.separador, Fn.LIC, Fn.PIC, I.CORIOLIS, I.TDG, I.TN, I.TPS, E.lv, E.pv].forEach(function (e) {
+          if (!e || !e.getBoundingClientRect) return;
+          var r = e.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return;
+          x0 = Math.min(x0, r.left); y0 = Math.min(y0, r.top); x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom); n++;
+        });
+        if (!n || !sr.width) return null;
+        var cx = (x0 + x1) / 2 - sr.left, cy = (y0 + y1) / 2 - sr.top;
+        var fw = V ? 1000 : 1760, fh = V ? 1240 : 900;                     // área útil del cuadro
+        var k = clamp(Math.min(fw / (x1 - x0), fh / (y1 - y0)), 1.2, 1.85);
+        var tx = (V ? 540 : 960) - PIDL.x, ty = (V ? 860 : 540) - PIDL.y;   // centro del área útil, en px del pliego
+        var ox = PIDL.w / 2, oy = PIDL.h;
+        return { s: k, x: tx - ox - k * (cx - ox), y: ty - oy - k * (cy - oy) };
+      } catch (err) { return null; }
+    })();
+    var DTI_T = { trazo: [82.85, 84.6], pulsos: [84.1, 84.7], zoom: [84.9, 85.75], cierre: 85.75 };
     init(pidWrap, { autoAlpha: 0 });
-    init(sheet, { scale: 0.9, y: 60, rotationX: 22, transformPerspective: 1800, transformOrigin: '50% 100%', filter: 'blur(0px)' });
+    init(sheet, { scale: 0.9, x: 0, y: 60, rotationX: 22, transformPerspective: 1800, transformOrigin: '50% 100%', filter: 'blur(0px)' });
     ft(scadaWrap, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.5, ease: 'power1.in' }, 82.7);
     ft(mon, { scale: 1 }, { scale: 0.92, duration: 0.6, ease: 'power2.in' }, 82.6);
     ft(pidWrap, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, 82.75);
     ft(sheet, { scale: 0.9, y: 60, rotationX: 22 }, { scale: 1, y: 0, rotationX: 0, duration: 1.1, ease: 'power3.out' }, 82.75);
-    ft(sheet, { scale: 1 }, { scale: 1.04, duration: 3.0, ease: 'sine.inOut' }, 83.85);
+    ft(sheet, { scale: 1 }, { scale: 1.008, duration: DTI_T.zoom[0] - 83.85, ease: 'sine.inOut' }, 83.85);
+    if (DZ) ft(sheet, { scale: 1.008, x: 0, y: 0 }, { scale: DZ.s, x: DZ.x, y: DZ.y, duration: DTI_T.zoom[1] - DTI_T.zoom[0], ease: 'power2.inOut' }, DTI_T.zoom[0]);
     var cap = hx('div', 'f-dti-cap', s9, '<b>DTI simplificado</b><span>Simbología ISA · Documento ilustrativo · sin escala</span>');
-    if (V) { cap.style.left = '64px'; cap.style.top = px(1560); cap.style.flexDirection = 'column'; cap.style.alignItems = 'flex-start'; cap.style.gap = '4px'; }
+    if (V) { cap.style.left = '64px'; cap.style.top = px(PIDL.y - 118); cap.style.flexDirection = 'column'; cap.style.alignItems = 'flex-start'; cap.style.gap = '4px'; }
     else { cap.style.left = '50%'; cap.style.top = '930px'; cap.style.transform = 'translateX(-50%)'; }
     init(cap, { autoAlpha: 0 });
     fadeIn(cap, 83.3, 0.5);
-    fadeOut(cap, 86.4, 0.3);
-    // cierre
-    ft(sheet, { filter: 'blur(0px)' }, { filter: 'blur(7px)', duration: 0.8, ease: 'power2.inOut' }, 86.5);
-    ft(pidWrap, { autoAlpha: 1 }, { autoAlpha: 0.16, duration: 0.8, ease: 'power2.inOut' }, 86.5);
+    fadeOut(cap, DTI_T.zoom[0] - 0.2, 0.25);   // sale antes del acercamiento
+    // cierre (el cuadro completo queda armado ≥ 2.5 s antes del final)
+    var CL0 = DTI_T.cierre;
+    ft(sheet, { filter: 'blur(0px)' }, { filter: 'blur(7px)', duration: 0.7, ease: 'power2.inOut' }, CL0);
+    ft(pidWrap, { autoAlpha: 1 }, { autoAlpha: 0.16, duration: 0.7, ease: 'power2.inOut' }, CL0);
     var close = hx('div', 'f-close', s9);
     var clLogo = hx('img', 'cl-logo', close); clLogo.src = LOGO; clLogo.alt = D.empresa.nombre;
-    clLogo.style.position = 'absolute'; clLogo.style.left = px(LG.close.cx - LG.close.w / 2); clLogo.style.top = px(LG.close.cy - LG.close.w * 96 / 360 / 2);
+    var CLH = LG.close.w / LAR;
+    clLogo.style.position = 'absolute'; clLogo.style.width = px(LG.close.w); clLogo.style.left = px(LG.close.cx - LG.close.w / 2); clLogo.style.top = px(LG.close.cy - CLH / 2);
     var clTxt = hx('div', '', close);
-    clTxt.style.position = 'absolute'; clTxt.style.left = '0'; clTxt.style.right = '0'; clTxt.style.top = px(LG.close.cy + LG.close.w * 96 / 360 / 2 + (V ? 30 : 10));
+    clTxt.style.position = 'absolute'; clTxt.style.left = '0'; clTxt.style.right = '0'; clTxt.style.top = px(LG.close.cy + CLH / 2 + (V ? 24 : 6));
     clTxt.style.display = 'flex'; clTxt.style.flexDirection = 'column'; clTxt.style.alignItems = 'center';
     var clT = hx('div', 'cl-t', clTxt, esc(D.empresa.nombre) + ' · <span>' + esc(D.empresa.servicio) + '</span>');
     var clA = hx('div', 'cl-attrs', clTxt);
@@ -767,19 +843,20 @@
     // el logo de la esquina vuela al centro
     var fc = { x: LG.close.cx - LG.corner.cx, y: LG.close.cy - LG.corner.cy, s: LG.close.w / LG.corner.w };
     init(cornerLogo, { x: 0, y: 0, scale: 1, transformOrigin: '50% 50%' });
-    ft(cornerLogo, { x: 0, y: 0, scale: 1 }, { x: fc.x, y: fc.y, scale: fc.s, duration: 0.9, ease: 'power3.inOut' }, 86.55);
+    ft(cornerLogo, { x: 0, y: 0, scale: 1 }, { x: fc.x, y: fc.y, scale: fc.s, duration: 0.85, ease: 'power3.inOut' }, CL0 + 0.05);
     init(clLogo, { autoAlpha: 0 });
-    ft(clLogo, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.05 }, 87.45);
-    ft(cornerLogo, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.05 }, 87.47);
+    ft(clLogo, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.05 }, CL0 + 0.9);
+    ft(cornerLogo, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.05 }, CL0 + 0.92);
     init(clT, { autoAlpha: 0, y: 30 });
-    ft(clT, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 87.3);
+    ft(clT, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out' }, CL0 + 0.7);
     attrs.forEach(function (a, i) {
       init(a, { autoAlpha: 0, y: 24, scale: 0.92 });
-      ft(a, { autoAlpha: 0, y: 24, scale: 0.92 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.8)' }, 87.65 + i * 0.16);
+      ft(a, { autoAlpha: 0, y: 24, scale: 0.92 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.45, ease: 'back.out(1.8)' }, CL0 + 0.95 + i * 0.12);
     });
     init(clL, { autoAlpha: 0 });
-    ft(clL, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6, ease: 'power1.out' }, 88.25);
-    ft(ghost, { autoAlpha: 0, x: -40 }, { autoAlpha: 0.8, x: 20, duration: 3.4, ease: 'none' }, 86.6);
+    ft(clL, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, ease: 'power1.out' }, CL0 + 1.2);   // cuadro completo a los ≈87.45 s
+    // texto fantasma de fondo solo en 16:9 (en 9:16 asomaría entre las píldoras apiladas)
+    if (!V) ft(ghost, { autoAlpha: 0, x: -40 }, { autoAlpha: 0.8, x: 20, duration: 90 - CL0, ease: 'none' }, CL0 + 0.05);
 
     // viñeta solo sobre la parte 3D / corte / SCADA
     ft(vig, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.5 }, 82.6);
@@ -814,12 +891,18 @@
     var PLAN_V = P([PV_T[0] + PV_R * Math.cos(PV_EL), PV_R * Math.sin(PV_EL), PV_T[2]], PV_T, 24);
     var SC_POSE = V ? P([19.6, 2.9, 18.6], [19.6, 1.75, 13], 42) : P([19.0, 2.75, 17.6], [19.1, 1.85, 13], 42);
     var TOUR = [SH.arbol, SH.estrangulador, SH.manifold, SH.lineaEntrada, SH.separador, SC_POSE];
-    var TOUR_T = [17.8, 20.3, 22.75, 25.7, 29.9, 32.7];
-    // circuito cerrado: reincorporación → vista alta del trailer y la línea de salida → línea a batería
-    var CC_A = P([14, 9, 26], [26, 0.5, 6], 42), CC_B = P([30, 8, 10], [44, 0.4, -6], 42);
+    // 9:16: la toma del cabezal se sostiene hasta casi el final de su tarjeta (22.1–24.1 s)
+    var TOUR_T = [17.8, 20.3, V ? 23.45 : 22.75, 25.7, 29.9, 32.7];
+    // circuito cerrado: reincorporación → vista alta del trailer y la línea de salida → final de la línea en
+    // el lindero con el letrero "A BATERÍA" (shots.bateria; respaldo: pose fija)
+    var CC_A = P([14, 9, 26], [26, 0.5, 6], 42), CC_B = SH.bateria || P([30, 8, 10], [44, 0.4, -6], 42);
     var TOUR2 = [SH.recombinacion, push(SH.recombinacion, 0.86), CC_A, CC_B];
-    var TOUR2_T = [63.2, 65.4, 68.2, 70.6];
-    var RTU_OV = V ? P([12, 11, 4], [31, 1.0, 20], 40) : P([15, 9.5, 35], [28.5, 1.5, 18], 42);
+    var TOUR2_T = [63.2, 65.4, 67.9, 70.0];
+    var BAT_END = 71.0;   // la toma "A batería" se sostiene (con un leve acercamiento) hasta el corte
+    // 9:16: pose propia (el letrero ≈ 9 % del alto del cuadro, la línea entra en diagonal desde el TPL)
+    var BAT_V = P([66, 8, 4], [50, 1.4, -5.5], 44);
+    // 9:16: RTU arriba, caseta al fondo y el remolque del separador abajo, todo por encima de la franja inferior
+    var RTU_OV = V ? P([8, 15, 8], [28, 1, 17], 42) : P([15, 9.5, 35], [28.5, 1.5, 18], 42);
     function tourU(t, T) {
       var n = T.length - 1;
       if (t <= T[0]) return 0; if (t >= T[n]) return 1;
@@ -827,9 +910,10 @@
       return 1;
     }
     var TOURF = TOUR.map(function (p) { return fit(p); }), TOUR2F = TOUR2.map(function (p) { return fit(p); });
+    if (V) TOUR2F[3] = BAT_V;
     var RTU_F = V ? RTU_OV : fit(RTU_OV);
     var HLW = [[17.0, 19.2, 'arbol'], [19.6, 21.8, 'estrangulador'], [24.8, 28.6, 'lineaEntrada'], [29.6, 31.9, 'separador'],
-      [65.0, 67.2, 'recombinacion'], [68.4, 70.8, 'lineaBateria'], [72.4, 74.6, 'rtu']];
+      [65.0, 67.2, 'recombinacion'], [68.4, BAT_END, 'lineaBateria'], [72.4, 74.6, 'rtu']];
     function hlAt(t) { for (var i = 0; i < HLW.length; i++) if (t >= HLW[i][0] && t < HLW[i][1]) return HLW[i][2]; return null; }
     function baseState(t) {
       var mz = seg(t, 16.2, 17.3), gl = seg(t, 29.6, 31.0);
@@ -871,15 +955,22 @@
         var k = seg(t, 34.55, 35.6), sc = TOURF[5];
         st.camera = push(sc, 1 - 0.07 * seg(t, 32.7, 34.55) - 0.5 * ei(k), lerp(sc.fov, 30, ei(k)));
         if (k > 0) zoom = { k: 0.7 * ei(k), a: 'separador', blur: 9 * ei(k) };
-      } else if (t < 70.6) {
+      } else if (t < TOUR2_T[3]) {
         st.camera = s3.tour(tourU(t, TOUR2_T), TOUR2F);
+        if (V) st.encuadre = { bottom: 300 * smr(seg(t, TOUR2_T[2], TOUR2_T[3])) };
+      } else if (t < BAT_END) {
+        st.camera = push(TOUR2F[3], 1 - 0.04 * smr(seg(t, TOUR2_T[3], BAT_END)));
+        if (V) st.encuadre = { bottom: 300 };
       } else if (t < 72.8) {
-        st.camera = s3.lerpShot(TOUR2F[3], RTU_F, seg(t, 70.6, 72.8));
+        // corte en 71 s (cambio de capítulo): toma del RTU con un leve acercamiento
+        st.camera = push(RTU_F, 1.1 - 0.1 * smr(seg(t, BAT_END, 72.8)));
+        if (V) st.encuadre = { bottom: 340 };
       } else {
         var k2 = seg(t, 74.35, 75.3);
         var base = orbit(RTU_F, -0.05 * seg(t, 72.8, 74.35), 0);
         st.camera = k2 > 0 ? s3.lerpShot(base, fit(P([cs.x - 3, 3.0, cs.z + 6], [cs.x, 2.0, cs.z], 34)), ei(k2) * 0.75, { ease: false, hop: 0 }) : base;
         if (k2 > 0) zoom = { k: 0.9 * ei(k2), a: 'scada', blur: 8 * ei(k2) };
+        if (V) st.encuadre = { bottom: 340 };   // 9:16: el remolque y la caseta por encima de la franja inferior
       }
       // 16:9: durante la tarjeta del separador el centro óptico se corre a la derecha
       if (!V && t >= 30.6 && t < 34.6) st.encuadre = { left: 560 * smr(seg(t, 30.8, 31.9)) * (1 - smr(seg(t, 34.0, 34.6))) };
@@ -910,7 +1001,7 @@
       }
       else {
         st.camera = orbit(MGAS, lerp(0.08, -0.08, u), 0); st.resaltar = t > 54.2 ? 'placa' : null;
-        if (V) st.encuadre = { bottom: 260 };   // 9:16: sube la línea de gas por encima de las tarjetas
+        if (V) st.encuadre = { top: 160, bottom: 552 };   // 9:16: línea de gas entre el encabezado (y≈1120) y los KPI (y≈1368)
       }
       return st;
     }
@@ -919,11 +1010,16 @@
        DIBUJO POR CUADRO
        ================================================================ */
     var PROJ = { '3d': { _t: -1 }, L: { _t: -1 }, R: { _t: -1 }, cut: { _t: -1 } };
-    var ANCH_IDS = Object.keys(A3);
+    // anclas propias del video (además de s3.anchors): en 9:16 la ruta de acceso se rotula en un punto
+    // del camino que cae dentro de la zona segura (el ancla del módulo queda bajo la leyenda)
+    var MPA = (D.macropera.acceso && D.macropera.acceso.puntos) || [], XA = {};
+    if (MPA.length > 2) XA.accesoV = [MPA[2][0], 0.1, MPA[2][1]];
+    var ANCH = {}; Object.keys(A3).forEach(function (k) { ANCH[k] = A3[k]; }); Object.keys(XA).forEach(function (k) { ANCH[k] = XA[k]; });
+    var ANCH_IDS = Object.keys(ANCH);
     function collect(view, ox, oy, z) {
       var o = PROJ[view]; o._t = curT;
       for (var i = 0; i < ANCH_IDS.length; i++) {
-        var id = ANCH_IDS[i], p = s3.project(A3[id]);
+        var id = ANCH_IDS[i], p = s3.project(ANCH[id]);
         var x = ox + p.x, y = oy + p.y;
         if (z) { x = (x - z.sx) * z.f; y = (y - z.sy) * z.f; }
         var q = o[id] || (o[id] = {});
@@ -987,14 +1083,17 @@
       var o = PROJ.cut; o._t = curT;
       for (var i = 0; i < CUT_IDS.length; i++) {
         var p = cut.anchor(CUT_IDS[i]); var q = o[CUT_IDS[i]] || (o[CUT_IDS[i]] = {});
-        if (p) { q.x = p.x; q.y = p.y; q.v = p.x > -20 && p.x < W + 20 && p.y > -20 && p.y < H + 20; } else q.v = false;
+        if (p) { q.x = p.x + CUTR.x; q.y = p.y + CUTR.y; q.v = q.x > -20 && q.x < W + 20 && q.y > -20 && q.y < H + 20; } else q.v = false;
       }
     }
+    // horas simuladas: Estabilización 75.0–77.2 s · En curso 77.2–80.9 s · Finalizado 80.9–82.7 s (cada estado ≥ 1.5 s legible)
+    var HS_T = [75.0, 77.2, 80.9];
     function hScada(t) {
-      if (t < 75.0) return 0;
-      if (t < 76.6) return 2 * eio(seg(t, 75.0, 76.6));
-      if (t < 81.0) return 2 + 24 * seg(t, 76.6, 81.0);
-      return 26 + 1.6 * eo(seg(t, 81.0, 82.2));
+      var hs = D.medicion.horasEstabilizacion || 2, hm = D.medicion.horasMedicion || 24;
+      if (t < HS_T[0]) return 0;
+      if (t < HS_T[1]) return hs * 0.995 * eio(seg(t, HS_T[0], HS_T[1]));
+      if (t < HS_T[2]) return hs + hm * seg(t, HS_T[1], HS_T[2]);
+      return hs + hm + 1.6 * eo(seg(t, HS_T[2], HS_T[2] + 1.2));
     }
     var lastState = '';
     function renderScada(t) {
@@ -1007,12 +1106,12 @@
       for (var i = 0; i < TOT.length; i++) TOT[i].el.innerHTML = num(S[TOT[i].k], TOT[i].d) + '<u>' + TOT[i].u + '</u>';
     }
     function renderPid(t) {
-      pid.renderAt(t, { trazo: eio(seg(t, 82.85, 86.3)), marco: 0, pulsos: seg(t, 85.6, 86.6) });
+      pid.renderAt(t, { trazo: eio(seg(t, DTI_T.trazo[0], DTI_T.trazo[1])), marco: 0, pulsos: seg(t, DTI_T.pulsos[0], DTI_T.pulsos[1]) });
     }
 
     // zona permitida para la caja de cada vista (en la pantalla dividida, su mitad)
     function bounds(view) {
-      var b = V ? [40, 200, W - 40, H - 280] : [60, 60, W - 60, H - 60];
+      var b = V ? [40, VSAFE.top, W - 40, VSAFE.bottom] : [60, 60, W - 60, H - 60];
       if (view === 'L') { if (V) b[3] = H / 2 - 16; else b[2] = W / 2 - 16; }
       if (view === 'R') { if (V) b[1] = H / 2 + 16; else b[0] = W / 2 + 16; }
       return b;
@@ -1026,18 +1125,21 @@
         var live = t >= s.t0 && t < s.t1 + 0.3;
         var q = live && PROJ[s.view]._t === t ? PROJ[s.view][s.a] : null;
         if (!live || !q || !q.v) {
-          if (L.on) { L.el.style.opacity = '0'; L.g.style.opacity = '0'; L.on = false; }
+          if (L.on) { L.el.style.opacity = '0'; L.g.style.opacity = '0'; L.g.style.display = 'none'; L.on = false; }
           continue;
         }
+        if (!L.on) L.g.style.display = '';
         L.on = true; measure(L);
         var kin = eo(seg(t, s.t0, s.t0 + 0.45)), kbox = eo(seg(t, s.t0 + 0.2, s.t0 + 0.65)), kout = 1 - seg(t, s.t1, s.t1 + 0.3);
         var ax = q.x, ay = q.y, sgn = L.dx >= 0 ? 1 : -1;
         var bx = ax + L.dx, by = ay + L.dy;
-        // mantener la caja dentro del cuadro (márgenes seguros)
+        // mantener la caja dentro del cuadro (márgenes seguros; en 9:16, debajo de y = 1000 el borde
+        // derecho no pasa de x = 940 por la columna de botones de las redes)
         var BD = bounds(s.view);
-        var x0 = sgn > 0 ? bx : bx - L.w;
-        if (x0 < BD[0]) { bx += BD[0] - x0; } else if (x0 + L.w > BD[2]) { bx -= x0 + L.w - BD[2]; }
         by = clamp(by, BD[1] + L.hh, BD[3] - L.hh);
+        var xr = V && by + L.hh > VSAFE.rightY0 ? Math.min(BD[2], VSAFE.right) : BD[2];
+        var x0 = sgn > 0 ? bx : bx - L.w;
+        if (x0 < BD[0]) { bx += BD[0] - x0; } else if (x0 + L.w > xr) { bx -= x0 + L.w - xr; }
         var ex = bx - sgn * 26;
         var len = Math.hypot(ex - ax, by - ay) + Math.abs(bx - ex);
         L.path.setAttribute('d', 'M' + ax.toFixed(1) + ' ' + ay.toFixed(1) + 'L' + ex.toFixed(1) + ' ' + by.toFixed(1) + 'L' + bx.toFixed(1) + ' ' + by.toFixed(1));
@@ -1053,19 +1155,20 @@
         L.el.style.transform = 'translate(' + (bx + slide).toFixed(1) + 'px,' + by.toFixed(1) + 'px) translate(' + (sgn > 0 ? '0' : '-100%') + ',-50%)';
         L.el.style.opacity = (kbox * kout).toFixed(3);
         if (L.vl) {
-          var S = sim(9.0 + (t - 17) * 0.05);
-          var v = S[s.val] * eo(seg(t, s.t0 + 0.35, s.t0 + 1.6));
-          var txt = num(v, s.dec) + '<u>' + esc(s.u) + '</u>';
+          var S = sim(9.0 + (t - 17) * 0.05);   // presión instantánea: entra con su valor (no cuenta desde 0)
+          var txt = num(S[s.val], s.dec) + '<u>' + esc(s.u) + '</u>';
           if (txt !== L.lastV) { L.vl.innerHTML = txt; L.lastV = txt; }
         }
       }
     }
     function updateSignals(t) {
       var on = t >= 71.4 && t < 74.6;
-      if (!on) { sigG.style.opacity = '0'; return; }
+      if (!on) { sigG.style.opacity = '0'; sigG.style.display = 'none'; return; }
+      sigG.style.display = '';
       var o = PROJ['3d'], r = o.rtu;
       sigG.style.opacity = (seg(t, 71.4, 71.9) * (1 - seg(t, 74.15, 74.5))).toFixed(3);
       if (!r) return;
+      var taken = [], fs = V ? 24 : 22;
       for (var i = 0; i < SIG.length; i++) {
         var q = o[SIG[i]], g = SIGP[i];
         var k = eo(seg(t, 71.6 + i * 0.12, 72.6 + i * 0.12));
@@ -1079,9 +1182,20 @@
           var x = (1 - u) * (1 - u) * q.x + 2 * (1 - u) * u * mx + u * u * r.x, y = (1 - u) * (1 - u) * q.y + 2 * (1 - u) * u * my + u * u * r.y;
           d.setAttribute('cx', x.toFixed(1)); d.setAttribute('cy', y.toFixed(1)); d.style.opacity = (k * Math.sin(Math.PI * u)).toFixed(3);
         }
-        // el tag solo se rotula dentro de la zona segura (no sobre la leyenda ni la franja de interfaz)
-        var txOk = q.v && q.y > (V ? 240 : 120) && q.y < H - (V ? 380 : 170) && q.x > 40 && q.x < W - 140;
-        g.tx.setAttribute('x', (q.x + 10).toFixed(1)); g.tx.setAttribute('y', (q.y - 12).toFixed(1)); g.tx.style.opacity = txOk ? k.toFixed(3) : '0';
+        // el tag solo se rotula dentro de la zona segura (no sobre la leyenda ni la franja de interfaz) y sin
+        // encimarse con otro: se prueba arriba-derecha, abajo-derecha, arriba-izquierda… (orden fijo → determinista)
+        var tw = SIG[i].length * fs * 0.62 + 6, pos = null;
+        var txOk = q.v && q.y > (V ? VSAFE.top + 40 : 120) && q.y < (V ? VSAFE.bottom : H - 170) && q.x > 40 && q.x < (V && q.y > VSAFE.rightY0 ? VSAFE.right : W - 140);
+        if (txOk) {
+          var C = [[10, -12], [10, fs + 12], [-10 - tw, -12], [-10 - tw, fs + 12], [10, -fs - 20], [-10 - tw, -fs - 20], [10, 2 * fs + 20], [-10 - tw, 2 * fs + 20]];
+          for (var c = 0; c < C.length && !pos; c++) {
+            var rx = q.x + C[c][0], ry = q.y + C[c][1], rc = [rx - 3, ry - fs * 0.82 - 3, rx + tw + 3, ry + fs * 0.25 + 3], hit = false;
+            for (var m = 0; m < taken.length && !hit; m++) hit = rc[0] < taken[m][2] && rc[2] > taken[m][0] && rc[1] < taken[m][3] && rc[3] > taken[m][1];
+            if (!hit) { pos = [rx, ry]; taken.push(rc); }
+          }
+        }
+        if (pos) { g.tx.setAttribute('x', pos[0].toFixed(1)); g.tx.setAttribute('y', pos[1].toFixed(1)); }
+        g.tx.style.opacity = pos ? k.toFixed(3) : '0';
       }
     }
     function updateCounters(t) {
@@ -1089,8 +1203,7 @@
         var c = COUNTERS[i];
         if (t < c.w0 || t > c.w1) continue;
         var S = sim(c.h0 + (t - c.t0) * c.rate);
-        var v = S[c.key] * eo(seg(t, c.t0, c.t0 + c.dur));
-        var txt = num(v, c.dec);
+        var txt = num(S[c.key], c.dec);
         if (txt !== c.last) { c.el.textContent = txt; c.last = txt; }
       }
     }
@@ -1132,6 +1245,7 @@
         measure(L);
         if (L.vl) { L.vl.innerHTML = ''; L.lastV = null; }
       });
+      sizeSteps();
       if (lastT >= 0) frame(lastT);
       return true;
     });

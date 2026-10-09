@@ -20,7 +20,7 @@
 //     viewport: [1920, 1080], scale: 2,      // px CSS y deviceScaleFactor (PNG = viewport × scale)
 //     ready: 'flag' | 1500,                  // 'flag' = espera window.__WT_READY === true; número = ms fijos
 //     eval: 'js…',                           // opcional: código a ejecutar antes de capturar
-//     pdf: { width: '420mm', height: '297mm' } // solo para .pdf (tamaño de página)
+//     pdf: { width: '420mm', height: '297mm', margin: '8mm' } // solo para .pdf (tamaño de página; margen opcional, 0 por defecto)
 //     svg: true                              // solo para .svg: requiere que la página exponga WT_DTI.pid (WT.PID)
 //   }
 import { createRequire } from 'node:module';
@@ -34,8 +34,10 @@ try { pw = require('playwright'); } catch { pw = require(path.join(process.env.N
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');                 // well-testing/
-const A3_LAND = { width: '420mm', height: '297mm' };
-const A3_PORT = { width: '297mm', height: '420mm' };
+const A3_PORT = { width: '297mm', height: '420mm', margin: '8mm' };   // margen para impresoras que no imprimen a sangre
+// El DTI horizontal está compuesto en 16:9 (pantalla): su PDF usa una página de la misma proporción con el ancho de
+// un A3 (420 × 236.25 mm), sin franjas blancas. La versión de impresión en papel A3 es la vertical.
+const PAGE_16_9 = { width: '420mm', height: '236.25mm' };
 
 /** Lista de trabajos (extensible). */
 export const JOBS = [
@@ -45,8 +47,8 @@ export const JOBS = [
   { out: 'dti-horizontal-pantalla.png', page: 'dti.html', query: { orientacion: 'horizontal', tema: 'pantalla', export: 1 }, viewport: [1920, 1080], scale: 2, ready: 'flag' },
   // DTI — vertical A3 en tema papel, ~300 dpi en A4 / 212 dpi en A3 (2480 × 3508)
   { out: 'dti-vertical.png', page: 'dti.html', query: { orientacion: 'vertical', tema: 'papel', export: 1 }, viewport: [1240, 1754], scale: 2, ready: 'flag' },
-  // PDF vectoriales A3 (texto seleccionable, fuentes incrustadas)
-  { out: 'dti-horizontal.pdf', page: 'dti.html', query: { orientacion: 'horizontal', tema: 'papel', export: 1 }, viewport: [1587, 1123], ready: 'flag', pdf: A3_LAND },
+  // PDF vectoriales (texto seleccionable, fuentes incrustadas): horizontal en página 16:9, vertical en A3 para imprimir
+  { out: 'dti-horizontal.pdf', page: 'dti.html', query: { orientacion: 'horizontal', tema: 'papel', export: 1 }, viewport: [1587, 893], ready: 'flag', pdf: PAGE_16_9 },
   { out: 'dti-vertical.pdf', page: 'dti.html', query: { orientacion: 'vertical', tema: 'papel', export: 1 }, viewport: [1123, 1587], ready: 'flag', pdf: A3_PORT },
   // SVG vectoriales autónomos (fuentes y logo incrustados) para edición en Illustrator / Inkscape
   { out: 'dti-horizontal.svg', page: 'dti.html', query: { orientacion: 'horizontal', tema: 'papel', export: 1 }, viewport: [1920, 1080], ready: 'flag', svg: true },
@@ -103,7 +105,8 @@ for (const job of jobs) {
     fs.writeFileSync(dest, svg);
   } else if (job.pdf) {
     await page.emulateMedia({ media: 'screen' });       // usa el diseño de exportación, no el de impresión del visor
-    await page.pdf({ path: dest, width: job.pdf.width, height: job.pdf.height, printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 }, pageRanges: '1' });
+    const m = job.pdf.margin || 0;
+    await page.pdf({ path: dest, width: job.pdf.width, height: job.pdf.height, printBackground: true, margin: { top: m, right: m, bottom: m, left: m }, pageRanges: '1' });
   } else {
     await page.screenshot({ path: dest, type: 'png' });
   }

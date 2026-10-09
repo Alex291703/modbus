@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vista aérea de la macropera · Well Testing · R.B. Tec México</title>
-<meta name="description" content="Vista aérea interactiva de la macropera durante un aforo de R.B. Tec México: árbol de válvulas, cabezal/manifold, separador bifásico, líneas temporales, caseta de medición, RTU, zona de seguridad y ruta de acceso.">
+<meta name="description" content="Vista aérea interactiva de la macropera durante un aforo de R.B. Tec México: árbol de válvulas, cabezal / manifold, separador bifásico, líneas temporales, caseta de medición, RTU, zona de seguridad y ruta de acceso.">
 <link rel="stylesheet" href="css/wt.css">
 <style>
   :root { --panel-w: 340px; --gap: 16px; }
@@ -109,8 +109,9 @@
 
   /* ---------- tarjeta de elemento ---------- */
   .mp-card { position: absolute; z-index: 6; left: calc(var(--panel-w) + var(--gap) * 2); bottom: var(--gap); width: min(460px, calc(100% - var(--panel-w) - 230px)); max-height: min(52%, 420px); overflow-y: auto; padding: 14px 16px 14px;
-    opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity 0.35s var(--ease), transform 0.35s var(--ease); }
-  .mp-card.is-open { opacity: 1; transform: none; pointer-events: auto; }
+    opacity: 0; transform: translateY(14px); pointer-events: none; visibility: hidden;
+    transition: opacity 0.35s var(--ease), transform 0.35s var(--ease), visibility 0s linear 0.35s; }
+  .mp-card.is-open { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition-delay: 0s; }
   .mp-card h3 { margin: 4px 36px 6px 0; font: 800 22px/1.05 var(--font-display); text-transform: uppercase; }
   .mp-card p { margin: 0 0 10px; font-size: 14px; color: var(--fg-2); }
   .mp-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; margin: 0 0 12px; font-size: 13px; }
@@ -125,17 +126,21 @@
   .mp-intro-hint { position: absolute; z-index: 3; left: 50%; bottom: 22px; transform: translateX(-50%); font: 600 13px var(--font-body); color: var(--fg-2); background: rgba(6,22,49,0.8); border: 1px solid var(--line); padding: 7px 12px; border-radius: 999px; pointer-events: none; transition: opacity 0.6s var(--ease); white-space: nowrap; }
   .mp-intro-hint.is-off { opacity: 0; }
 
+  /* ---------- sin WebGL: aviso en el escenario, panel funcional ---------- */
+  .mp-nogl { position: absolute; z-index: 2; left: calc(var(--panel-w) + var(--gap) * 2); right: var(--gap); top: 50%; transform: translateY(-50%);
+    max-width: 560px; margin: 0 auto; padding: 18px 20px; border-radius: var(--r-md, 14px); display: grid; gap: 6px;
+    background: rgba(6,22,49,0.9); border: 1px solid var(--line-strong); color: var(--fg-2); font-size: 14px; box-shadow: var(--shadow); }
+  .mp-nogl strong { font: 800 22px/1.1 var(--font-display); text-transform: uppercase; color: var(--fg); }
+  .mp.is-nogl .mp-tools, .mp.is-nogl .mp-hud, .mp.is-nogl .mp-modefloat, .mp.is-nogl .mp-intro-hint, .mp.is-nogl .mp-card .acts { display: none !important; }
+  .mp.is-nogl #mp-canvas { cursor: default; }
+  .mp.is-nogl .mp-panel .mp-seg, .mp.is-nogl .mp-sec[aria-labelledby="h-capas"] { display: none; }
+
   @keyframes mp-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
   @keyframes mp-flow { from { transform: translateX(-14px); } to { transform: translateX(0); } }
 
   /* ---------- móvil / pantallas angostas ---------- */
   @media (max-width: 760px) {
     :root { --gap: 10px; }
-    .wt-topbar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 12px 6px; }
-    .wt-topbar .wt-title { font-size: 17px; line-height: 1.1; }
-    .wt-topbar .wt-title small { display: none; }
-    .wt-topbar nav { order: 3; gap: 2px; }
-    .wt-topbar nav a { padding: 5px 8px; font-size: 13px; white-space: nowrap; }
     .mp-panel { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: 64%; border-radius: 16px 16px 0 0; transform: translateY(calc(100% - 56px)); transition: transform 0.4s var(--ease); animation: none; }
     .mp-panel.is-open { transform: none; }
     .mp-panel-toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 56px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--fg); font: 700 15px var(--font-body); cursor: pointer; }
@@ -150,6 +155,7 @@
     .mp-card { left: var(--gap); right: var(--gap); width: auto; bottom: 66px; }
     .mp-modefloat { display: grid !important; }
     .mp-intro-hint { bottom: 134px; font-size: 12px; white-space: normal; text-align: center; width: max-content; max-width: calc(100% - 24px); border-radius: 12px; }
+    .mp-nogl { left: var(--gap); top: var(--gap); transform: none; }
   }
   .mp-modefloat { display: none; position: absolute; z-index: 4; left: var(--gap); top: var(--gap); width: 190px; }
   @media (prefers-reduced-motion: reduce) {
@@ -172,7 +178,7 @@
 </header>
 
 <main class="mp" id="mp">
-  <canvas id="mp-canvas" role="img" aria-label="Vista 3D de la macropera: pozo en prueba con árbol de válvulas, estrangulador, cabezal, líneas temporales hacia el separador bifásico sobre remolque, línea de salida a batería, caseta de medición con RTU, zona de seguridad y camino de acceso."></canvas>
+  <canvas id="mp-canvas" role="img" aria-label="Vista 3D de la macropera: pozo en prueba con árbol de válvulas, estrangulador, cabezal / manifold, líneas temporales hacia el separador bifásico sobre remolque, línea de salida a batería, caseta de medición con RTU, zona de seguridad y camino de acceso."></canvas>
   <div class="mp-vignette" aria-hidden="true"></div>
   <div class="mp-labels" id="labels" aria-hidden="true"><svg id="leaders"></svg></div>
 
@@ -252,26 +258,31 @@
 <script src="js/vendor/gsap.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/scene3d.js"></script>
+<script src="js/logo.js"></script>
 <script>
 (function () {
   'use strict';
   var D = WT.data, U = WT.util, MP = D.macropera, PL = MP.plataforma, C = D.colores;
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
   var main = document.getElementById('mp'), canvas = document.getElementById('mp-canvas');
   var labelsEl = document.getElementById('labels'), leaders = document.getElementById('leaders');
-  var panel = document.getElementById('panel');
+  var panel = document.getElementById('panel'), toggle = document.getElementById('panelToggle');
+  var card = document.getElementById('card'), hint = document.getElementById('hint');
   function eq(id) { return U.equipo(id) || {}; }
   function narrow() { return main.clientWidth < 760; }
+  var MANIFOLD = String(eq('manifold').nombre || 'Cabezal / manifold');
+  var manifoldMin = MANIFOLD.charAt(0).toLowerCase() + MANIFOLD.slice(1);
 
   /* ---------- elementos de la vista (descripciones extra = constantes de esta página) ---------- */
   var EXTRA = {
     caseta: { nombre: 'Caseta de medición / PC de campo', desc: 'Camper de remolque donde opera el personal de medición. Aquí está la PC de campo con el ' + String(eq('scada').nombre || '').replace(/\s*\(.*\)\s*/, '') + ', que ' + (eq('scada').desc || '').charAt(0).toLowerCase() + (eq('scada').desc || '').slice(1) },
-    zonaSeguridad: { nombre: 'Zona de seguridad', desc: 'Perímetro delimitado con delineadores y cinta de barricada alrededor del pozo, el cabezal, las líneas temporales y el separador. Solo entra personal autorizado con EPP; se señaliza la presencia de hidrocarburo amargo (H₂S).' },
-    acceso: { nombre: 'Ruta de acceso', desc: 'Camino de terracería por el que entran las unidades a la macropera; llega junto a la caseta de medición, fuera de la zona de seguridad. Velocidad máxima dentro de la locación.' },
+    zonaSeguridad: { nombre: 'Zona de seguridad', desc: 'Perímetro delimitado con delineadores y cinta de barricada alrededor del pozo, el ' + manifoldMin + ', las líneas temporales y el separador. Solo entra personal autorizado con EPP; se señaliza la presencia de hidrocarburo amargo (H₂S).' },
+    acceso: { nombre: 'Ruta de acceso', desc: 'Camino de terracería por el que entran las unidades a la macropera; llega junto a la caseta de medición, fuera de la zona de seguridad. Dentro de la locación se circula a la velocidad máxima señalizada en el acceso.' },
     puntoReunion: { nombre: 'Punto de reunión', desc: 'Área de concentración del personal en caso de emergencia, ubicada lejos del pozo y del separador y, de preferencia, contra el viento (ver manga de viento).' },
     mangaViento: { nombre: 'Manga de viento', desc: 'Indica la dirección del viento para definir rutas de evacuación y la ubicación segura del personal ante una fuga de gas amargo.' },
-    pozosInactivos: { nombre: 'Otros pozos de la macropera', desc: 'Pozos de la misma pera que no están en prueba durante este aforo; se mantienen cerrados y protegidos.' },
-    lineaEntrada: { nombre: 'Líneas temporales', desc: (eq('lineaEntrada').desc || '') + ' Se tienden sobre soportes tipo burro, con uniones de golpe, desde el pozo y el cabezal hasta el separador, y del separador a la línea a batería.' }
+    pozosInactivos: { nombre: 'Otros pozos de la macropera', desc: 'Pozos de la misma pera que no están en prueba durante este aforo. Solo el pozo en prueba se alinea al separador; los demás pozos de la pera continúan produciendo a batería por su línea.' },
+    lineaEntrada: { nombre: 'Líneas temporales', desc: (eq('lineaEntrada').desc || '') + ' Se tienden sobre soportes tipo burro, con uniones de golpe, desde el pozo y el ' + manifoldMin + ' hasta el separador, y del separador a la línea a batería.' }
   };
   var ELEMS = [
     { id: 'arbol', dir: [-1, -1] }, { id: 'estrangulador', dir: [1, -1.15] }, { id: 'manifold', dir: [-1, 0.9] },
@@ -293,24 +304,7 @@
   if (C.zonaSeguridad) main.style.setProperty('--c-zona', C.zonaSeguridad);
   if (C.camino) main.style.setProperty('--c-camino', C.camino);
 
-  /* ---------- escena ---------- */
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  // Calidad según el GPU: los renderizadores por software (SwiftShader/llvmpipe) usan 'medium'
-  function gpuQuality() {
-    try {
-      var c = document.createElement('canvas'), gl = c.getContext('webgl2') || c.getContext('webgl');
-      var ext = gl && gl.getExtension('WEBGL_debug_renderer_info'), name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
-      if (gl && gl.getExtension('WEBGL_lose_context')) gl.getExtension('WEBGL_lose_context').loseContext();
-      if (/swiftshader|llvmpipe|software/i.test(name)) return 'medium';
-    } catch (err) { /* sin información: calidad estándar */ }
-    return narrow() ? 'high' : 'ultra';
-  }
-  var S = WT.Scene3D.create({ canvas: canvas, width: main.clientWidth, height: main.clientHeight, pixelRatio: dpr, quality: gpuQuality() });
-  var controls = new THREE.OrbitControls(S.camera, canvas);
-  controls.enableDamping = !reduce; controls.dampingFactor = 0.08; controls.minDistance = 3; controls.maxDistance = 260;
-  controls.maxPolarAngle = 1.42; controls.screenSpacePanning = false; controls.enabled = false;
-  controls.zoomToCursor = true;
-
+  /* ---------- estado de la vista ---------- */
   var PLAN_C0 = [(PL.x0 + PL.x1) / 2 + 5, (PL.z0 + PL.z1) / 2 + 1];
   var state = {
     camera: null, ortho: 0, nivel: 0.45, rayosX: 0, corte: 0, ajusteVertical: false,
@@ -320,23 +314,6 @@
     planta: { centro: PLAN_C0.slice(), ancho: null, padding: { left: 0, right: 0, top: 0, bottom: 0 } }
   };
   var ui = { etiquetas: true, mode: '3d', sel: null, busy: false };
-  state.camera = shot('establecimiento');
-  function clone(p) { return { pos: p.pos.slice(), target: p.target.slice(), fov: p.fov || 40 }; }
-  /* Las poses de la escena están pensadas para 16:9; en pantallas verticales se aleja la cámara.
-     (La página maneja la cámara con OrbitControls, por eso desactiva el ajuste automático de la escena.) */
-  function fit(p) {
-    var q = clone(p), asp = main.clientWidth / Math.max(1, main.clientHeight);
-    if (asp < 1.25) { var f = Math.pow(1.25 / asp, 0.85); for (var i = 0; i < 3; i++) q.pos[i] = q.target[i] + (q.pos[i] - q.target[i]) * f; }
-    return q;
-  }
-  function shot(id) { return fit(S.shots[id] || S.poseFor(id)); }
-
-  function updatePadding() {
-    var w = main.clientWidth, n = narrow();
-    state.planta.padding = n ? { left: 8, right: 8, top: 64, bottom: 120 }
-      : { left: panel.offsetWidth + 40, right: 70, top: 24, bottom: 30 };
-    state.encuadre = n ? { left: 0, right: 0, top: 40, bottom: 60 } : { left: panel.offsetWidth + 16, right: 0, top: 0, bottom: 0 };
-  }
 
   /* ---------- capas ---------- */
   var LAYERS = [
@@ -378,6 +355,114 @@
   document.getElementById('note').textContent = (notaCliente ? notaCliente + '. ' : '') + 'Circuito cerrado: el gas y el líquido medidos regresan a la línea; no hay quemador ni venteo.';
   document.getElementById('lead').textContent = 'Distribución típica de equipos durante un aforo con separador bifásico de circuito cerrado. Active capas y seleccione un elemento para ubicarlo.';
 
+  /* ---------- tarjeta de elemento ---------- */
+  function facts(id) {
+    var f = [];
+    if (id === 'separador') {
+      var sp = D.separador;
+      f.push(['Tipo', sp.tipo], ['Orientación', sp.orientacion], ['Montaje', sp.montaje], ['Servicio', sp.servicio], ['Equipos tipo', sp.tags.join(' · ')]);
+      if (sp.diametro) f.push(['Diámetro', sp.diametro]); if (sp.longitud) f.push(['Longitud', sp.longitud]); if (sp.presionDiseno) f.push(['Presión de diseño', sp.presionDiseno]);
+    }
+    if (id === 'rtu') f.push(['Señales (' + D.instrumentos.length + ')', D.instrumentos.map(function (x) { return x.tag; }).join(' · '), 1], ['Visualización', eq('scada').nombre, 1]);
+    if (id === 'arbol') f.push(['Transmisor TDP', U.instrumento('TDP').variable, 1]);
+    if (id === 'lineaBateria') f.push(['Transmisor TPL', U.instrumento('TPL').variable, 1]);
+    if (id === 'caseta') f.push(['RTU', eq('rtu').nombre, 1]);
+    (MP.distancias || []).forEach(function (d) {
+      var SHORT = { arbol: 'al árbol', separador: 'al separador', caseta: 'a la caseta', manifold: 'al ' + manifoldMin, rtu: 'al RTU' };
+      if (d.de === id || d.a === id) { var o = d.de === id ? d.a : d.de; f.push(['Distancia ' + (SHORT[o] || 'a ' + o), '≈ ' + d.m + ' m']); }
+    });
+    return f;
+  }
+  function setCardOpen(open) {
+    card.classList.toggle('is-open', open); card.setAttribute('aria-hidden', String(!open));
+    // cerrada: fuera del orden de tabulación (inert + visibility en CSS)
+    if (open) card.removeAttribute('inert'); else card.setAttribute('inert', '');
+    card.inert = !open;
+  }
+  setCardOpen(false);
+  function select(id, fly) {
+    var e = ELEMS.filter(function (x) { return x.id === id; })[0]; if (!e) return;
+    ui.sel = id; state.resaltar = id;
+    list.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.id === id)); });
+    document.getElementById('cardEyebrow').textContent = 'Elemento ' + e.n;
+    document.getElementById('cardTitle').textContent = e.nombre;
+    document.getElementById('cardDesc').textContent = e.desc;
+    document.getElementById('cardFacts').innerHTML = facts(id).map(function (f) { return '<div' + (f[2] ? ' class="wide"' : '') + '><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>'; }).join('');
+    setCardOpen(true);
+    if (narrow()) { panel.classList.remove('is-open'); toggle.setAttribute('aria-expanded', 'false'); }
+    if (!fly || !S) return;
+    if (ui.mode === 'planta') focusPlan(id); else to3D(shot(id), 1.8);
+  }
+  function clearSel() {
+    var prev = ui.sel, hadFocus = card.contains(document.activeElement);
+    ui.sel = null; state.resaltar = null; setCardOpen(false);
+    list.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+    if (hadFocus) { // devolver el foco a un control visible
+      var back = prev && !narrow() ? list.querySelector('button[data-id="' + prev + '"]') : toggle;
+      if (back && back.offsetParent !== null) back.focus(); else if (document.activeElement) document.activeElement.blur();
+    }
+  }
+  document.getElementById('cardClose').addEventListener('click', clearSel);
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && ui.sel) clearSel(); });
+
+  /* ---------- panel colapsable (móvil) ---------- */
+  toggle.addEventListener('click', function () { var o = panel.classList.toggle('is-open'); toggle.setAttribute('aria-expanded', String(o)); });
+
+  /* ---------- escena (WebGL) ---------- */
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Calidad según el GPU: los renderizadores por software (SwiftShader/llvmpipe) usan 'medium'
+  function gpuQuality() {
+    try {
+      var c = document.createElement('canvas'), gl = c.getContext('webgl2') || c.getContext('webgl');
+      if (!gl) return null;
+      var ext = gl.getExtension('WEBGL_debug_renderer_info'), name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
+      if (gl.getExtension('WEBGL_lose_context')) gl.getExtension('WEBGL_lose_context').loseContext();
+      if (/swiftshader|llvmpipe|software/i.test(name)) return 'medium';
+    } catch (err) { /* sin información: calidad estándar */ }
+    return narrow() ? 'high' : 'ultra';
+  }
+  var QUALITY = gpuQuality(), S = null;
+  if (QUALITY && window.THREE && WT.Scene3D) {
+    try { S = WT.Scene3D.create({ canvas: canvas, width: main.clientWidth, height: main.clientHeight, pixelRatio: dpr, quality: QUALITY }); }
+    catch (err) { S = null; }
+  }
+  if (!S || !S.renderAt) {
+    /* Sin WebGL (política del equipo, escritorio remoto, GPU bloqueada): aviso en el escenario y panel funcional
+       (capas informativas, lista de elementos con descripciones y leyenda). */
+    S = null;
+    main.classList.add('is-nogl'); canvas.setAttribute('aria-hidden', 'true'); labelsEl.style.display = 'none';
+    var msg = document.createElement('div'); msg.className = 'mp-nogl'; msg.setAttribute('role', 'status');
+    msg.innerHTML = '<strong>La vista 3D necesita WebGL</strong><span>Este equipo o navegador no lo tiene disponible. Abra esta página en Chrome, Edge o Firefox actualizados para ver la locación en 3D. Mientras tanto, consulte en el panel los elementos de la macropera y la leyenda de corrientes.</span>';
+    main.appendChild(msg);
+    swBox.querySelectorAll('input').forEach(function (inp) { inp.disabled = true; });
+    if (narrow()) { panel.classList.add('is-open'); toggle.setAttribute('aria-expanded', 'true'); }
+    window.WTMacropera = { scene: null, state: state, jump: function (o) { if (o && o.sel) select(o.sel, false); }, exportPNG: function () {} };
+    return;
+  }
+
+  var controls = new THREE.OrbitControls(S.camera, canvas);
+  controls.enableDamping = !reduce; controls.dampingFactor = 0.08; controls.minDistance = 3; controls.maxDistance = 260;
+  controls.maxPolarAngle = 1.42; controls.screenSpacePanning = false; controls.enabled = false;
+  controls.zoomToCursor = true;
+
+  state.camera = shot('establecimiento');
+  function clone(p) { return { pos: p.pos.slice(), target: p.target.slice(), fov: p.fov || 40 }; }
+  /* Las poses de la escena están pensadas para 16:9; en pantallas verticales se aleja la cámara.
+     (La página maneja la cámara con OrbitControls, por eso desactiva el ajuste automático de la escena.) */
+  function fit(p) {
+    var q = clone(p), asp = main.clientWidth / Math.max(1, main.clientHeight);
+    if (asp < 1.25) { var f = Math.pow(1.25 / asp, 0.85); for (var i = 0; i < 3; i++) q.pos[i] = q.target[i] + (q.pos[i] - q.target[i]) * f; }
+    return q;
+  }
+  function shot(id) { return fit(S.shots[id] || S.poseFor(id)); }
+
+  function updatePadding() {
+    var n = narrow();
+    state.planta.padding = n ? { left: 8, right: 8, top: 64, bottom: 120 }
+      : { left: panel.offsetWidth + 40, right: 70, top: 24, bottom: 30 };
+    state.encuadre = n ? { left: 0, right: 0, top: 40, bottom: 60 } : { left: panel.offsetWidth + 16, right: 0, top: 0, bottom: 0 };
+  }
+
   /* ---------- etiquetas ancladas ---------- */
   var NS = 'http://www.w3.org/2000/svg';
   ELEMS.forEach(function (e, i) {
@@ -396,10 +481,30 @@
     labelsEl.appendChild(el); return el;
   });
 
+  /* Zonas de la interfaz que las etiquetas no deben tapar (brújula/escala, herramientas, tarjeta, aviso,
+     selector y hoja inferior en móvil). En la exportación solo cuentan la brújula y la escala, que también se dibujan. */
+  var compassBox = document.querySelector('.mp-compass'), toolsEl = document.querySelector('.mp-tools'), modeFloat = document.querySelector('.mp-modefloat');
+  var scaleEl = document.getElementById('scale');
+  function uiObstacles() {
+    var r = [], mr = main.getBoundingClientRect();
+    function add(el) {
+      if (!el || el.offsetParent === null) return;
+      var b = el.getBoundingClientRect(); if (b.width < 1 || b.height < 1) return;
+      r.push({ x: b.left - mr.left - 4, y: b.top - mr.top - 4, w: b.width + 8, h: b.height + 8 });
+    }
+    add(compassBox); if (!scaleEl.classList.contains('is-off')) add(scaleEl);
+    if (!ui.exporting) {
+      add(toolsEl);
+      if (card.classList.contains('is-open')) add(card);
+      if (!hint.classList.contains('is-off')) add(hint);
+      if (narrow()) { add(modeFloat); add(panel); }
+    }
+    return r;
+  }
   function layoutLabels() {
     var W = main.clientWidth, H = main.clientHeight, compact = narrow();
     labelsEl.classList.toggle('is-compact', compact);
-    var show = ui.etiquetas, placed = [];
+    var show = ui.etiquetas, placed = uiObstacles();
     var sideL = narrow() || ui.exporting ? 0 : panel.offsetLeft + panel.offsetWidth;
     ELEMS.forEach(function (e) { var p = S.project(e.anchor); e.pp = show && p.visible ? p : null; });
     if (state.capas.cotas) S.cotas.forEach(function (c) { var p = S.project(c.p); if (p.visible) placed.push({ x: p.x - 34, y: p.y - 12, w: 68, h: 24 }); });
@@ -408,6 +513,7 @@
       e.el.classList.toggle('is-hidden', !vis);
       e.line.style.display = e.dot.style.display = vis ? '' : 'none';
       e.el.classList.toggle('is-sel', ui.sel === e.id);
+      e.box = null;
       if (!vis) return;
       var w = e.w || (e.w = e.el.offsetWidth), h = e.h || (e.h = e.el.offsetHeight);
       if (compact) { w = e.el.offsetWidth; h = e.el.offsetHeight; }
@@ -443,7 +549,7 @@
   }
 
   /* ---------- brújula y escala ---------- */
-  var compass = document.getElementById('compass'), scaleEl = document.getElementById('scale'), scaleBar = document.getElementById('scaleBar'), scaleTxt = document.getElementById('scaleTxt');
+  var compass = document.getElementById('compass'), scaleBar = document.getElementById('scaleBar'), scaleTxt = document.getElementById('scaleTxt');
   var northAng = 0;
   function updateHud() {
     var pose = S.cameraPose(), t = pose.target, a = S.project(t), b = S.project([t[0], t[1], t[2] - 10]);
@@ -455,13 +561,23 @@
     scaleEl.classList.toggle('is-off', state.ortho < 0.85);
   }
 
+  /* ---------- aviso de interacción ---------- */
+  function hintText() {
+    if (ui.mode === 'planta') return coarse ? 'Arrastre para mover · pellizque para acercar · toque una etiqueta para ver detalles' : 'Arrastre para mover · rueda para acercar · clic en una etiqueta para ver detalles';
+    return coarse ? 'Arrastre para orbitar · pellizque para acercar · toque una etiqueta para ver detalles' : 'Arrastre para orbitar · rueda o pellizco para acercar · clic en una etiqueta para ver detalles';
+  }
+  function hideHint() { hint.classList.add('is-off'); }
+
   /* ---------- modos de vista ---------- */
   var segBtns = document.querySelectorAll('[data-mode]');
-  function setModeUI(m) { ui.mode = m; segBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === m)); }); }
+  function setModeUI(m) {
+    ui.mode = m; segBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === m)); });
+    hint.textContent = hintText();
+  }
   segBtns.forEach(function (b) { b.addEventListener('click', function () { b.dataset.mode === 'planta' ? toPlan() : to3D(); }); });
   var tweens = [];
   function killTweens() { tweens.forEach(function (t) { t.kill(); }); tweens = []; }
-  function tw(o, v) { if (reduce) { v.duration = 0.001; } var t = gsap.to(o, v); tweens.push(t); return t; }
+  function tw(o, v) { if (reduce) { v.duration = 0.001; if (v.delay) v.delay = 0; } var t = gsap.to(o, v); tweens.push(t); return t; }
   function syncControls() {
     controls.target.fromArray(state.camera.target); S.camera.position.fromArray(state.camera.pos);
     controls.update();
@@ -479,38 +595,7 @@
       onComplete: function () { state.camera = to; ui.mode3dPose = clone(to); syncControls(); controls.enabled = true; labelsEl.classList.remove('is-moving'); } });
   }
 
-  /* ---------- selección de elementos ---------- */
-  var card = document.getElementById('card');
-  function facts(id) {
-    var f = [];
-    if (id === 'separador') {
-      var sp = D.separador;
-      f.push(['Tipo', sp.tipo], ['Orientación', sp.orientacion], ['Montaje', sp.montaje], ['Servicio', sp.servicio], ['Equipos tipo', sp.tags.join(' · ')]);
-      if (sp.diametro) f.push(['Diámetro', sp.diametro]); if (sp.longitud) f.push(['Longitud', sp.longitud]); if (sp.presionDiseno) f.push(['Presión de diseño', sp.presionDiseno]);
-    }
-    if (id === 'rtu') f.push(['Señales (' + D.instrumentos.length + ')', D.instrumentos.map(function (x) { return x.tag; }).join(' · '), 1], ['Visualización', eq('scada').nombre, 1]);
-    if (id === 'arbol') f.push(['Transmisor TDP', U.instrumento('TDP').variable, 1]);
-    if (id === 'lineaBateria') f.push(['Transmisor TPL', U.instrumento('TPL').variable, 1]);
-    if (id === 'caseta') f.push(['RTU', eq('rtu').nombre, 1]);
-    (MP.distancias || []).forEach(function (d) {
-      var SHORT = { arbol: 'al árbol', separador: 'al separador', caseta: 'a la caseta', manifold: 'al cabezal', rtu: 'al RTU' };
-      if (d.de === id || d.a === id) { var o = d.de === id ? d.a : d.de; f.push(['Distancia ' + (SHORT[o] || 'a ' + o), '≈ ' + d.m + ' m']); }
-    });
-    return f;
-  }
-  function select(id, fly) {
-    var e = ELEMS.filter(function (x) { return x.id === id; })[0]; if (!e) return;
-    ui.sel = id; state.resaltar = id;
-    list.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.id === id)); });
-    document.getElementById('cardEyebrow').textContent = 'Elemento ' + e.n;
-    document.getElementById('cardTitle').textContent = e.nombre;
-    document.getElementById('cardDesc').textContent = e.desc;
-    document.getElementById('cardFacts').innerHTML = facts(id).map(function (f) { return '<div' + (f[2] ? ' class="wide"' : '') + '><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>'; }).join('');
-    card.classList.add('is-open'); card.setAttribute('aria-hidden', 'false');
-    if (narrow()) panel.classList.remove('is-open'), document.getElementById('panelToggle').setAttribute('aria-expanded', 'false');
-    if (!fly) return;
-    if (ui.mode === 'planta') focusPlan(id); else to3D(shot(id), 1.8);
-  }
+  /* ---------- selección: vuelo a planta / 3D ---------- */
   function focusPlan(id) {
     var e = ELEMS.filter(function (x) { return x.id === id; })[0], a = e.anchor;
     killTweens(); setModeUI('planta'); controls.enabled = false;
@@ -524,14 +609,8 @@
     var p = state.planta.padding, aw = main.clientWidth - p.left - p.right, ah = main.clientHeight - p.top - p.bottom;
     return Math.max((PL.x1 - PL.x0 + 24), (PL.z1 - PL.z0 + 12) * aw / ah);
   }
-  document.getElementById('cardClose').addEventListener('click', clearSel);
   document.getElementById('card3d').addEventListener('click', function () { if (ui.sel) to3D(shot(ui.sel), 1.8); });
   document.getElementById('cardPlan').addEventListener('click', function () { if (ui.sel) focusPlan(ui.sel); });
-  function clearSel() {
-    ui.sel = null; state.resaltar = null; card.classList.remove('is-open'); card.setAttribute('aria-hidden', 'true');
-    list.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
-  }
-  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') clearSel(); });
 
   /* ---------- zoom / pan en planta (OrbitControls en 3D) ---------- */
   function planMpp() { return S.metersPerPixel(); }
@@ -557,18 +636,18 @@
       tw(o, { cx: PLAN_C0[0], cz: PLAN_C0[1], w: w1, duration: 1, ease: 'power2.inOut', onUpdate: function () { state.planta.centro = [o.cx, o.cz]; state.planta.ancho = o.w; }, onComplete: function () { state.planta.ancho = null; } }); }
     else to3D(shot('aerea'), 1.4);
   });
-  var ptrs = {}, drag = null;
+  var ptrs = {};
   canvas.addEventListener('wheel', function (ev) {
+    hideHint();
     if (ui.mode !== 'planta' || state.ortho < 0.99) return;
     ev.preventDefault(); killTweens();
     var r = canvas.getBoundingClientRect(); zoomPlanAt(Math.exp(ev.deltaY * 0.0015), ev.clientX - r.left, ev.clientY - r.top);
   }, { passive: false });
   canvas.addEventListener('pointerdown', function (ev) {
-    canvas.classList.add('is-drag');
+    canvas.classList.add('is-drag'); hideHint();
     if (ui.mode !== 'planta' || state.ortho < 0.99) return;
     killTweens(); canvas.setPointerCapture(ev.pointerId);
     ptrs[ev.pointerId] = [ev.clientX, ev.clientY];
-    drag = { pts: JSON.parse(JSON.stringify(ptrs)) };
   });
   canvas.addEventListener('pointermove', function (ev) {
     if (!ptrs[ev.pointerId] || ui.mode !== 'planta') return;
@@ -584,34 +663,46 @@
   function endPtr(ev) { delete ptrs[ev.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('is-drag'); }
   canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
   canvas.addEventListener('pointerleave', function () { if (!Object.keys(ptrs).length) canvas.classList.remove('is-drag'); });
-  controls.addEventListener('start', function () { hint.classList.add('is-off'); });
-
-  /* ---------- panel colapsable (móvil) ---------- */
-  var toggle = document.getElementById('panelToggle');
-  toggle.addEventListener('click', function () { var o = panel.classList.toggle('is-open'); toggle.setAttribute('aria-expanded', String(o)); });
+  controls.addEventListener('start', hideHint);
 
   /* ---------- exportar PNG ---------- */
+  // Logotipo incrustado (data URI, js/logo.js): no contamina el lienzo aunque la página se abra con doble clic (file://)
+  var logoImg = null;
+  if (WT.logo && WT.logo.blanco) { logoImg = new Image(); logoImg.decoding = 'sync'; logoImg.src = WT.logo.blanco; }
+  function exportScale() {
+    // entregable a 2× (o la densidad de la pantalla si es mayor), sin pasar de 4096 px por lado
+    var W = main.clientWidth, H = main.clientHeight;
+    return Math.max(1, Math.min(Math.max(2, dpr), 4096 / W, 4096 / H));
+  }
   function exportPNG() {
     // la exportación no lleva el panel: se centra el encuadre en todo el lienzo
-    var savePad = state.planta.padding, saveEnc = state.encuadre;
+    var savePad = state.planta.padding, saveEnc = state.encuadre, W = main.clientWidth, H = main.clientHeight;
     state.planta.padding = { left: 24, right: 24, top: 24, bottom: 24 }; state.encuadre = null; ui.exporting = true;
-    S.renderAt(T, state); layoutLabels(); updateHud();
-    try { exportNow(); } finally { state.planta.padding = savePad; state.encuadre = saveEnc; ui.exporting = false; }
+    S.renderer.setPixelRatio(exportScale()); S.resize(W, H);
+    try { S.renderAt(T, state); layoutLabels(); updateHud(); exportNow(); }
+    finally {
+      state.planta.padding = savePad; state.encuadre = saveEnc; ui.exporting = false;
+      S.renderer.setPixelRatio(dpr); S.resize(W, H); S.renderAt(T, state); layoutLabels(); updateHud();
+    }
   }
   function exportNow() {
     var W = main.clientWidth, H = main.clientHeight, k = canvas.width / W, head = Math.round(64 * k), foot = Math.round(40 * k);
     var out, g;
     function draw(withLogo) {
-      // lienzo nuevo en cada intento: si el logo (file://) contamina el lienzo, el reintento sin logo parte de cero
+      // lienzo nuevo en cada intento: si el logo contaminara el lienzo, el reintento sin logo parte de cero
       out = document.createElement('canvas'); out.width = canvas.width; out.height = canvas.height + head + foot; g = out.getContext('2d');
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.fillStyle = C.marino900; g.fillRect(0, 0, out.width, out.height);
       g.drawImage(canvas, 0, head);
       g.fillStyle = C.marino; g.fillRect(0, 0, out.width, head); g.fillStyle = C.amarillo; g.fillRect(0, head - 3 * k, out.width, 3 * k);
       var x0 = 16 * k;
-      if (withLogo) { var img = document.querySelector('.wt-logo'); var lh = 44 * k, lw = lh * (img.naturalWidth / img.naturalHeight || 3.75); g.drawImage(img, x0, (head - lh) / 2, lw, lh); x0 += lw + 16 * k; }
-      else { var brand = D.empresa.nombre.toUpperCase(); g.fillStyle = '#fff'; g.font = '800 ' + 26 * k + 'px "Barlow Condensed", Arial'; g.textBaseline = 'middle'; g.fillText(brand, x0, head / 2); x0 += g.measureText(brand).width + 16 * k; }
-      g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.font = '700 ' + 22 * k + 'px "Barlow Condensed", Arial';
+      if (withLogo) {
+        var asp = logoImg.naturalWidth && logoImg.naturalHeight ? logoImg.naturalWidth / logoImg.naturalHeight : 256 / 96;
+        var lh = 48 * k, lw = lh * asp; g.drawImage(logoImg, x0, (head - 3 * k - lh) / 2, lw, lh); x0 += lw + 18 * k;
+        g.fillStyle = 'rgba(169,220,247,0.35)'; g.fillRect(x0 - 9 * k, 14 * k, 1 * k, head - 31 * k);
+        x0 += 6 * k;
+      } else { var brand = D.empresa.nombre.toUpperCase(); g.fillStyle = '#fff'; g.font = '800 ' + 26 * k + 'px "Barlow Condensed", Arial'; g.textBaseline = 'middle'; g.fillText(brand, x0, head / 2); x0 += g.measureText(brand).width + 16 * k; }
+      g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = '700 ' + 22 * k + 'px "Barlow Condensed", Arial';
       g.fillText(('Vista aérea de la macropera · ' + D.empresa.servicio + ' (' + D.empresa.servicioEs + ')').toUpperCase(), x0, head / 2 - 9 * k);
       g.fillStyle = C.celeste200; g.font = '500 ' + 13 * k + 'px Barlow, Arial'; g.fillText(ui.mode === 'planta' ? 'Vista en planta (norte arriba)' : 'Vista 3D', x0, head / 2 + 13 * k);
       g.save(); g.translate(0, head); g.scale(k, k);
@@ -621,7 +712,7 @@
         g.fillStyle = C.amarillo; g.beginPath(); g.arc(b.px, b.py, 3.6, 0, Math.PI * 2); g.fill();
         g.fillStyle = 'rgba(6,22,49,0.9)'; rr(g, b.x, b.y, b.w, b.h, b.h / 2); g.fill();
         g.fillStyle = C.amarillo; g.beginPath(); g.arc(b.x + 15, b.y + b.h / 2, 11, 0, Math.PI * 2); g.fill();
-        g.fillStyle = C.marino; g.font = '800 12px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText(String(e.n), b.x + 15, b.y + b.h / 2 + 0.5);
+        g.fillStyle = C.marino; g.font = '800 12px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(e.n), b.x + 15, b.y + b.h / 2 + 0.5);
         if (!narrow()) { g.fillStyle = '#fff'; g.font = '600 13px Barlow, Arial'; g.textAlign = 'left'; g.fillText(e.etq, b.x + 33, b.y + b.h / 2 + 0.5); }
       });
       S.cotas.forEach(function (c) { if (!c.box) return; var t = '≈ ' + c.m + ' m'; g.font = '700 12px "JetBrains Mono", monospace'; var tw2 = g.measureText(t).width + 12; g.fillStyle = '#fff'; rr(g, c.box.x - tw2 / 2, c.box.y - 10, tw2, 20, 4); g.fill(); g.fillStyle = C.marino900; g.textAlign = 'center'; g.fillText(t, c.box.x, c.box.y + 0.5); });
@@ -644,8 +735,8 @@
       g.fillText('Medidas aproximadas · ilustrativo · ' + D.empresa.nombre, out.width - 16 * k, fy + foot / 2);
     }
     function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
-    var url;
-    try { draw(true); url = out.toDataURL('image/png'); }
+    var url, logoOk = !!(logoImg && logoImg.complete && logoImg.naturalWidth);
+    try { draw(logoOk); url = out.toDataURL('image/png'); }
     catch (err) { S.renderAt(T, state); draw(false); url = out.toDataURL('image/png'); }
     var a = document.createElement('a'); a.href = url; a.download = 'macropera-' + (ui.mode === 'planta' ? 'planta' : '3d') + '.png';
     document.body.appendChild(a); a.click(); a.remove();
@@ -654,17 +745,18 @@
 
   /* ---------- tamaño ---------- */
   function resize() {
-    var w = main.clientWidth, h = main.clientHeight;
-    S.resize(w, h); updatePadding(); ELEMS.forEach(function (e) { e.w = e.h = 0; });
+    S.resize(main.clientWidth, main.clientHeight); updatePadding(); ELEMS.forEach(function (e) { e.w = e.h = 0; });
   }
   window.addEventListener('resize', resize);
   updatePadding();
 
   /* ---------- bucle ---------- */
-  var T = 0, last = performance.now(), hint = document.getElementById('hint'), started = false;
-  if (window.matchMedia && matchMedia('(pointer: coarse)').matches) hint.textContent = 'Arrastre para orbitar · pellizque para acercar · toque una etiqueta para ver detalles';
+  // Con "reducir movimiento" el reloj de la escena no avanza (sin partículas ni pulsos); la cámara sigue respondiendo.
+  var T = 0, last = performance.now(), started = false;
+  hint.textContent = hintText();
   function frame(now) {
-    var dt = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now; T += dt * (reduce ? 0.35 : 1);
+    var dt = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now;
+    if (!reduce) T += dt;
     if (ui.mode === '3d' && controls.enabled) {
       controls.update();
       state.camera = { pos: S.camera.position.toArray(), target: controls.target.toArray(), fov: 40 };
@@ -676,14 +768,14 @@
 
   /* ---------- arranque: vista oblicua → planta, etiquetas escalonadas ---------- */
   function intro() {
-    var h = (location.hash || '').replace('#', ''), m = /elemento=([\w]+)/.exec(h);
+    var h = (location.hash || '').replace('#', ''), m = /elemento=([\w]+)/.exec(h), direct = h === '3d' || h === 'planta' || reduce || !!m;
+    setTimeout(hideHint, direct ? 8000 : 9000); // el aviso se oculta solo en todas las entradas
     if (h === '3d') { state.camera = shot('aerea'); ui.mode3dPose = shot('aerea'); setModeUI('3d'); syncControls(); controls.enabled = true; labelsEl.classList.add('is-in'); return; }
-    if (h === 'planta' || reduce || m) { state.ortho = 1; state.camera = shot('aerea'); ui.mode3dPose = shot('aerea'); setModeUI('planta'); labelsEl.classList.add('is-in'); if (m) select(m[1], true); return; }
+    if (direct) { state.ortho = 1; state.camera = shot('aerea'); ui.mode3dPose = shot('aerea'); setModeUI('planta'); labelsEl.classList.add('is-in'); if (m) select(m[1], true); return; }
     setModeUI('planta'); ui.mode3dPose = shot('aerea');
     var from = shot('establecimiento'), to = shot('aerea'), k = { v: 0 };
     tw(k, { v: 1, duration: 3.6, ease: 'power2.inOut', onUpdate: function () { state.camera = S.lerpShot(from, to, k.v, { ease: false, hop: 0.1 }); } });
     tw(state, { ortho: 1, duration: 3.0, delay: 1.0, ease: 'power3.inOut', onComplete: function () { labelsEl.classList.add('is-in'); } });
-    setTimeout(function () { hint.classList.add('is-off'); }, 9000);
   }
   S.ready.then(function () { if (started) return; started = true; intro(); requestAnimationFrame(function (n) { last = n; frame(n); }); });
 
@@ -698,7 +790,7 @@
       swBox.querySelectorAll('input').forEach(function (inp, i) { var L = LAYERS[i]; inp.checked = L.k === 'etiquetas' ? ui.etiquetas : !!state.capas[L.k]; });
       if (o.sel) select(o.sel, false); else if (o.sel === null) clearSel();
       if (o.panel != null) { panel.classList.toggle('is-open', !!o.panel); toggle.setAttribute('aria-expanded', String(!!o.panel)); }
-      labelsEl.classList.add('is-in'); labelsEl.classList.remove('is-moving'); hint.classList.add('is-off');
+      labelsEl.classList.add('is-in'); labelsEl.classList.remove('is-moving'); hideHint();
       S.renderAt(T, state); layoutLabels(); updateHud();
     },
     exportPNG: exportPNG

@@ -157,13 +157,27 @@
   .monitor-cap { margin: 52px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
 
   /* ---------- VIDEOS ---------- */
-  .vids { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
+  /* 16:9 y 9:16 a la misma altura: columnas 3:1 (≈ proporción de ambos formatos), tarjetas estiradas */
+  .vids { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
   .vcard { display: flex; flex-direction: column; overflow: hidden; }
-  .vcard .stage { position: relative; background: #050f22; display: grid; place-items: center; overflow: hidden; }
-  .vcard.w .stage { aspect-ratio: 16 / 9; }
-  .vcard.t .stage { aspect-ratio: 9 / 16; max-height: 540px; width: 100%; }
-  .vcard video { width: 100%; height: 100%; object-fit: contain; background: #000; }
-  .prep { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 24px; text-align: center;
+  .vcard .stage { position: relative; flex: 1 1 auto; min-height: 0; background: radial-gradient(80% 60% at 50% 40%, #0f2a50, #050f22 75%); display: grid; place-items: center; overflow: hidden; }
+  .vcard.w .stage { aspect-ratio: 16 / 9; flex: none; }
+  .vcard.t .stage { width: 100%; }
+  .vcard video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: transparent; }
+  .vplay { position: absolute; inset: 0; z-index: 1; display: flex; align-items: flex-end; justify-content: flex-start; gap: 14px; padding: clamp(14px, 2vw, 22px); border: 0; cursor: pointer; color: var(--fg); text-align: left;
+    background: linear-gradient(180deg, rgba(6,22,49,0) 52%, rgba(6,22,49,0.86) 100%); transition: opacity 0.35s var(--ease), visibility 0.35s; }
+  .vplay .ico { flex: none; display: grid; place-items: center; width: clamp(52px, 5vw, 66px); aspect-ratio: 1; border-radius: 50%; background: var(--rb-amarillo); color: var(--rb-marino);
+    box-shadow: 0 0 0 7px rgba(255,194,14,0.2), 0 14px 30px -10px rgba(0,0,0,0.85); transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease); }
+  .vplay .ico svg { width: 42%; height: 42%; margin-left: 6%; }
+  .vplay:hover .ico, .vplay:focus-visible .ico { transform: scale(1.07); box-shadow: 0 0 0 11px rgba(255,194,14,0.24), 0 14px 30px -10px rgba(0,0,0,0.85); }
+  .vplay:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: -3px; }
+  .vplay .row { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .vplay .cap { display: grid; gap: 3px; min-width: 0; }
+  .vplay .cap strong { font: 800 clamp(20px, 2vw, 26px)/1 var(--font-display); text-transform: uppercase; letter-spacing: 0.03em; }
+  .vplay .cap span { font-size: 13.5px; line-height: 1.3; color: var(--rb-celeste-200); }
+  .vcard.t .vplay .cap strong { font-size: 20px; }
+  .stage.is-on .vplay { opacity: 0; visibility: hidden; }
+  .prep { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 24px; text-align: center;
     background: radial-gradient(70% 70% at 50% 40%, rgba(29,68,119,0.55), transparent 70%), repeating-linear-gradient(135deg, rgba(169,220,247,0.035) 0 12px, transparent 12px 24px), #061631; }
   .prep .film { width: 64px; height: 64px; color: var(--rb-amarillo); }
   .prep strong { font: 800 clamp(22px, 2.4vw, 30px)/1.05 var(--font-display); text-transform: uppercase; }
@@ -171,6 +185,7 @@
   .prep .sb { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 560px; }
   .prep .sb span { font: 600 12px/1 var(--font-mono); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--line-strong); color: var(--rb-celeste-200); }
   .vcard.t .prep .sb { display: none; }
+  .vcard.t .prep p { font-size: 13.5px; }
   .vcard .meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
   .vcard .meta h3 { margin: 0; font: 700 18px/1.15 var(--font-display); text-transform: uppercase; letter-spacing: 0.02em; }
   .vcard .meta span { font-size: 13px; color: var(--muted); }
@@ -182,11 +197,9 @@
     background: linear-gradient(225deg, transparent 10px, var(--rb-celeste-200) 10px); }
   .dl-list .fi.pdf { background: linear-gradient(225deg, transparent 10px, #ffd75e 10px); }
   .dl-list .tx { display: grid; gap: 3px; min-width: 0; }
-  .dl-list .tx strong { font-size: 14.5px; }
-  .dl-list .tx a, .dl-list .tx span { font-size: 13px; }
-  .dl-list .tx span { color: var(--muted); }
-  .dl-list .tx .fn { font: 500 11.5px/1.3 var(--font-mono); overflow-wrap: anywhere; }
-  .dl-list .tx a { font-weight: 700; }
+  .dl-list .tx strong { font-size: 14.5px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dl-list .tx .fmt { font: 500 12px/1.3 var(--font-mono); color: var(--rb-celeste-200); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dl-list .tx a { font-size: 13.5px; font-weight: 700; white-space: nowrap; }
 
   /* ---------- INSTRUMENTACIÓN ---------- */
   .tbl-wrap { overflow: hidden; }
@@ -215,7 +228,7 @@
   .ph figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 36px 14px 12px; pointer-events: none; font-size: 13.5px; line-height: 1.4; color: #fff;
     background: linear-gradient(180deg, transparent, rgba(6,22,49,0.92) 55%); }
   .ph figcaption strong { display: block; font: 700 16px/1.15 var(--font-display); text-transform: uppercase; letter-spacing: 0.03em; color: var(--rb-amarillo); margin-bottom: 2px; }
-  .ph:not(.big) figcaption span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ph figcaption span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .ph button:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: -3px; border-radius: var(--r-lg); }
   dialog.viewer { width: min(1180px, 94vw); max-height: 94vh; padding: 0; border: 1px solid var(--line-strong); border-radius: var(--r-lg); background: #04101f; color: var(--fg); overflow: hidden; }
   dialog.viewer::backdrop { background: rgba(2,8,18,0.86); backdrop-filter: blur(4px); }
@@ -250,11 +263,6 @@
     .gal { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 210px; }
   }
   @media (max-width: 720px) {
-    .wt-topbar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 12px 6px; }
-    .wt-topbar .wt-title { font-size: 17px; line-height: 1.1; }
-    .wt-topbar .wt-title small { display: none; }
-    .wt-topbar nav { order: 3; gap: 2px; }
-    .wt-topbar nav a { padding: 5px 8px; font-size: 13px; white-space: nowrap; }
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .stats div:nth-child(3) { border-left: 0; padding-left: 0; }
     .how-list { grid-template-columns: minmax(0, 1fr); }
@@ -265,8 +273,9 @@
     .how-step .txt { flex: 1 1 200px; display: grid; gap: 6px; }
     .deliv { grid-template-columns: minmax(0, 1fr); }
     .vids { grid-template-columns: minmax(0, 1fr); }
-    .vcard.t .stage { max-height: 460px; }
+    .vcard.t .stage { flex: none; aspect-ratio: 9 / 16; max-height: 520px; }
     .vcard.w .prep p, .vcard.w .prep .sb { display: none; }
+    .vplay .cap span { display: none; }
     .prep .film { width: 44px; height: 44px; }
     .dl-list { grid-template-columns: minmax(0, 1fr); }
     .iso-lbl { display: none; }
@@ -281,6 +290,19 @@
     .foot-grid { grid-template-columns: minmax(0, 1fr); }
   }
   @media (min-width: 721px) { .how-step .txt { display: contents; } }
+  /* Impresión / PDF: todo visible (el revelado depende del scroll), sin controles interactivos */
+  @media print {
+    html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .wt-topbar { position: static; backdrop-filter: none; }
+    .wt-topbar nav, .skip, .cta, .ctrl, .vplay, dialog.viewer, .monitor::after { display: none !important; }
+    .rv, .hero-copy > *, .hero-art, .iso-lbl { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
+    .how-step .ico svg .d { stroke-dashoffset: 0 !important; transition: none !important; }
+    .iso-tilt, .iso-float, .monitor, .dcard-in { transform: none !important; animation: none !important; }
+    .sec { padding: 36px 0; break-inside: auto; }
+    .how-step, .dcard, .vcard, .downloads, .tbl-wrap, .ph, .states li { break-inside: avoid; }
+    .gal { grid-auto-rows: 200px; }
+    .monitor-cap { margin-top: 12px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .rv { opacity: 1; transform: none; }
@@ -294,7 +316,7 @@
 <a class="skip" href="#main">Saltar al contenido</a>
 <header class="wt-topbar">
   <a class="wt-brand" href="index.html"><img class="wt-logo" src="assets/logo-rbtec-blanco.svg" alt="R.B. Tec México · Well Testing — ir al inicio"></a>
-  <div class="wt-title">Well Testing<small>Aforo de pozos · Material técnico-visual</small></div>
+  <div class="wt-title">Material técnico-visual<small>Servicio de aforo de pozos</small></div>
   <nav aria-label="Entregables">
     <a href="index.html" aria-current="page">Inicio</a>
     <a href="proceso.html">1 · Proceso</a>
@@ -346,7 +368,7 @@
       <div class="sec-head rv">
         <span class="wt-eyebrow">Material del servicio</span>
         <h2 id="h-del">Cuatro entregables <em>interactivos</em></h2>
-        <p>Para presentar a PEMEX y clientes, y para capacitar al personal de nuevo ingreso. Todo funciona sin internet, con doble clic.</p>
+        <p>Cuatro vistas del mismo proceso, alimentadas por los mismos datos. Funcionan sin conexión a internet.</p>
       </div>
       <div class="deliv js-deliv"></div>
     </div>
@@ -381,8 +403,8 @@
     <div class="wrap">
       <div class="sec-head rv">
         <span class="wt-eyebrow">Videos y descargas</span>
-        <h2 id="h-vid">Animación del proceso <em>60–90 s</em></h2>
-        <p>Versión 16:9 para presentaciones y 9:16 para redes. Se generan con HyperFrames a partir de las mismas vistas de esta carpeta.</p>
+        <h2 id="h-vid">Animación del proceso <em>en&nbsp;90&nbsp;s</em></h2>
+        <p>Versión 16:9 para presentaciones y 9:16 para redes sociales, con la misma información que el recorrido interactivo.</p>
       </div>
       <div class="vids">
         <article class="vcard w wt-card rv" data-file="well-testing-16x9.mp4">
@@ -461,23 +483,12 @@
   var FINE = window.matchMedia && matchMedia('(pointer: fine)').matches;
   if (window.gsap && window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin);
 
-  /* Archivos ya generados en entregables/. Cambie a true cuando exista cada archivo
-     (en file:// no se puede comprobar su existencia sin provocar una petición fallida). */
-  var ENTREGABLES = {
-    'well-testing-16x9.mp4': false,
-    'well-testing-9x16.mp4': false,
-    'dti-horizontal-pantalla.png': true,
-    'dti-horizontal.png': true,
-    'dti-horizontal.pdf': true,
-    'dti-vertical.png': true,
-    'dti-vertical.pdf': true
-  };
-
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var eq = function (id) { return U.equipo(id) || { nombre: id, desc: '' }; };
   var corto = function (id) { var e = eq(id); return e.corto || e.nombre; };
+  var minus = function (t) { t = String(t || ''); return t.charAt(0).toLowerCase() + t.slice(1); };
   /* Válvula de control de cada salida (va DESPUÉS del medidor): gas → PV, líquido → LV */
   var valv = function (corriente, fb) { var l = D.valvulasControl || []; for (var i = 0; i < l.length; i++) if (l[i].corriente === corriente) return l[i]; return { tag: fb, nombre: '' }; };
   var V_GAS = valv('gas', 'PV'), V_LIQ = valv('liquido', 'LV');
@@ -509,7 +520,7 @@
     '; gas → ' + esc(corto('placa').toLowerCase()) + ' → ' + esc(V_GAS.tag) + '. Todas las señales llegan al ' + nw(eq('rtu').nombre) + ' y al ' + nw(corto('scada')) + '.';
   $('.js-hm').textContent = M.horasMedicion;
   $('.js-scada-eyebrow').textContent = corto('scada') + ' · simulación en vivo';
-  $('.js-scada-p').textContent = eq('scada').desc + ' Aquí se recorren las ' + WT.SCADA.horas.total + ' h simuladas en un minuto: estabilización, medición de ' + M.horasMedicion + ' h y cierre.';
+  $('.js-scada-p').textContent = 'El ' + corto('scada') + ' ' + minus(eq('scada').desc) + ' Aquí se recorren las ' + WT.SCADA.horas.total + ' h simuladas en un minuto: estabilización, medición de ' + M.horasMedicion + ' h y cierre.';
   $('.js-aviso').textContent = D.demo.aviso + (FINE && !REDUCED ? ' · Pase el puntero para enderezar la pantalla.' : '.');
   $('.js-ninst').textContent = D.instrumentos.length;
   $('.js-inst-p').textContent = 'Transmisores ' + ((U.instrumento('TPS') || {}).marca || 'Endress+Hauser') + ' y medidor ' + corto('coriolis') + '; todos llegan al ' + eq('rtu').nombre + '. Identificación funcional según ISA-5.1.';
@@ -665,12 +676,12 @@
       I.poly([P(15, 1.0, -3.69), P(22.2, 1.0, -3.69), P(22.2, 1.18, -3.69), P(15, 1.18, -3.69)], C.marino, gB);
       I.poly([P(15, 1.18, -3.69), P(22.2, 1.18, -3.69), P(22.2, 1.26, -3.69), P(15, 1.26, -3.69)], C.amarillo, gB);
       A.caseta = [18.6, 3.55, -4.7];
-      // gabinete RTU (acero inoxidable) sobre poste
-      I.cylY(13.6, -2.6, 0, 0.9, 0.05, '#8d949b', gB, 8);
-      I.box(13.25, 13.95, 0.9, 1.85, -2.8, -2.45, '#c3cad1', gB);
-      I.poly([P(13.35, 1.0, -2.44), P(13.85, 1.0, -2.44), P(13.85, 1.75, -2.44), P(13.35, 1.75, -2.44)], '#aab3bc', gB);
-      var led = P(13.6, 1.6, -2.43); sv('circle', { cx: led[0], cy: led[1], r: 2.4, fill: '#3ccf8e', class: 'pulse' }, gB);
-      A.rtu = [13.6, 1.85, -2.6];
+      // gabinete RTU (acero inoxidable) sobre poste, frente a la caseta
+      I.cylY(20.6, -2.22, 0, 0.9, 0.05, '#8d949b', gB, 8);
+      I.box(20.25, 20.95, 0.9, 1.85, -2.4, -2.05, '#c3cad1', gB);
+      I.poly([P(20.35, 1.0, -2.04), P(20.85, 1.0, -2.04), P(20.85, 1.75, -2.04), P(20.35, 1.75, -2.04)], '#aab3bc', gB);
+      var led = P(20.6, 1.6, -2.03); sv('circle', { cx: led[0], cy: led[1], r: 2.4, fill: '#3ccf8e', class: 'pulse' }, gB);
+      A.rtu = [20.6, 1.3, -2.03];   // puerta del gabinete
     }
 
     // ---- árbol de válvulas (verde) ----
@@ -689,8 +700,7 @@
     I.box(-0.32, 0.32, 2.15, 2.6, -0.32, 0.32, TG, gT);     // cruz
     I.cylY(0, 0, 3.0, 3.18, 0.34, '#8a5bb8', gT, 18);
     I.cylY(0, 0, 3.18, 3.36, 0.22, TG, gT, 16);
-    A.TDP = I.transmitter(0, 3.36, 0, gT, 0.25);
-    A.arbol = [0, 3.5, 0];
+    A.arbol = [0, 3.36, 0];
     // brazo lateral izquierdo (cerrado) hacia -x (oculto en parte)
     // ---- línea de entrada ----
     var gL = sv('g', null, gM), PIPE = '#2e6049';
@@ -703,6 +713,8 @@
     var hc = []; for (k = 0; k < 18; k++) { var aa = k / 18 * Math.PI * 2; hc.push(P(1.45 + 0.24 * Math.cos(aa), 2.98, 0.24 * Math.sin(aa))); }
     sv('path', { d: 'M' + hc.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join('L') + 'Z', fill: 'none', stroke: '#c9a227', 'stroke-width': 2.6 }, gL);
     A.estrangulador = [1.45, 2.98, 0];
+    // TDP en la línea lateral (TP), aguas arriba del estrangulador
+    A.TDP = I.transmitter(0.86, 2.5, 0, gL, 0.2);
     // soporte de tubería
     I.box(5.25, 5.55, 0, 0.2, -0.25, 0.25, '#6d655a', gL);
 
@@ -752,25 +764,24 @@
     A.separador = [10.8, vy + vr, 0];
     A.TPS = I.transmitter(10.0, vy + vr - 0.04, 0, gV, 0.24);
     A.TT = I.transmitter(9.2, vy + vr - 0.04, 0.25, gV, 0.2);
-    // TN: cuerpo de nivel en la cabeza derecha
-    I.cylY(13.4, 0.55, 1.75, 3.0, 0.07, '#7f8a95', gV, 8);
-    A.TN = I.transmitter(13.4, 3.0, 0.55, gV, 0.12);
+    // TN: sonda de nivel montada arriba, hacia el extremo de salida
+    A.TN = I.transmitter(12.35, vy + vr - 0.04, 0.12, gV, 0.22);
 
     // ---- salida de gas (arriba) → placa de orificio (TDG) → PV → bajada ----
     var gGs = sv('g', null, gM);
     var gas3 = [[13.2, vy + vr - 0.1, 0], [13.2, 3.95, 0], [16.2, 3.95, 0], [19.6, 3.95, 0], [19.6, 0.6, 0]];
     var dGas = I.pipe(gas3, 0.22 * (o.S || 27), PIPE, gGs);
     // placa de orificio entre bridas + transmisor de presión diferencial (TDG)
-    I.flange(14.98, 3.95, 0, gGs, 0.2); I.flange(15.23, 3.95, 0, gGs, 0.2);
-    A.TDG = I.transmitter(15.1, 4.12, 0, gGs, 0.18);
-    A.placa = [15.1, 3.95, 0];
+    I.flange(15.68, 3.95, 0, gGs, 0.2); I.flange(15.93, 3.95, 0, gGs, 0.2);
+    A.TDG = I.transmitter(15.8, 4.12, 0, gGs, 0.18);
+    A.placa = [15.8, 3.95, 0];
     // PV (contrapresión), aguas abajo de la placa: cuerpo + vástago + actuador
-    I.box(17.35, 17.85, 3.75, 4.15, -0.2, 0.2, '#2b5642', gGs);
-    I.cylY(17.6, 0, 4.15, 4.22, 0.05, '#7d858d', gGs, 6);
-    I.cylY(17.6, 0, 4.22, 4.52, 0.26, '#d7dbe0', gGs, 16);
-    A.PV = [17.6, 4.52, 0];
+    I.box(17.85, 18.35, 3.75, 4.15, -0.2, 0.2, '#2b5642', gGs);
+    I.cylY(18.1, 0, 4.15, 4.22, 0.05, '#7d858d', gGs, 6);
+    I.cylY(18.1, 0, 4.22, 4.52, 0.26, '#d7dbe0', gGs, 16);
+    A.PV = [18.1, 4.52, 0];
     // soportes
-    I.cylY(16.2, 0, 0, 3.85, 0.05, '#6c747c', gGs, 6); I.cylY(19.6, 0, 0, 0.5, 0.12, '#6c747c', gGs, 8);
+    I.cylY(16.9, 0, 0, 3.85, 0.05, '#6c747c', gGs, 6); I.cylY(19.6, 0, 0, 0.5, 0.12, '#6c747c', gGs, 8);
 
     // ---- salida de líquido (abajo) → Coriolis → LV ----
     var gLq = sv('g', null, gM);
@@ -863,8 +874,8 @@
         { a: 'arbol', t: eq('arbol').nombre, s: 'TDP · boca de pozo', dx: -60, dy: -80 },
         { a: 'estrangulador', t: corto('estrangulador'), dx: 96, dy: -98 },
         { a: 'separador', t: eq('separador').nombre + ' ' + (o.tag || SEP.tagDefault), s: 'TPS · TT · TN', dx: 64, dy: -112 },
-        { a: 'rtu', t: corto('rtu'), s: 'recibe las ' + D.instrumentos.length + ' señales', dx: 176, dy: -178 },
-        { a: 'placa', t: corto('placa') + ' → ' + V_GAS.tag, s: 'TDG: gasto de gas · ' + V_GAS.tag + ': contrapresión', dx: 262, dy: -64 },
+        { a: 'rtu', t: corto('rtu'), s: 'recibe las ' + D.instrumentos.length + ' señales', dx: 172, dy: 6 },
+        { a: 'placa', t: corto('placa') + ' → ' + V_GAS.tag, s: 'TDG: gasto de gas · ' + V_GAS.tag + ': contrapresión', dx: 150, dy: -182 },
         { a: 'caseta', t: 'Caseta · PC de campo', s: corto('scada'), dx: 196, dy: 24 },
         { a: 'coriolis', t: corto('coriolis') + ' → ' + V_LIQ.tag, s: 'masa · densidad · % agua · ' + V_LIQ.tag + ': nivel', dx: -30, dy: 108 },
         { a: 'bateria', t: 'A batería', s: 'TDM · TPL · circuito cerrado', dx: -20, dy: 70 }
@@ -889,7 +900,7 @@
     function place(list) { // posiciones estáticas (movimiento reducido o sin GSAP)
       list.forEach(function (p) { var L = p.path.getTotalLength(), pt = p.path.getPointAtLength(L * p.off); p.el.setAttribute('cx', pt.x); p.el.setAttribute('cy', pt.y); });
     }
-    if (window.gsap && window.MotionPathPlugin && !REDUCED) {
+    if (window.gsap && window.MotionPathPlugin && !REDUCED && !o.estatico) {
       FL.concat(SIG).forEach(function (p) {
         gsap.to(p.el, { motionPath: { path: p.path, align: p.path, alignOrigin: [0.5, 0.5] }, duration: p.dur, ease: 'none', repeat: -1, delay: -p.dur * (1 - p.off) });
       });
@@ -929,7 +940,7 @@
   };
   var STEPS = [
     { id: 'arbol', eqs: ['arbol'], tags: ['TDP'], st: C.mezcla },
-    { id: 'estrangulador', eqs: ['estrangulador', 'manifold'], tags: [], st: C.mezcla },
+    { id: 'estrangulador', titulo: U.equipo('manifold') ? 'Estrangulador y cabezal' : 'Estrangulador TP/TR', eqs: ['estrangulador', 'manifold'], tags: [], st: C.mezcla },
     { id: 'separador', eqs: ['separador'], tags: ['TPS', 'TT', 'TN'], st: 'linear-gradient(90deg,' + C.mezcla + ',' + C.gas + ')' },
     // en cada salida: primero el medidor y después la válvula de control
     { id: 'medicion', titulo: 'Medición de líquido y gas', eqs: ['coriolis', 'placa'], tags: [], pares: [['CORIOLIS', V_LIQ.tag], ['TDG', V_GAS.tag]], st: 'linear-gradient(90deg,' + C.liquidoAmbar + ' 50%,' + C.gas + ' 50%)' },
@@ -939,9 +950,11 @@
   $('.js-how').insertAdjacentHTML('beforeend', STEPS.map(function (s, i) {
     var e0 = eq(s.eqs[0]);
     var titulo = s.titulo || (s.id === 'estrangulador' ? 'Estrangulador TP/TR' : e0.nombre);
-    var txt = s.eqs.map(function (id) { return eq(id).desc; }).join(' ');
-    if (s.id === 'medicion') txt = s.eqs.map(function (id) { var d = eq(id).desc; return corto(id) + ' ' + d.charAt(0).toLowerCase() + d.slice(1); }).join(' ');
-    if (s.id === 'scada') txt = eq('rtu').nombre + ': ' + eq('rtu').desc.charAt(0).toLowerCase() + eq('rtu').desc.slice(1) + ' ' + eq('scada').desc;
+    // con varios equipos, cada descripción lleva su sujeto (no se encadenan frases sueltas)
+    var ids = s.eqs.filter(function (id) { return U.equipo(id); });
+    var txt = ids.length > 1 ? ids.map(function (id) { return corto(id) + ': ' + minus(eq(id).desc); }).join(' ') : eq(s.eqs[0]).desc;
+    if (s.id === 'medicion') txt = ids.map(function (id) { return corto(id) + ' ' + minus(eq(id).desc); }).join(' ');
+    if (s.id === 'scada') txt = 'El ' + eq('rtu').nombre + ' ' + minus(eq('rtu').desc) + ' El ' + corto('scada') + ' ' + minus(eq('scada').desc);
     var tags = s.tags.filter(function (t) { return U.instrumento(t); }).map(function (t) { return '<span class="wt-tag">' + esc(t) + '</span>'; }).join('');
     if (s.pares) tags += s.pares.filter(function (p) { return U.instrumento(p[0]); }).map(function (p) {
       return '<span class="par"><span class="wt-tag">' + esc(p[0]) + '</span><span class="arr" aria-label="y después">→</span><span class="wt-tag vlv">' + esc(p[1]) + '</span></span>';
@@ -1007,7 +1020,7 @@
   var DELIV = [
     { n: 1, href: 'proceso.html', t: 'Animación del proceso', p: 'Recorrido 3D pozo → separador → batería con flechas de flujo por color, etiquetas de equipos e instrumentos y lectura simulada del SCADA.', go: 'Abrir recorrido 3D', pv: 'proceso' },
     { n: 2, href: 'separador.html', t: 'Corte interno del separador', p: D.pasosSeparacion.length + ' pasos: ' + D.pasosSeparacion.map(function (s) { return s.titulo.toLowerCase(); }).join(', ') + '.', go: 'Ver el corte paso a paso', pv: 'separador' },
-    { n: 3, href: 'macropera.html', t: 'Vista aérea de la macropera', p: 'Árbol, cabezal/manifold, separador, líneas temporales, caseta/PC de medición, zona de seguridad y ruta de acceso, por capas.', go: 'Explorar la locación', pv: 'macropera' },
+    { n: 3, href: 'macropera.html', t: 'Vista aérea de la macropera', p: 'Árbol, ' + (U.equipo('manifold') ? minus(eq('manifold').nombre) + ', ' : '') + 'separador, líneas temporales, caseta con la PC de medición, zona de seguridad y ruta de acceso, por capas.', go: 'Explorar la locación', pv: 'macropera' },
     { n: 4, href: 'dti.html', t: 'Infografía del DTI (P&ID)', p: 'Simbología ISA con los ' + D.instrumentos.length + ' tags, lazos de control y válvulas. Vertical para imprimir y horizontal para pantalla.', go: 'Abrir el DTI', pv: 'dti' }
   ];
   $('.js-deliv').innerHTML = DELIV.map(function (d, i) {
@@ -1044,7 +1057,8 @@
   var stLis = $$('.js-states li'), lastE = null;
   function hm(h) { var m = Math.floor(h * 60 + 1e-6); return 'T+' + String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
   function draw() {
-    var v = view.renderAt(hNow, { t: tNow });
+    // los odómetros solo giran mientras la simulación avanza; en pausa muestran dígitos enteros
+    var v = view.renderAt(hNow, { t: tNow, rueda: playing && inView });
     slider.value = hNow.toFixed(2);
     out.textContent = hm(hNow);
     slider.setAttribute('aria-valuetext', hm(hNow) + ' · ' + v.estadoNombre);
@@ -1056,7 +1070,7 @@
     btn.querySelector('.ic').setAttribute('d', p ? 'M7 5h4v14H7zM13 5h4v14h-4z' : 'M8 5.5v13l11-6.5z');
   }
   setPlay(playing);
-  btn.addEventListener('click', function () { setPlay(!playing); });
+  btn.addEventListener('click', function () { setPlay(!playing); draw(); });
   slider.addEventListener('input', function () { hNow = +slider.value; setPlay(false); draw(); });
   $('.js-jumps').addEventListener('click', function (e) { var b = e.target.closest('button[data-j]'); if (!b) return; hNow = JUMP[b.getAttribute('data-j')]; draw(); });
   function frame(ts) {
@@ -1073,32 +1087,87 @@
 
   /* ====================== Videos y descargas ====================== */
   var STORY = ['Apertura', 'Locación', 'Pozo', 'Línea de entrada', 'Separación', 'Medición', 'Circuito cerrado', 'Monitoreo', 'DTI y cierre'];
-  function mountVideo(card, tryLoad) {
-    var f = card.getAttribute('data-file'), stage = card.querySelector('.stage');
-    function prep() {
-      stage.innerHTML = '<div class="prep"><svg class="film" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="10" width="36" height="28" rx="3"/><path d="M6 17h36M6 31h36M13 10v7M20 10v7M27 10v7M34 10v7M13 31v7M20 31v7M27 31v7M34 31v7"/><path d="M21 21v6l6-3z" fill="currentColor"/></svg>' +
-        '<strong>Video en preparación</strong><p>El MP4 se genera con HyperFrames a partir de estas mismas vistas. Mientras tanto, use los entregables interactivos.</p>' +
-        '<div class="sb" aria-label="Escenas">' + STORY.map(function (s, i) { return '<span>' + (i + 1) + ' · ' + esc(s) + '</span>'; }).join('') + '</div>' +
-        '<button class="wt-btn" type="button">Intentar cargar</button></div>';
-      stage.querySelector('button').addEventListener('click', function () { mountVideo(card, true); });
-    }
-    if (!ENTREGABLES[f] && !tryLoad) return prep();
+  /* Póster: la escena axonométrica del proceso, estática, como imagen SVG (data URI, sin red).
+     Se construye una sola vez fuera de pantalla y se encuadra en cada formato. */
+  var posterSrc = null;
+  function posterEscena() {
+    if (posterSrc) return posterSrc;
+    var host = document.createElement('div');
+    host.setAttribute('aria-hidden', 'true');
+    host.style.cssText = 'position:absolute;left:-12000px;top:0;width:1000px;height:640px;overflow:hidden;visibility:hidden';
+    document.body.appendChild(host);
+    var sg = sv('svg', null, host);
+    buildScene(sg, { mini: true, estatico: true, W: 1000, H: 625, S: 30, OX: 190, OY: 250, id: 'pst', seed: 3, fit: 20 });
+    sv('style', null, sg).textContent = '.iso-flow{fill:none;stroke-linecap:round;stroke-dasharray:2 13}';
+    var vb = sg.getAttribute('viewBox').split(' ').map(Number);
+    posterSrc = { vb: vb, svg: new XMLSerializer().serializeToString(sg) };
+    document.body.removeChild(host);
+    return posterSrc;
+  }
+  function posterURI(W, H) {
+    var e = posterEscena(), vb = e.vb, ar = vb[2] / vb[3];
+    // horizontal: escena completa; vertical: recorte más cercano centrado en el separador
+    var sw = W > H ? W * 0.84 : W * 2.1, sh = sw / ar, sx = W > H ? (W - sw) / 2 : W / 2 - sw * 0.44, sy = W > H ? (H - sh) / 2 - H * 0.07 : H * 0.38 - sh / 2;
+    var inner = e.svg.replace(/^<svg\b/, '<svg x="' + sx.toFixed(0) + '" y="' + sy.toFixed(0) + '" width="' + sw.toFixed(0) + '" height="' + sh.toFixed(0) + '"');
+    var grid = '';
+    for (var gx = 0; gx <= W; gx += 60) grid += 'M' + gx + ' 0V' + H;
+    for (var gy = 0; gy <= H; gy += 60) grid += 'M0 ' + gy + 'H' + W;
+    var svgTxt = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">' +
+      '<defs><radialGradient id="g" cx="50%" cy="' + (W > H ? 42 : 36) + '%" r="70%"><stop offset="0" stop-color="#16396a"/><stop offset=".55" stop-color="#0a1f3d"/><stop offset="1" stop-color="#050f22"/></radialGradient></defs>' +
+      '<rect width="' + W + '" height="' + H + '" fill="url(#g)"/><path d="' + grid + '" stroke="#a9dcf7" stroke-opacity=".05" stroke-width="1.5"/>' + inner + '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgTxt);
+  }
+  /* Siempre se monta el <video> con su póster; no se descarga nada hasta reproducir
+     (preload="none"). Si al reproducir el archivo no existe o no se puede abrir,
+     se muestra un respaldo con enlace al recorrido interactivo. */
+  function mountVideo(card) {
+    var f = card.getAttribute('data-file'), stage = card.querySelector('.stage'), vert = card.classList.contains('t');
+    var nombre = card.querySelector('h3').textContent;
     stage.innerHTML = '';
     var v = document.createElement('video');
-    v.controls = true; v.preload = 'metadata'; v.playsInline = true;
-    v.setAttribute('aria-label', card.querySelector('h3').textContent);
-    v.addEventListener('error', prep, { once: true });
+    v.preload = 'none'; v.playsInline = true; v.controls = false;
+    v.setAttribute('aria-label', 'Video: ' + nombre);
+    try { v.poster = vert ? posterURI(1080, 1920) : posterURI(1920, 1080); } catch (e) { /* sin póster: queda el fondo de la tarjeta */ }
     v.src = 'entregables/' + f;
     stage.appendChild(v);
-    if (tryLoad) v.load();
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'vplay';
+    b.setAttribute('aria-label', 'Reproducir video: ' + nombre);
+    b.innerHTML = '<span class="row" aria-hidden="true"><span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3.5v17l14-8.5z"/></svg></span>' +
+      '<span class="cap"><strong>Reproducir</strong><span>Animación del proceso · 90 s</span></span></span>';
+    stage.appendChild(b);
+    var fallo = false;
+    function respaldo() {
+      if (fallo) return; fallo = true;
+      var d = document.createElement('div');
+      d.className = 'prep';
+      d.innerHTML = '<svg class="film" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="10" width="36" height="28" rx="3"/><path d="M6 17h36M6 31h36M13 10v7M20 10v7M27 10v7M34 10v7M13 31v7M20 31v7M27 31v7M34 31v7"/><path d="M21 21v6l6-3z" fill="currentColor"/></svg>' +
+        '<strong>Video disponible próximamente</strong><p>Mientras tanto, el recorrido interactivo muestra el mismo proceso, paso a paso.</p>' +
+        '<div class="sb" aria-label="Escenas del video">' + STORY.map(function (t, i) { return '<span>' + (i + 1) + ' · ' + esc(t) + '</span>'; }).join('') + '</div>' +
+        '<a class="wt-btn primary" href="proceso.html">Abrir el recorrido 3D</a>';
+      stage.innerHTML = '';
+      stage.appendChild(d);
+    }
+    v.addEventListener('error', respaldo);
+    v.addEventListener('play', function () { stage.classList.add('is-on'); v.controls = true; });
+    v.addEventListener('ended', function () { stage.classList.remove('is-on'); });
+    b.addEventListener('click', function () {
+      stage.classList.add('is-on'); v.controls = true;
+      var pr = v.play();
+      if (pr && pr.catch) pr.catch(function (e) {
+        if (v.error || (e && e.name === 'NotSupportedError')) respaldo();
+        else { stage.classList.remove('is-on'); v.controls = false; }
+      });
+    });
   }
-  $$('.vcard').forEach(function (c) { mountVideo(c, false); });
-  var DLS = [['dti-horizontal-pantalla.png', 'DTI horizontal', 'PNG 4K · pantalla'], ['dti-horizontal.png', 'DTI horizontal', 'PNG 4K · papel'], ['dti-horizontal.pdf', 'DTI horizontal', 'PDF · A3'],
+  $$('.vcard').forEach(function (c) { mountVideo(c); });
+  // Descargas del DTI: en otra pestaña (en file:// el navegador ignora «download» y saldría de la portada)
+  var DLS = [['dti-horizontal-pantalla.png', 'DTI horizontal', 'PNG 4K · pantalla'], ['dti-horizontal.png', 'DTI horizontal', 'PNG 4K · papel'], ['dti-horizontal.pdf', 'DTI horizontal', 'PDF · 16:9'],
     ['dti-vertical.png', 'DTI vertical', 'PNG · impresión'], ['dti-vertical.pdf', 'DTI vertical', 'PDF · A3']];
   $('.js-dl').innerHTML = DLS.map(function (d) {
-    var ok = ENTREGABLES[d[0]], ext = d[0].split('.').pop();
-    return '<li><span class="fi ' + ext + '" aria-hidden="true">' + ext.toUpperCase() + '</span><span class="tx"><strong>' + esc(d[1]) + ' · ' + esc(d[2]) + '</strong>' +
-      (ok ? '<a href="entregables/' + d[0] + '" download>Descargar<span class="wt-visually-hidden"> ' + esc(d[1] + ' ' + d[2]) + '</span></a><span class="fn">' + esc(d[0]) + '</span>' : '<span>En preparación · <a href="dti.html">abrir el DTI para imprimir</a></span>') + '</span></li>';
+    var ext = d[0].split('.').pop();
+    return '<li><span class="fi ' + ext + '" aria-hidden="true">' + ext.toUpperCase() + '</span><span class="tx"><strong>' + esc(d[1]) + '</strong><span class="fmt">' + esc(d[2]) + '</span>' +
+      '<a href="entregables/' + d[0] + '" target="_blank" rel="noopener" download title="' + esc(d[0]) + '">Abrir / guardar<span class="wt-visually-hidden"> ' + esc(d[1] + ', ' + d[2]) + ' (se abre en otra pestaña)</span></a></span></li>';
   }).join('');
 
   /* ====================== Instrumentación ====================== */
@@ -1109,17 +1178,19 @@
   }).join('');
 
   /* ====================== Galería ====================== */
-  var cap = SEP.capacidad && SEP.capacidad.valor ? ' (cap. ' + SEP.capacidad.valor + ')' : '';
+  // capacidad de placa sin paréntesis anidados: «0.761 m³ (4.78 bls)» → «0.761 m³ / 4.78 bls»
+  var cap = SEP.capacidad && SEP.capacidad.valor ? ', cap. ' + String(SEP.capacidad.valor).replace(/\s*\(([^)]*)\)\s*$/, ' / $1') : '';
+  /* ds = pie corto de la tarjeta (máx. 2 renglones); d = descripción completa en el visor */
   var PH = [
-    { f: '05-separador-fa02.jpg', w: 1280, h: 960, cls: 'big', pos: 'center', t: eq('separador').nombre + ' sobre remolque', d: 'Recipiente horizontal en remolque de doble eje, placa FA-02' + cap + ': válvula de seguridad, transmisores E+H y medidor Coriolis en la línea de líquido.', alt: 'Separador bifásico horizontal verde sobre remolque amarillo de doble eje, con placa naranja FA-02, rombo NFPA, válvula de seguridad roja y transmisores azules.' },
-    { f: '03-pozo-y-separador.jpg', w: 1280, h: 960, cls: 'wide', pos: 'center 60%', t: 'Pozo y separador', d: 'Árbol de válvulas sobre contrapozo con plataforma de trabajo; la línea de entrada lleva la producción al separador.', alt: 'Árbol de válvulas negro con plataforma de barandal amarillo, conectado por una línea inclinada al separador en remolque; personal con overol naranja.' },
-    { f: '04-rtu-controledge.jpg', w: 960, h: 1280, cls: 'tall', pos: 'center 30%', t: eq('rtu').nombre, d: 'Gabinete de medición: fuente de 24 VDC, protección y clemas; cada señal de instrumento llega rotulada al controlador.', alt: 'Gabinete de acero inoxidable abierto con el controlador Honeywell ControlEdge rotulado Medición 3, fuente de 24 VDC, interruptor y clemas con cables rotulados.' },
-    { f: '02-separador-en-locacion.jpg', w: 960, h: 1280, cls: 'tall', pos: 'center 48%', t: 'Zona de seguridad', d: 'Separador en locación delimitado con conos, cinta de barricada y sombrillas para el equipo de medición.', alt: 'Separador en la locación rodeado de conos naranjas y cinta roja, con sombrillas verdes; al fondo el mástil del equipo de reparación y pipas.' },
-    { f: '01-arbol-macropera.jpg', w: 960, h: 1280, cls: 'wide', pos: 'center 52%', t: 'Macropera', d: 'Árbol de válvulas en primer plano; al fondo la caseta de medición (camper) donde está la PC de campo con el SCADA.', alt: 'Árbol de válvulas verde con línea blanca y válvula morada sobre plataforma de caliche; al fondo una caseta tipo camper blanca y esferas de almacenamiento.' }
+    { f: '05-separador-fa02.jpg', w: 1280, h: 960, cls: 'big', pos: 'center', t: eq('separador').nombre + ' sobre remolque', ds: 'Recipiente horizontal en remolque de doble eje; placa FA-02' + cap + '.', d: 'Recipiente horizontal en remolque de doble eje; placa FA-02' + cap + '. Válvula de seguridad, transmisores E+H y medidor Coriolis en la línea de líquido.', alt: 'Separador bifásico horizontal verde sobre remolque amarillo de doble eje, con placa naranja FA-02, rombo NFPA, válvula de seguridad roja y transmisores azules.' },
+    { f: '03-pozo-y-separador.jpg', w: 1280, h: 960, cls: 'wide', pos: 'center 60%', t: 'Pozo y separador', ds: 'La línea de entrada lleva la producción del árbol al separador.', d: 'Árbol de válvulas sobre contrapozo con plataforma de trabajo; la línea de entrada lleva la producción al separador.', alt: 'Árbol de válvulas negro con plataforma de barandal amarillo, conectado por una línea inclinada al separador en remolque; personal con overol naranja.' },
+    { f: '04-rtu-controledge.jpg', w: 960, h: 1280, cls: 'tall', pos: 'center 30%', t: eq('rtu').nombre, ds: 'Gabinete de medición: cada señal llega rotulada al controlador.', d: 'Gabinete de medición: fuente de 24 VDC, protección y clemas; cada señal de instrumento llega rotulada al controlador.', alt: 'Gabinete de acero inoxidable abierto con el controlador Honeywell ControlEdge rotulado Medición 3, fuente de 24 VDC, interruptor y clemas con cables rotulados.' },
+    { f: '02-separador-en-locacion.jpg', w: 960, h: 1280, cls: 'tall', pos: 'center 48%', t: 'Zona de seguridad', ds: 'Conos, cinta de barricada y sombrillas delimitan el área de medición.', d: 'Separador en locación delimitado con conos, cinta de barricada y sombrillas para el equipo de medición.', alt: 'Separador en la locación rodeado de conos naranjas y cinta roja, con sombrillas verdes; al fondo el mástil del equipo de reparación y pipas.' },
+    { f: '01-arbol-macropera.jpg', w: 960, h: 1280, cls: 'wide', pos: 'center 52%', t: 'Macropera', ds: 'Árbol en primer plano; al fondo, la caseta con la PC de campo y el SCADA.', d: 'Árbol de válvulas en primer plano; al fondo la caseta de medición (camper) donde está la PC de campo con el SCADA.', alt: 'Árbol de válvulas verde con línea blanca y válvula morada sobre plataforma de caliche; al fondo una caseta tipo camper blanca y esferas de almacenamiento.' }
   ];
   $('.js-gal').innerHTML = PH.map(function (p, i) {
     return '<figure class="ph rv ' + p.cls + '" style="--d:' + i + '"><img src="assets/fotos/' + p.f + '" width="' + p.w + '" height="' + p.h + '" alt="' + esc(p.alt) + '" decoding="async" style="object-position:' + (p.pos || 'center') + '">' +
-      '<button type="button" data-i="' + i + '" aria-label="Ampliar foto: ' + esc(p.t) + '"></button><figcaption><strong>' + esc(p.t) + '</strong><span>' + esc(p.d) + '</span></figcaption></figure>';
+      '<button type="button" data-i="' + i + '" aria-label="Ampliar foto: ' + esc(p.t) + '"></button><figcaption><strong>' + esc(p.t) + '</strong><span>' + esc(p.ds || p.d) + '</span></figcaption></figure>';
   }).join('');
   var dlg = $('#viewer'), vi = 0;
   function showPh(i) { vi = (i + PH.length) % PH.length; var p = PH[vi]; $('#vimg').src = 'assets/fotos/' + p.f; $('#vimg').alt = p.alt; $('#vcap-t').textContent = (vi + 1) + ' / ' + PH.length + ' · ' + p.t; $('#vcap-d').textContent = p.d; }
@@ -1133,7 +1204,6 @@
   /* ====================== Pie ====================== */
   $('.js-foot').innerHTML = [
     '<strong>' + esc(D.empresa.nombre) + ' · ' + esc(D.empresa.servicio) + '</strong> — ' + esc(D.empresa.lema) + '.',
-    'Logotipo <strong>provisional</strong>: reemplace <code>assets/logo-rbtec.svg</code> y <code>assets/logo-rbtec-blanco.svg</code> por el oficial, con el mismo nombre.',
     'SCADA: <strong>' + esc(D.demo.aviso.toLowerCase()) + '</strong>; no corresponden a un pozo real.',
     'Distribución de la macropera y DTI con fines ilustrativos · sin escala.'
   ].map(function (t) { return '<li>' + t + '</li>'; }).join('');
@@ -1145,10 +1215,17 @@
     var io = new IntersectionObserver(function (en) { en.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add('is-in'); io.unobserve(x.target); } }); }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
     rvs.forEach(function (e) { io.observe(e); });
   }
+  var conteos = [];
   if (window.gsap && !REDUCED) $$('.js-stats [data-n]').forEach(function (el, i) {
     var n = +el.getAttribute('data-n'), o = { v: 0 };
     if (!n) return;
-    gsap.to(o, { v: n, duration: 1.6, delay: 0.7 + i * 0.12, ease: 'power2.out', onUpdate: function () { el.textContent = Math.round(o.v); } });
+    conteos.push(gsap.to(o, { v: n, duration: 1.6, delay: 0.7 + i * 0.12, ease: 'power2.out', onUpdate: function () { el.textContent = Math.round(o.v); } }));
+  });
+  // al imprimir, los contadores y el revelado quedan en su estado final
+  window.addEventListener('beforeprint', function () {
+    conteos.forEach(function (t) { t.progress(1); });
+    rvs.forEach(function (e) { e.classList.add('is-in'); });
+    heroSvg.classList.add('iso-on');
   });
 })();
 </script>

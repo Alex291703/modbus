@@ -34,6 +34,9 @@
      estado.capas.lineas = true  cintas de flujo animadas sobre el piso (más visibles en planta)
      estado.nivel                nivel de líquido 0..1 (también actualiza anchors.nivel)
      estado.ajusteVertical=false desactiva el ajuste automático de cámara en pantallas verticales
+     anchors.letreroBateria      centro del letrero "A BATERÍA" en el lindero (shots.bateria lo encuadra con el final de la línea)
+     Resaltado: equipos con contorno amarillo; líneas de corriente (lineaEntrada, lineaSalida, lineaBateria,
+     gas, liquido, lineas…) con contorno blanco no aditivo, para no alterar el código de colores.
 
    Sistema de coordenadas: metros, x = este, y = arriba, z = sur, origen = pozo en prueba.
    ===================================================================== */
@@ -624,7 +627,7 @@
     // Materiales "rayos X" (fantasma) para tuberías
     var GHOST = {};
     ['pipeGreen', 'lineBlack', 'flange', 'steelDark', 'galv'].forEach(function (k) {
-      var g = MAT[k].clone(); g.transparent = true; g.opacity = 0.2; g.depthWrite = false; g.name = k + 'Ghost'; GHOST[k] = g;
+      var g = MAT[k].clone(); g.transparent = true; g.opacity = 0.2; g.depthWrite = false; g.name = k + 'Ghost'; g.userData.ghost = true; GHOST[k] = g;
     });
     var rimMat = new THREE.ShaderMaterial({
       uniforms: { uColor: { value: new THREE.Color('#ffffff') }, uI: { value: 0 } },
@@ -921,7 +924,13 @@
       // válvulas laterales (TP): este = producción, oeste = cerrada con brida ciega
       gateValve(b, K, new V3(x + 0.55, yc, z), new V3(1, 0, 0), 0.058, new V3(0, 0, 1), { flangeKey: KF, wheelKey: active ? 'black' : 'treeGray', wheelR: 2.6 });
       gateValve(b, K, new V3(x - 0.55, yc, z), new V3(-1, 0, 0), 0.058, new V3(0, 0, 1), { flangeKey: KF, wheelKey: active ? 'black' : 'treeGray', wheelR: 2.6 });
-      if (!active) { blindFlange(b, KF, new V3(x + 0.72, yc, z), new V3(1, 0, 0), 0.058); }
+      if (!active) {
+        // los demás pozos de la pera siguen produciendo a batería por su propia línea (baja al ducto enterrado)
+        flangePair(b, KF, new V3(x + 0.74, yc, z), new V3(1, 0, 0), 0.058);
+        b.add('lineBlack', gCylAB(new V3(x + 0.78, yc, z), new V3(x + 1.18, yc, z), 0.058, 14));
+        b.add('lineBlack', new THREE.SphereGeometry(0.066, 14, 10), mat(x + 1.2, yc, z));
+        b.add('lineBlack', gCylAB(new V3(x + 1.2, yc, z), new V3(x + 1.2, -0.25, z), 0.058, 14));
+      }
       blindFlange(b, KF, new V3(x - 0.72, yc, z), new V3(-1, 0, 0), 0.058);
       // válvula de sondeo + tapa + manómetro
       valveV(1.68 * s, true, 0.85 * s);
@@ -1871,15 +1880,36 @@
     /* =========================== RESALTADO =========================== */
     function rimShader(clip) {
       return new THREE.ShaderMaterial({
-        uniforms: { uColor: { value: new THREE.Color(C.amarillo) }, uI: { value: 0 }, uT: { value: 0 }, uMode: { value: 0 } },
+        uniforms: { uColor: { value: new THREE.Color(C.amarillo) }, uI: { value: 0 }, uT: { value: 0 }, uMode: { value: 0 }, uEdge: { value: new THREE.Color(0, 0, 0) }, uEdgeK: { value: 0 } },
         vertexShader: '#include <common>\n#include <clipping_planes_pars_vertex>\nuniform float uT; varying vec3 vN; varying vec3 vV;\nvoid main(){ vec3 p = position + normalize(normal) * uT; vec4 mvPosition = modelViewMatrix * vec4(p, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mvPosition.xyz); gl_Position = projectionMatrix * mvPosition;\n#include <clipping_planes_vertex>\n}',
-        fragmentShader: '#include <clipping_planes_pars_fragment>\nuniform vec3 uColor; uniform float uI; uniform float uMode; varying vec3 vN; varying vec3 vV;\nvoid main(){\n#include <clipping_planes_fragment>\n float f = 1.0 - abs(dot(normalize(vN), normalize(vV))); f = pow(f, 2.0); vec3 c = uMode > 0.5 ? uColor * uI : uColor * (0.1 + 1.4 * f) * uI; gl_FragColor = vec4(c, 1.0); }',
+        fragmentShader: '#include <clipping_planes_pars_fragment>\nuniform vec3 uColor; uniform float uI; uniform float uMode; uniform vec3 uEdge; uniform float uEdgeK; varying vec3 vN; varying vec3 vV;\nvoid main(){\n#include <clipping_planes_fragment>\n float f0 = 1.0 - abs(dot(normalize(vN), normalize(vV))); float f = f0 * f0; vec3 c = uMode > 0.5 ? mix(uColor * uI, uEdge, smoothstep(0.8, 0.98, f0) * uEdgeK) : uColor * (0.1 + 1.4 * f) * uI; gl_FragColor = vec4(c, 1.0); }',
         transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
         clipping: !!clip, clippingPlanes: clip ? CLIP_SEP : null, clipIntersection: true
       });
     }
+    // Los ShaderMaterial escriben el color tal cual (sin conversión a sRGB): se cargan los hex "en crudo"
+    // para que el amarillo del resaltado sea el amarillo corporativo y no un naranja.
+    function rawColor(hex) { return new THREE.Color().setStyle(hex, THREE.LinearSRGBColorSpace); }
+    var HL_AMARILLO = rawColor(C.amarillo), HL_BLANCO = rawColor('#ffffff');
     var HLM = { glow: rimShader(false), glowC: rimShader(true), hull: rimShader(false), hullC: rimShader(true) };
     [HLM.hull, HLM.hullC].forEach(function (m) { m.side = THREE.BackSide; m.blending = THREE.NormalBlending; m.uniforms.uMode.value = 1; });
+    [HLM.glow, HLM.glowC, HLM.hull, HLM.hullC].forEach(function (m) { m.uniforms.uColor.value.copy(HL_AMARILLO); });
+    [HLM.hull, HLM.hullC].forEach(function (m) { m.uniforms.uEdge.value.copy(rawColor(C.marino900)); });
+    /* Piezas en rayos X (translúcidas): la cáscara trasera rellenaría la tubería, así que se usa una cáscara
+       inflada vista por delante, opaca solo en el borde y transparente al centro, con mezcla normal (no aditiva).
+       La tubería conserva su color y se siguen viendo las partículas: el código de colores no cambia. */
+    function outlineShader(clip) {
+      return new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: HL_BLANCO.clone() }, uEdge: { value: rawColor(C.marino900) }, uI: { value: 0 }, uT: { value: 0 } },
+        vertexShader: '#include <common>\n#include <clipping_planes_pars_vertex>\nuniform float uT; varying vec3 vN; varying vec3 vV;\nvoid main(){ vec3 p = position + normalize(normal) * uT; vec4 mvPosition = modelViewMatrix * vec4(p, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mvPosition.xyz); gl_Position = projectionMatrix * mvPosition;\n#include <clipping_planes_vertex>\n}',
+        fragmentShader: '#include <clipping_planes_pars_fragment>\nuniform vec3 uColor; uniform vec3 uEdge; uniform float uI; varying vec3 vN; varying vec3 vV;\nvoid main(){\n#include <clipping_planes_fragment>\n float f = 1.0 - abs(dot(normalize(vN), normalize(vV))); float a = smoothstep(0.28, 0.6, f) * uI; vec3 c = mix(uColor, uEdge, smoothstep(0.84, 0.99, f) * 0.85); gl_FragColor = vec4(c, a); }',
+        transparent: true, blending: THREE.NormalBlending, depthWrite: false, toneMapped: false, side: THREE.FrontSide,
+        clipping: !!clip, clippingPlanes: clip ? CLIP_SEP : null, clipIntersection: true
+      });
+    }
+    var OUTL = { n: outlineShader(false), c: outlineShader(true) };
+    // ids que son líneas de corriente: se resaltan con contorno blanco (nunca se tiñen de amarillo/ámbar)
+    var HL_STREAM = { lineaEntrada: 1, mezclaPozo: 1, lineaSalida: 1, lineaBateria: 1, gas: 1, liquido: 1, lineaGas: 1, lineaLiquido: 1, lineas: 1, cables: 1 };
     var XR = {}; STREAMS.forEach(function (k) { XR[k] = rimShader(false); XR[k].uniforms.uColor.value = new THREE.Color(k === 'liquido' ? C.liquidoAmbar : k === 'salida' ? '#c08850' : C[k]); });
     var HL = {};      // id → [{mesh, hull, glow}]
     var XRAY = {};    // stream → [{mesh, rim, key}]
@@ -1891,7 +1921,7 @@
         var c = isClip(m);
         var h = new THREE.Mesh(m.geometry, c ? HLM.hullC : HLM.hull), g = new THREE.Mesh(m.geometry, c ? HLM.glowC : HLM.glow);
         [h, g].forEach(function (x) { x.matrixAutoUpdate = false; x.matrix.copy(m.matrix); x.visible = false; x.renderOrder = 8; x.frustumCulled = false; m.parent.add(x); });
-        HL[id].push({ mesh: m, hull: h, glow: g });
+        HL[id].push({ mesh: m, hull: h, glow: g, clip: c });
       });
     });
     STREAMS.forEach(function (k) {
@@ -1918,6 +1948,7 @@
     var ring1 = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 64), ringMat), ring2 = new THREE.Mesh(new THREE.RingGeometry(0.96, 1, 64), ringMat.clone());
     [ring1, ring2].forEach(function (m) { m.visible = false; m.renderOrder = 9; m.frustumCulled = false; root.add(m); });
     var bill = new THREE.Mesh(new THREE.RingGeometry(0.82, 1, 48), ringMat.clone()); bill.visible = false; bill.renderOrder = 9; bill.frustumCulled = false; root.add(bill);
+    var BILL_Y = new THREE.Color(C.amarillo), BILL_W = new THREE.Color('#ffffff');
 
     /* =========================== CIELO, LUCES, ENTORNO PMREM =========================== */
     // Cielo: degradado + nubes horneados en una textura equirectangular (una sola lectura por píxel,
@@ -2010,7 +2041,8 @@
       medicionLiquido: S(arr(L2W(mLiq - 0.5, 1.6, 2.3)), arr(L2W(mLiq + 0.12, 1.04, SK.zL)), 40),
       medicionGas: S(arr(L2W(mGas + 0.82, 2.1, 2.4)), arr(L2W(mGas - 0.08, 1.4, -0.05)), 42),
       recombinacion: S(arr(L2W(SK.xTe - 2.0, 1.85, 2.6)), arr(L2W(SK.xTe - 0.3, 1.0, SK.zL)), 40),
-      bateria: S([BX - 3, 6.5, BZ + 12], [BX + 6, 0.3, BZ], 42),
+      // final de la línea en el lindero este: letrero "A BATERÍA" + bajada de la línea (y el TPL al fondo, a la izquierda)
+      bateria: S([BX1 + 6, 4.0, BZ + 13], [BX1 - 7.5, 1.7, BZ - 0.5], 46),
       caseta: S([MP.caseta.x - 9.5, 4.2, MP.caseta.z + 10.5], [MP.caseta.x - 1.5, 1.5, MP.caseta.z], 40),
       // extras
       rtu: S([MP.rtu.x - 1.5, 2.0, MP.rtu.z + 2.4], [MP.rtu.x, 1.2, MP.rtu.z], 40),
@@ -2018,13 +2050,14 @@
       zonaSeguridad: S([MP.zonaSeguridad.x1 + 10, 14, MP.zonaSeguridad.z1 + 16], [(MP.zonaSeguridad.x0 + MP.zonaSeguridad.x1) / 2 + 3, 0, (MP.zonaSeguridad.z0 + MP.zonaSeguridad.z1) / 2], 42),
       acceso: S([PL.x1 + 18, 10, MP.acceso.puntos[0][1] + 14], [PL.x1 - 6, 0, MP.acceso.puntos[1][1] - 3], 42),
       puntoReunion: S([MP.puntoReunion.x - 6, 4, MP.puntoReunion.z + 8], [MP.puntoReunion.x, 0.9, MP.puntoReunion.z + 0.6], 40),
-      lineaBateria: S([BX + 4, 5.5, BZ + 10], [BX + 12, 0.3, BZ], 42),
+      // toda la línea a batería: TPL al fondo, letrero "A BATERÍA" y bajada en el lindero
+      lineaBateria: S([BX1 + 8, 6.5, BZ + 17], [BX1 - 9, 1.2, BZ - 0.5], 44),
       planta: null
     };
     function poseFor(id) {
       if (SHOTS[id]) return SHOTS[id];
       var a = A[id]; if (!a) return SHOTS.aerea;
-      var rr = { separador: 8, caseta: 12, arbol: 6, lineaEntrada: 14, zonaSeguridad: 30, acceso: 20, lineaSalida: 16, mangaViento: 10, pozosInactivos: 16, scada: 12, cables: 18 }[id] || 2.6;
+      var rr = { separador: 8, caseta: 12, arbol: 6, lineaEntrada: 14, zonaSeguridad: 30, acceso: 20, lineaSalida: 16, mangaViento: 10, pozosInactivos: 16, scada: 12, cables: 18, letreroBateria: 9 }[id] || 2.6;
       return S([a[0] + rr * 0.55, a[1] + rr * 0.45, a[2] + rr * 0.75], a.slice(), 40);
     }
 
@@ -2265,8 +2298,22 @@
       HLM.hull.uniforms.uI.value = HLM.hullC.uniforms.uI.value = 0.65 + 0.35 * pulse;
       HLM.glow.uniforms.uI.value = HLM.glowC.uniforms.uI.value = 0.07 + 0.14 * pulse;
       HLM.glow.uniforms.uT.value = HLM.glowC.uniforms.uT.value = 0;
-      var HG = HL_BY_ID[id] || HL[id] || EMPTY_ARR;
-      for (var hj = 0; hj < HG.length; hj++) { var ho = HG[hj]; ho.hull.visible = ho.mesh.visible !== false; ho.glow.visible = ho.hull.visible; ho.hull.matrix.copy(ho.mesh.matrix); ho.glow.matrix.copy(ho.mesh.matrix); }
+      var HG = HL_BY_ID[id] || HL[id] || EMPTY_ARR, isStream = HL_STREAM[id] === 1;
+      // Líneas de corriente: contorno BLANCO no aditivo y sin brillo encima (no se tiñen de amarillo ni de ámbar).
+      // Equipos: contorno amarillo corporativo + brillo suave. Piezas en rayos X: cáscara de borde (OUTL).
+      var hullCol = isStream ? HL_BLANCO : HL_AMARILLO;
+      HLM.hull.uniforms.uColor.value.copy(hullCol); HLM.hullC.uniforms.uColor.value.copy(hullCol);
+      HLM.hull.uniforms.uEdgeK.value = HLM.hullC.uniforms.uEdgeK.value = isStream ? 0.85 : 0;
+      if (isStream) { HLM.hull.uniforms.uT.value = HLM.hullC.uniforms.uT.value = thick * 0.8; HLM.hull.uniforms.uI.value = HLM.hullC.uniforms.uI.value = 0.82 + 0.18 * pulse; }
+      OUTL.n.uniforms.uT.value = OUTL.c.uniforms.uT.value = thick * (isStream ? 0.8 : 1);
+      OUTL.n.uniforms.uI.value = OUTL.c.uniforms.uI.value = 0.8 + 0.2 * pulse;
+      OUTL.n.uniforms.uColor.value.copy(hullCol); OUTL.c.uniforms.uColor.value.copy(hullCol);
+      for (var hj = 0; hj < HG.length; hj++) {
+        var ho = HG[hj], vis = ho.mesh.visible !== false, ghost = !!(ho.mesh.material && ho.mesh.material.userData.ghost);
+        ho.hull.material = ghost ? (ho.clip ? OUTL.c : OUTL.n) : (ho.clip ? HLM.hullC : HLM.hull);
+        ho.hull.visible = vis; ho.glow.visible = vis && !isStream;
+        ho.hull.matrix.copy(ho.mesh.matrix); ho.glow.matrix.copy(ho.mesh.matrix);
+      }
       if (id === 'zonaSeguridad') { zoneFillMat.opacity = 0.12 + 0.16 * pulse; zoneEdgeMat.opacity = 0.75 + 0.25 * pulse; }
       if (id === 'acceso') accesoArrowsMat.opacity = 0.5 + 0.5 * pulse;
       if (!a) return;
@@ -2277,7 +2324,7 @@
         var w = frac(t * 0.7); ring2.position.set(a[0], 0.065, a[2]); ring2.rotation.set(-PI / 2, 0, 0); var s2 = R * (1 + 0.8 * w); ring2.scale.set(s2, s2, s2);
         ring2.material.opacity = 0.8 * (1 - w); ring1.material.opacity = 0.85;
       } else if (R !== 0) {
-        bill.visible = true; bill.position.set(a[0], a[1], a[2]); bill.quaternion.copy(camera.quaternion);
+        bill.visible = true; bill.position.set(a[0], a[1], a[2]); bill.quaternion.copy(camera.quaternion); bill.material.color.copy(isStream ? BILL_W : BILL_Y);
         var bs = clamp(dist * 0.035, 0.08, 6) * (1 + 0.12 * pulse); bill.scale.set(bs, bs, bs); bill.material.opacity = 0.75 + 0.25 * pulse;
       }
     }

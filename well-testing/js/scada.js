@@ -11,10 +11,15 @@
         Finalizado: acumulados congelados.
    2) WT.SCADA.create(container, opts): pantalla HMI "SAF-900" de alto
       desempeño (ISA-101: fondo gris pizarra, color solo donde informa).
-      renderAt(h, { resaltar, t }) pinta la hora simulada h; no depende
-      del cuadro anterior (el video HyperFrames busca cuadros arbitrarios).
+      renderAt(h, { resaltar, t, rueda }) pinta la hora simulada h; no
+      depende del cuadro anterior (el video HyperFrames busca cuadros
+      arbitrarios). rueda:true anima el giro de los odómetros entre dígitos
+      (solo mientras la vista avanza; en pausa se omite para que ningún
+      dígito quede a medio giro).
       Mímico en el orden del proceso: gas → placa de orificio (TDG) → PV;
       líquido → Coriolis → LV; ambas corrientes se reincorporan a batería.
+      El gasto de gas (MMpcd) lo calcula la función FQI del RTU con el ΔP
+      del TDG: se rotula «FQI (TDG)».
    Todos los valores son SIMULADOS (WT.data.demo.aviso).
    ===================================================================== */
 (function () {
@@ -240,6 +245,19 @@
     return null;
   }
   var V_GAS = valvula('gas', 'PV'), V_LIQ = valvula('liquido', 'LV');
+  /* Función del RTU que entrega una variable calculada a partir de un instrumento
+     (p. ej. FQI ← TDG): aplica cuando la unidad mostrada no es la del transmisor
+     (MMpcd frente a inH₂O). Si no hay función, se rotula con el tag del instrumento. */
+  function funcionDe(tag, unidad) {
+    var ins = U.instrumento(tag), f = D.funciones || [], i;
+    if (!ins || !unidad || ins.unidad === unidad) return null;
+    for (i = 0; i < f.length; i++) if (f[i].mide === tag) return f[i];
+    return null;
+  }
+  function rotulo(tag, unidad) { var f = funcionDe(tag, unidad); return f ? f.tag : tag; }
+  /* resaltar por lazo: LIC → TN, PIC → TPS, FQI → TDG */
+  var ALIAS = {};
+  (D.funciones || []).forEach(function (f) { if (f.mide) ALIAS[f.tag] = f.mide; });
   function descValvula(vc) {
     var f = vc.lazo ? funcion(vc.lazo) : null, s = vc.tag + (vc.nombre ? ' · ' + vc.nombre : '');
     if (f) s += ' · lazo ' + f.tag + (f.mide ? ' (' + f.mide + ' → ' + (f.actua || vc.tag) + ')' : '') + ' en el ' + CORTO_RTU;
@@ -277,6 +295,8 @@
   };
 
   /* Geometrías del mímico (viewBox propio, ajustado a la proporción del panel).
+     TDP en la línea lateral (TP) entre el árbol y el estrangulador; TN con sonda
+     superior (WT.data.separador.tnMontaje) en tnX.
      Orden del proceso en cada salida del separador (izquierda → derecha):
        gas:     placa de orificio (FE, con TDG) → PV (contrapresión) → reincorporación
        líquido: Coriolis (CORIOLIS)             → LV (control de nivel) → reincorporación
@@ -286,8 +306,8 @@
       VW: 1100, VH: 480, bw: 132, bh: 60, bhx: 84, bwx: 182, fTag: 14, fVal: 26, fSub: 12.5, fLbl: 13.5,
       tree: { x: 70, top: 150, base: 430, wingY: 235 }, chokeX: 160,
       ves: { xa: 250, xb: 640, cy: 250, r: 80 },
-      gasX: 590, gasY: 92, feX: 750, pvX: 872, liqX: 585, liqY: 392, corX: 750, lvX: 872, recX: 930, endX: 1090,
-      box: { TDP: [70, 95], TPS: [384, 116], TT: [330, 424], TN: [482, 424], TDG: [750, 166], CORIOLIS: [750, 302], TDM: [950, 442], TPL: [1028, 330] },
+      gasX: 590, gasY: 92, feX: 750, pvX: 872, liqX: 585, liqY: 392, corX: 750, lvX: 872, recX: 930, endX: 1090, tnX: 528,
+      box: { TDP: [118, 95], TPS: [330, 116], TT: [330, 424], TN: [474, 116], TDG: [750, 166], CORIOLIS: [750, 302], TDM: [950, 442], TPL: [1028, 330] },
       lbl: [
         { k: 'arbol', x: 70, y: 458 }, { k: 'estrangulador', x: 160, y: 268 }, { k: 'placa', x: 750, y: 58 }, { k: 'pv', x: 872, y: 56 },
         { k: 'coriolis', x: 750, y: 430 }, { k: 'lv', x: 872, y: 355 }, { k: 'bateria', x: 1090, y: 420, a: 'end' }
@@ -298,8 +318,8 @@
       VW: 900, VH: 540, bw: 148, bh: 70, bhx: 96, bwx: 190, fTag: 16, fVal: 31, fSub: 14, fLbl: 16,
       tree: { x: 62, top: 172, base: 490, wingY: 262 }, chokeX: 146,
       ves: { xa: 200, xb: 490, cy: 282, r: 82 },
-      gasX: 446, gasY: 108, feX: 604, pvX: 682, liqX: 442, liqY: 426, corX: 604, lvX: 682, recX: 726, endX: 894,
-      box: { TDP: [82, 86], TPS: [326, 142], TT: [252, 478], TN: [408, 478], TDG: [604, 190], CORIOLIS: [604, 330], TDM: [814, 492], TPL: [814, 344] },
+      gasX: 446, gasY: 108, feX: 604, pvX: 682, liqX: 442, liqY: 426, corX: 604, lvX: 682, recX: 726, endX: 894, tnX: 400,
+      box: { TDP: [107, 88], TPS: [300, 142], TT: [252, 478], TN: [410, 478], TDG: [604, 190], CORIOLIS: [604, 330], TDM: [814, 492], TPL: [814, 344] },
       lbl: [
         { k: 'pv', x: 682, y: 70 }, { k: 'lv', x: 682, y: 462 }, { k: 'bateria', x: 894, y: 414, a: 'end' }
       ],
@@ -419,6 +439,7 @@
     '.saf-tbl td.v{text-align:right;font:700 17px/1 var(--mono);color:var(--s-val);font-variant-numeric:tabular-nums;}',
     '.saf-tbl td.u{font:500 13px/1 var(--mono);color:var(--s-dim);}',
     '.saf-tbl td.t span{font:700 12px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--s-line);color:var(--s-text);}',
+    '.saf-tbl td.t i{font:500 11px/1 var(--mono);font-style:normal;color:var(--s-dim);margin-left:5px;}',
     '.saf-tbl tr.is-hl td{background:rgba(255,194,14,.12);color:var(--s-val);}',
     '.saf-tbl tr.is-hl td.t span{background:#ffc20e;border-color:#ffc20e;color:#0b2545;}',
     '.saf-tbl th.v{text-align:right;}',
@@ -640,6 +661,12 @@
     var cx_ = G.chokeX, cy_ = T.wingY;
     sv('path', { d: 'M' + (cx_ - 15) + ',' + (cy_ - 11) + 'L' + (cx_ + 15) + ',' + (cy_ + 11) + 'V' + (cy_ - 11) + 'L' + (cx_ - 15) + ',' + (cy_ + 11) + 'Z', class: 'vlv open' }, svg);
     sv('path', { d: 'M' + (cx_ - 14) + ',' + (cy_ + 20) + 'L' + (cx_ + 14) + ',' + (cy_ - 20) + 'm-9,1l9,-1l-1,9', stroke: '#e6ebf0', 'stroke-width': 2, fill: 'none', 'stroke-linecap': 'round' }, svg);
+    // toma del TDP en la línea lateral (TP), aguas arriba del estrangulador
+    if (U.instrumento('TDP')) {
+      var tdx = tdpX(G);
+      sv('line', { x1: tdx, y1: cy_ - 4, x2: tdx, y2: cy_ - 16, stroke: '#aab4bf', 'stroke-width': 2 }, svg);
+      sv('circle', { cx: tdx, cy: cy_ - 22, r: 6, fill: '#2f5f8f', stroke: '#8fc4ea', 'stroke-width': 1.5 }, svg);
+    }
 
     // ---- separador ----
     var gV = sv('g', null, svg);
@@ -659,9 +686,15 @@
     sv('rect', { x: G.gasX - 32, y: v.cy - v.r + 8, width: 64, height: v.r * 0.3, fill: 'url(#' + id + 'mesh)', stroke: '#7d8995', 'stroke-width': 1.2 }, gIn);
     // deflector
     sv('path', { d: 'M' + (v.xa + rx + 6) + ',' + (v.cy - v.r * 0.7) + 'q-10,' + (v.r * 0.45) + ' 0,' + (v.r * 0.95), stroke: '#c5cdd5', 'stroke-width': 4.5, fill: 'none', 'stroke-linecap': 'round' }, gIn);
+    // TN: sonda de nivel montada en la parte superior (varilla hacia el líquido)
+    if (U.instrumento('TN')) sv('line', { x1: G.tnX, y1: v.cy - v.r, x2: G.tnX, y2: v.cy + v.r * 0.72, stroke: '#aab4bf', 'stroke-width': 2.5, 'stroke-linecap': 'round' }, gIn);
     sv('rect', { x: v.xa, y: v.cy - v.r, width: v.xb - v.xa, height: 2 * v.r, rx: rx, ry: v.r, fill: 'none', stroke: '#9aa5b1', 'stroke-width': 2.5 }, gV);
-    var tSep = sv('text', { x: (v.xa + v.xb) / 2 - 10, y: v.cy - v.r * 0.42, 'text-anchor': 'middle', 'font-size': G.fLbl * 1.05, class: 'lbl' }, gV);
-    tSep.textContent = tag + ' · ' + (compacto ? 'Separador' : eqNombre('separador', 'Separador'));
+    if (U.instrumento('TN')) {
+      sv('line', { x1: G.tnX, y1: v.cy - v.r, x2: G.tnX, y2: v.cy - v.r - 10, stroke: '#aab4bf', 'stroke-width': 2 }, gV);
+      sv('circle', { cx: G.tnX, cy: v.cy - v.r - 16, r: 6, fill: '#2f5f8f', stroke: '#8fc4ea', 'stroke-width': 1.5 }, gV);
+    }
+    var tSep = sv('text', { x: (v.xa + v.xb) / 2 - (compacto ? 10 : 30), y: v.cy - v.r * 0.42, 'text-anchor': 'middle', 'font-size': G.fLbl * 1.05, class: 'lbl' }, gV);
+    tSep.textContent = compacto ? tag : tag + ' · ' + eqNombre('separador', 'Separador');
     tSep.setAttribute('fill', '#aeb8c2');
     refs.sepTxt = tSep;
 
@@ -715,27 +748,33 @@
       sv('rect', { x: bx, y: by, width: w, height: h, rx: 4, class: 'saf-box-bg' }, g);
       sv('path', { d: 'M' + bx + ',' + (by + 4) + 'a4,4 0 0 1 4,-4h' + (w - 8) + 'a4,4 0 0 1 4,4v' + (hh - 4) + 'h' + (-w) + 'z', class: 'saf-box-hd' }, g);
       var tt = sv('text', { x: bx + 8, y: by + hh - 5.5, 'font-size': G.fTag, class: 'saf-box-tag' }, g);
-      tt.appendChild(document.createTextNode(tg));
-      var ti = sv('tspan', { dx: 6, 'font-size': G.fTag * 0.82 }, tt); ti.textContent = isa(tg);
+      var fn = funcionDe(tg, spec.u);   // gasto de gas: FQI (TDG)
+      tt.appendChild(document.createTextNode(fn ? fn.tag : tg));
+      var ti = sv('tspan', { dx: 6, 'font-size': G.fTag * 0.82 }, tt); ti.textContent = fn ? '(' + tg + ')' : isa(tg);
+      if (fn) { var tl = sv('title', null, g); tl.textContent = fn.tag + ' · ' + (fn.desc || '') + ' · ' + tg + ' ' + isa(tg); }
       var tu = sv('text', { x: bx + w - 8, y: by + hh - 5.5, 'text-anchor': 'end', 'font-size': G.fTag * 0.85, class: 'saf-box-unit' }, g);
       tu.textContent = spec.u;
       var tv = sv('text', { x: bx + w - 9, y: by + hh + G.fVal + 4, 'text-anchor': 'end', 'font-size': G.fVal, class: 'saf-box-val' }, g);
       var ts = sub ? sv('text', { x: bx + w - 9, y: by + h - 9, 'text-anchor': 'end', 'font-size': G.fSub, class: 'saf-box-sub' }, g) : null;
       // guía
-      var y0 = anc[1] > by + h ? by + h : by, ldr = sv('path', { d: 'M' + b[0] + ',' + y0 + 'L' + anc[0] + ',' + anc[1], class: 'saf-ldr' }, svg);
+      var y0 = anc[1] > by + h ? by + h : by, x0 = U.clamp(anc[0], bx + 12, bx + w - 12);
+      var ldr = sv('path', { d: 'M' + x0 + ',' + y0 + 'L' + anc[0] + ',' + anc[1], class: 'saf-ldr' }, svg);
       var dot = sv('circle', { cx: anc[0], cy: anc[1], r: 3.6, fill: '#c5cdd5' }, svg);
       refs.boxes[tg] = { g: g, v: tv, s: ts, ring: ring, ldr: ldr, dot: dot, spec: spec };
     });
     return refs;
   }
+  // x de la toma del TDP: en la línea lateral, entre el árbol y el estrangulador
+  function tdpX(G) { return Math.round((G.tree.x + 22 + G.chokeX - 15) / 2); }
   // punto del proceso al que apunta cada tag
   function ancla(G, tg) {
     var v = G.ves, b = G.box[tg], T = G.tree;
     switch (tg) {
-      case 'TDP': return [T.x, T.top];
+      case 'TDP': return [tdpX(G), T.wingY - 28];
       case 'TPS': return [b[0] + 6, v.cy - v.r + 1];
       case 'TT': return [b[0], v.cy + v.r - 1];
-      case 'TN': return [b[0], v.cy + v.r - 1];
+      // sonda superior: si la caja está arriba apunta al cabezal; si está abajo, a la punta de la varilla
+      case 'TN': return b[1] < v.cy ? [G.tnX, v.cy - v.r - 22] : [G.tnX, v.cy + v.r * 0.72];
       case 'TDG': return [G.feX, G.gasY + 10];
       case 'CORIOLIS': return [G.corX, G.liqY - 13];
       case 'TDM': return [b[0], G.liqY + 5];
@@ -775,7 +814,7 @@
       sv('rect', { x: padL - 4, y: y + 2, width: pw + 8, height: hdr + ph + 2, rx: 4, class: 'strip-hl' }, g);
       var nm = sv('text', { x: padL, y: y + hdr - 8 * sc, 'font-size': fS, class: 'sn' }, g);
       var single = s.series.length === 1;
-      nm.textContent = (w < 470 && s.corto ? s.corto : s.nombre) + (single ? ' · ' + s.series[0].tag : '') + (s.unidad ? ' · ' + s.unidad : '');
+      nm.textContent = (w < 470 && s.corto ? s.corto : s.nombre) + (single ? ' · ' + rotulo(s.series[0].tag, s.unidad) : '') + (s.unidad ? ' · ' + s.unidad : '');
       if (single) {
         st.vals.push(sv('text', { x: padL + pw, y: y + hdr - 8 * sc, 'text-anchor': 'end', 'font-size': fS, class: 'gv' }, g));
       } else {
@@ -897,7 +936,8 @@
     return o;
   }
   function setOdo(o, v, ch, rueda) {
-    // +0.5: cada dígito muestra el valor REDONDEADO (igual que fmt); durante la medición rueda en el último 15 % antes del cambio
+    // +0.5: cada dígito muestra el valor REDONDEADO (igual que fmt). Con rueda (vista en marcha, medición en curso)
+    // el dígito gira en el último 15 % antes del cambio; sin rueda salta entero y nunca queda a medio giro.
     var n = o.nInt + o.nDec, x = Math.max(0, v) * Math.pow(10, o.nDec) + 0.5, lim = Math.pow(10, n) - 1e-6, k;
     if (x > lim) x = lim;
     for (k = 0; k < n; k++) {
@@ -1016,7 +1056,8 @@
         tb.innerHTML = '<colgroup><col><col style="width:' + (L.vars[2] > 500 ? 116 : 96) + 'px"><col style="width:' + (L.vars[2] > 500 ? 120 : 84) + 'px"><col style="width:' + (L.vars[2] > 500 ? 84 : 74) + 'px"></colgroup>' +
           '<thead><tr><th>Variable</th><th>Tag</th><th class="v">Valor</th><th>Unidad</th></tr></thead><tbody>' +
           D.variables.map(function (vr) {
-            return '<tr data-tag="' + esc(vr.tag) + '" style="height:' + rowH + 'px"><td>' + esc(vr.nombre) + '</td><td class="t"><span>' + esc(vr.tag) + '</span></td><td class="v" data-k="' + esc(vr.id) + '"></td><td class="u">' + esc(vr.unidad) + '</td></tr>';
+            var fn = funcionDe(vr.tag, vr.unidad);   // Q gas: FQI (TDG)
+            return '<tr data-tag="' + esc(vr.tag) + '" style="height:' + rowH + 'px"><td>' + esc(vr.nombre) + '</td><td class="t"><span>' + esc(fn ? fn.tag : vr.tag) + '</span>' + (fn ? '<i>(' + esc(vr.tag) + ')</i>' : '') + '</td><td class="v" data-k="' + esc(vr.id) + '"></td><td class="u">' + esc(vr.unidad) + '</td></tr>';
           }).join('') + '</tbody>';
         S.rows = [].slice.call(tb.querySelectorAll('tbody tr')).map(function (tr) { return { tr: tr, tag: tr.getAttribute('data-tag'), td: tr.querySelector('td.v'), k: tr.querySelector('td.v').getAttribute('data-k') }; });
       }
@@ -1073,6 +1114,7 @@
       h = +h; if (!(h > 0)) h = 0;
       lastH = h; lastO = o;
       var v = sim(h), t = o.t != null ? +o.t : h * 2.2, res = o.resaltar || null, ei = v.estadoIdx;
+      if (res && ALIAS[res]) res = ALIAS[res];
       var scr = S.scr;
       if (scr._e !== v.estado) { scr.setAttribute('data-estado', v.estado); scr._e = v.estado; }
 
@@ -1117,7 +1159,7 @@
 
       // acumulados
       S.ctr.forEach(function (c) {
-        setOdo(c.o, v[c.c.k], S.ch, ei === 1);
+        setOdo(c.o, v[c.c.k], S.ch, ei === 1 && o.rueda === true);
         setT(c.r, fmt(v[c.c.q], c.c.ru === 'bpd' ? 0 : 3));
         setT(c.sr, c.c.nm + ': ' + fmt(v[c.c.k], c.c.d) + ' ' + c.c.u);
       });
