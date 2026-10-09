@@ -1,0 +1,6 @@
+video/snapshots/
+video/renders/
+video/.hyperframes/
+video/node_modules/
+video/*.mp4
+*.log

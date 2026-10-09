@@ -1,0 +1,160 @@
+/* =====================================================================
+   Well Testing · R.B. Tec México — sistema visual compartido
+   Ingeniería limpia: azul marino dominante, amarillo para acción/énfasis,
+   azul claro para datos e instrumentación. Corrientes: mezcla café,
+   gas amarillo, líquido negro/ámbar.
+   Fuentes locales (funciona sin internet y al abrir con doble clic).
+   ===================================================================== */
+
+@font-face { font-family: "Barlow"; font-weight: 400; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 500; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 600; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 700; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 500; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-condensed-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 600; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-condensed-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 700; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-condensed-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 800; font-style: normal; font-display: swap; src: url("../assets/fonts/barlow-condensed-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; font-style: normal; font-display: swap; src: url("../assets/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 500; font-style: normal; font-display: swap; src: url("../assets/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 700; font-style: normal; font-display: swap; src: url("../assets/fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; font-style: normal; font-display: swap; src: url("../assets/fonts/jetbrains-mono-greek-400-normal.woff2") format("woff2"); unicode-range: U+0370-03FF; }
+@font-face { font-family: "JetBrains Mono"; font-weight: 700; font-style: normal; font-display: swap; src: url("../assets/fonts/jetbrains-mono-greek-700-normal.woff2") format("woff2"); unicode-range: U+0370-03FF; }
+
+:root {
+  /* Marca */
+  --rb-marino: #0b2545;
+  --rb-marino-900: #061631;
+  --rb-marino-800: #0a1f3d;
+  --rb-marino-700: #13315c;
+  --rb-marino-600: #1d4477;
+  --rb-amarillo: #ffc20e;
+  --rb-amarillo-300: #ffd75e;
+  --rb-celeste: #4fb3e8;
+  --rb-celeste-200: #a9dcf7;
+  --rb-celeste-050: #eaf6fd;
+
+  /* Corrientes de proceso */
+  --st-mezcla: #8a5a2b;
+  --st-mezcla-claro: #b9824a;
+  --st-gas: #ffd23f;
+  --st-liquido: #1c140c;
+  --st-liquido-ambar: #e8971e;
+  --st-salida: #7a5233;
+  --st-senal: #4fb3e8;
+
+  /* Estados */
+  --ok: #3ccf8e;
+  --warn: #ffb020;
+  --alarm: #ff5a5f;
+
+  /* Superficies (tema pantalla, marino) */
+  --bg: #061631;
+  --bg-2: #0a1f3d;
+  --surface: #0f2a50;
+  --surface-2: #143563;
+  --line: rgba(169, 220, 247, 0.16);
+  --line-strong: rgba(169, 220, 247, 0.32);
+  --fg: #eef5fb;
+  --fg-2: #b8cce0;
+  --muted: #7f97b3;
+
+  /* Papel (impresión / DTI) */
+  --paper: #ffffff;
+  --paper-2: #f3f6fa;
+  --ink: #0b2545;
+  --ink-2: #3d5675;
+
+  --font-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --font-body: "Barlow", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.75);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+img, svg, canvas { display: block; max-width: 100%; }
+a { color: var(--rb-celeste); }
+button { font: inherit; }
+
+/* ---------- Barra superior común ---------- */
+.wt-topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 16px;
+  min-height: 60px; padding: 8px 20px;
+  background: rgba(6, 22, 49, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.wt-topbar .wt-logo { height: 40px; width: auto; }
+.wt-topbar .wt-title { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0.02em; text-transform: uppercase; }
+.wt-topbar .wt-title small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 12px; letter-spacing: 0.08em; color: var(--rb-celeste-200); }
+.wt-topbar nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+.wt-topbar nav a {
+  color: var(--fg-2); text-decoration: none; font-weight: 600; font-size: 14px;
+  padding: 6px 10px; border-radius: var(--r-sm);
+}
+.wt-topbar nav a:hover { color: var(--fg); background: var(--surface); }
+.wt-topbar nav a[aria-current="page"] { color: var(--rb-marino); background: var(--rb-amarillo); }
+
+/* ---------- Componentes ---------- */
+.wt-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 40px; padding: 8px 16px;
+  border-radius: var(--r-sm); border: 1px solid var(--line-strong);
+  background: var(--surface); color: var(--fg);
+  font-weight: 600; cursor: pointer; text-decoration: none;
+  transition: background 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.wt-btn:hover { background: var(--surface-2); border-color: var(--rb-celeste); }
+.wt-btn.primary { background: var(--rb-amarillo); color: var(--rb-marino); border-color: var(--rb-amarillo); }
+.wt-btn.primary:hover { background: var(--rb-amarillo-300); }
+.wt-btn:focus-visible, .wt-topbar nav a:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: 2px; }
+
+.wt-card {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+.wt-eyebrow {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--rb-amarillo);
+}
+.wt-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px;
+  background: rgba(79, 179, 232, 0.14); color: var(--rb-celeste-200);
+  border: 1px solid rgba(79, 179, 232, 0.4);
+}
+.wt-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; }
+.wt-swatch.mezcla { background: var(--st-mezcla); }
+.wt-swatch.gas { background: var(--st-gas); }
+.wt-swatch.liquido { background: linear-gradient(90deg, var(--st-liquido) 50%, var(--st-liquido-ambar) 50%); }
+.wt-swatch.senal { background: var(--st-senal); }
+.wt-note { font-size: 13px; color: var(--muted); }
+.wt-confirmar { color: var(--warn); font-weight: 600; }
+
+.wt-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .wt-topbar { padding: 8px 16px; }
+  .wt-topbar .wt-logo { height: 32px; }
+  .wt-topbar nav { width: 100%; margin-left: 0; overflow-x: auto; flex-wrap: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

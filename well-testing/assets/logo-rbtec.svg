@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="R.B. Tec México">
+  <!-- Logotipo PROVISIONAL. Reemplace este archivo por el logo oficial de R.B. Tec México
+       (mismo nombre de archivo) y todas las páginas y el video lo tomarán automáticamente. -->
+  <defs>
+    <linearGradient id="rbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16386b"/>
+      <stop offset="1" stop-color="#0b2545"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4 4)">
+    <path d="M44 0 82 22v44L44 88 6 66V22Z" fill="url(#rbg)"/>
+    <path d="M44 0 82 22v44L44 88 6 66V22Z" fill="none" stroke="#ffc20e" stroke-width="3"/>
+    <path d="M22 62V26h15c8 0 12 4 12 10 0 5-3 8-7 9l9 17h-9l-8-15h-4v15Zm8-22h6c3 0 5-1 5-4s-2-4-5-4h-6Z" fill="#ffffff"/>
+    <path d="M52 26h12c7 0 10 3 10 8 0 3-2 6-5 7 4 1 6 4 6 8 0 6-4 9-11 9H52Zm8 6v8h4c2 0 4-1 4-4s-2-4-4-4Zm0 14v10h5c3 0 5-2 5-5s-2-5-5-5Z" fill="#ffc20e"/>
+    <path d="M14 74c18 8 42 8 60-2" fill="none" stroke="#4fb3e8" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+  <text x="100" y="52" font-family="'Barlow Condensed','Arial Narrow',Arial,sans-serif" font-weight="800" font-size="44" letter-spacing="1" textLength="150" lengthAdjust="spacingAndGlyphs" fill="#0b2545">R.B. TEC</text>
+  <text x="102" y="80" font-family="'Barlow Condensed','Arial Narrow',Arial,sans-serif" font-weight="600" font-size="20" letter-spacing="7.2" textLength="146" lengthAdjust="spacingAndGlyphs" fill="#2a8fd0">MÉXICO</text>
+  <rect x="262" y="20" width="6" height="58" rx="1" fill="#ffc20e"/>
+  <text x="280" y="44" font-family="'Barlow Condensed','Arial Narrow',Arial,sans-serif" font-weight="700" font-size="17" letter-spacing="1.5" textLength="74" lengthAdjust="spacingAndGlyphs" fill="#0b2545">WELL</text>
+  <text x="280" y="66" font-family="'Barlow Condensed','Arial Narrow',Arial,sans-serif" font-weight="700" font-size="17" letter-spacing="1.5" textLength="74" lengthAdjust="spacingAndGlyphs" fill="#0b2545">TESTING</text>
+</svg>
