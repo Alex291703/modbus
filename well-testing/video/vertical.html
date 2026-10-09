@@ -2,14 +2,14 @@
 <html lang="es-MX">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=1920, height=1080" />
-    <title>Well Testing · Animación del proceso · 16:9</title>
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Well Testing · Animación del proceso · 9:16</title>
     <!--
-      Well Testing · R.B. Tec México — Entregable 1 "Animación del proceso" (1920×1080, 90 s).
+      Well Testing · R.B. Tec México — Entregable 1 "Animación del proceso" (1080×1920, 90 s).
       Composición HyperFrames. El código y los estilos se comparten con la otra
       composición en src/film.js y src/film.css; los datos salen de lib/data.js.
       Render (desde well-testing/video, con HYPERFRAMES_BROWSER_PATH apuntando a Chromium):
-        npx hyperframes render -q delivery -o ../entregables/well-testing-16x9.mp4
+        npx hyperframes render -c vertical.html -q delivery -o ../entregables/well-testing-9x16.mp4
       3D en un canvas WebGL fuera del DOM copiado a un canvas 2D (evita huecos en la captura).
     -->
     <style>
@@ -39,9 +39,9 @@
     <script src="src/film.js"></script>
   </head>
   <body>
-    <div id="root" class="wt-film fmt-h" data-composition-id="wt-proceso" data-width="1920" data-height="1080" data-duration="90" data-fps="30">
+    <div id="root" class="wt-film fmt-v" data-composition-id="wt-proceso-916" data-width="1080" data-height="1920" data-duration="90" data-fps="30">
       <div id="f-bg" class="f-layer"></div>
-      <div id="f-gl" class="f-layer"><canvas id="f-glc" data-layout-allow-overflow width="1920" height="1080"></canvas></div>
+      <div id="f-gl" class="f-layer"><canvas id="f-glc" data-layout-allow-overflow width="1080" height="1920"></canvas></div>
       <div id="f-cut" class="f-layer"></div>
       <div id="f-scada" class="f-layer"></div>
       <div id="f-pid" class="f-layer"></div>
@@ -69,7 +69,7 @@
     </div>
     <script>
       window.__timelines = window.__timelines || {};
-      window.__timelines["wt-proceso"] = WTFilm.boot({ id: "wt-proceso", layout: "landscape" });
+      window.__timelines["wt-proceso-916"] = WTFilm.boot({ id: "wt-proceso-916", layout: "portrait" });
     </script>
   </body>
 </html>

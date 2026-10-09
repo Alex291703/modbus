@@ -87,11 +87,10 @@
   .mp-legend .ln::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,255,255,0.75) 8px 11px, transparent 11px 14px); animation: mp-flow 1.2s linear infinite; }
   .ln.mezcla { background: var(--st-mezcla); } .ln.gas { background: var(--st-gas); } .ln.liquido { background: linear-gradient(90deg, var(--st-liquido), #3a2614); box-shadow: inset 0 0 0 1px var(--st-liquido-ambar); }
   .ln.salida { background: var(--st-salida); } .ln.senal { background: var(--st-senal); height: 4px; }
-  .ln.zona { background: repeating-linear-gradient(135deg, #d6262e 0 5px, #ffc20e 5px 10px); }
+  .ln.zona { background: repeating-linear-gradient(135deg, var(--c-zona, #d6262e) 0 5px, var(--rb-amarillo) 5px 10px); }
   .ln.zona::after, .ln.acceso::after { display: none; }
-  .ln.acceso { background: #b9a888; }
+  .ln.acceso { background: var(--c-camino, #b9a888); }
   .mp-note { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
-  .mp-note strong { color: var(--warn); font-weight: 600; }
 
   /* ---------- herramientas y brújula ---------- */
   .mp-tools { position: absolute; z-index: 4; right: var(--gap); top: var(--gap); display: flex; flex-direction: column; gap: 8px; align-items: flex-end; animation: mp-in 0.8s var(--ease) both 0.35s; }
@@ -287,7 +286,12 @@
     e.nombre = x.nombre || q.nombre || e.id;
     e.desc = x.desc || q.desc || '';
     if (e.id === 'separador') e.nombre = q.nombre + ' ' + D.separador.tagDefault;
+    e.etq = x.nombre ? e.nombre : (q.corto ? q.corto : e.nombre); // rótulo corto sobre la escena (equipos[].corto)
+    if (e.id === 'separador') e.etq = e.nombre;
   });
+  // colores de capas desde WT.data (las muestras de la leyenda usan estas variables)
+  if (C.zonaSeguridad) main.style.setProperty('--c-zona', C.zonaSeguridad);
+  if (C.camino) main.style.setProperty('--c-camino', C.camino);
 
   /* ---------- escena ---------- */
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -369,14 +373,17 @@
    ['zona', 'Zona de seguridad'], ['acceso', 'Camino de terracería']].forEach(function (r) {
     var d = document.createElement('div'); d.innerHTML = '<span class="ln ' + r[0] + '" aria-hidden="true"></span><span>' + r[1] + '</span>'; lg.appendChild(d);
   });
-  document.getElementById('note').innerHTML = (MP.confirmar ? '<strong>Por confirmar:</strong> ' : '') + MP.nota + ' Circuito cerrado: el gas y el líquido medidos regresan a la línea; no hay quemador ni venteo.';
+  // Nota para el cliente: solo la parte ilustrativa (las indicaciones internas de ajuste viven en el README)
+  var notaCliente = String(MP.nota || '').split(';')[0].replace(/\.\s*$/, '');
+  document.getElementById('note').textContent = (notaCliente ? notaCliente + '. ' : '') + 'Circuito cerrado: el gas y el líquido medidos regresan a la línea; no hay quemador ni venteo.';
   document.getElementById('lead').textContent = 'Distribución típica de equipos durante un aforo con separador bifásico de circuito cerrado. Active capas y seleccione un elemento para ubicarlo.';
 
   /* ---------- etiquetas ancladas ---------- */
   var NS = 'http://www.w3.org/2000/svg';
   ELEMS.forEach(function (e, i) {
     var el = document.createElement('div'); el.className = 'mp-lab'; el.style.setProperty('--d', (i * 70) + 'ms');
-    el.innerHTML = '<b>' + e.n + '</b><span>' + e.nombre + '</span>';
+    el.innerHTML = '<b>' + e.n + '</b><span>' + e.etq + '</span>';
+    el.title = e.nombre;
     el.addEventListener('click', function () { select(e.id, true); });
     labelsEl.appendChild(el); e.el = el;
     e.line = document.createElementNS(NS, 'path'); e.line.setAttribute('class', 'mp-leader'); leaders.appendChild(e.line);
@@ -486,8 +493,8 @@
     if (id === 'lineaBateria') f.push(['Transmisor TPL', U.instrumento('TPL').variable, 1]);
     if (id === 'caseta') f.push(['RTU', eq('rtu').nombre, 1]);
     (MP.distancias || []).forEach(function (d) {
-      var SHORT = { arbol: 'árbol', separador: 'separador', caseta: 'caseta', manifold: 'cabezal', rtu: 'RTU' };
-      if (d.de === id || d.a === id) { var o = d.de === id ? d.a : d.de; f.push(['Distancia al ' + (SHORT[o] || o), '≈ ' + d.m + ' m']); }
+      var SHORT = { arbol: 'al árbol', separador: 'al separador', caseta: 'a la caseta', manifold: 'al cabezal', rtu: 'al RTU' };
+      if (d.de === id || d.a === id) { var o = d.de === id ? d.a : d.de; f.push(['Distancia ' + (SHORT[o] || 'a ' + o), '≈ ' + d.m + ' m']); }
     });
     return f;
   }
@@ -615,7 +622,7 @@
         g.fillStyle = 'rgba(6,22,49,0.9)'; rr(g, b.x, b.y, b.w, b.h, b.h / 2); g.fill();
         g.fillStyle = C.amarillo; g.beginPath(); g.arc(b.x + 15, b.y + b.h / 2, 11, 0, Math.PI * 2); g.fill();
         g.fillStyle = C.marino; g.font = '800 12px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText(String(e.n), b.x + 15, b.y + b.h / 2 + 0.5);
-        if (!narrow()) { g.fillStyle = '#fff'; g.font = '600 13px Barlow, Arial'; g.textAlign = 'left'; g.fillText(e.nombre, b.x + 33, b.y + b.h / 2 + 0.5); }
+        if (!narrow()) { g.fillStyle = '#fff'; g.font = '600 13px Barlow, Arial'; g.textAlign = 'left'; g.fillText(e.etq, b.x + 33, b.y + b.h / 2 + 0.5); }
       });
       S.cotas.forEach(function (c) { if (!c.box) return; var t = '≈ ' + c.m + ' m'; g.font = '700 12px "JetBrains Mono", monospace'; var tw2 = g.measureText(t).width + 12; g.fillStyle = '#fff'; rr(g, c.box.x - tw2 / 2, c.box.y - 10, tw2, 20, 4); g.fill(); g.fillStyle = C.marino900; g.textAlign = 'center'; g.fillText(t, c.box.x, c.box.y + 0.5); });
       // brújula
@@ -628,8 +635,10 @@
       // pie: leyenda y nota
       var fy = head + canvas.height, lx = 16 * k; g.fillStyle = C.marino900; g.fillRect(0, fy, out.width, foot);
       g.font = '600 ' + 12 * k + 'px Barlow, Arial'; g.textBaseline = 'middle'; g.textAlign = 'left';
-      [['Mezcla', C.mezcla], ['Gas', C.gas], ['Líquido', C.liquidoAmbar], ['Salida a batería', C.salida], ['Señal', C.senal]].forEach(function (s) {
-        g.fillStyle = s[1]; g.fillRect(lx, fy + foot / 2 - 3 * k, 22 * k, 6 * k); g.fillStyle = '#dfe9f3'; g.fillText(s[0], lx + 28 * k, fy + foot / 2); lx += 28 * k + g.measureText(s[0]).width + 18 * k;
+      [['Mezcla', C.mezcla], ['Gas', C.gas], ['Líquido', C.liquido, C.liquidoAmbar], ['Salida a batería', C.salida], ['Señal', C.senal]].forEach(function (s) {
+        g.fillStyle = s[1]; g.fillRect(lx, fy + foot / 2 - 3 * k, 22 * k, 6 * k);
+        if (s[2]) { g.strokeStyle = s[2]; g.lineWidth = 1.5 * k; g.strokeRect(lx + 0.75 * k, fy + foot / 2 - 2.25 * k, 20.5 * k, 4.5 * k); } // líquido: negro con resalte ámbar
+        g.fillStyle = '#dfe9f3'; g.fillText(s[0], lx + 28 * k, fy + foot / 2); lx += 28 * k + g.measureText(s[0]).width + 18 * k;
       });
       g.fillStyle = '#8fa6bf'; g.font = '500 ' + 11 * k + 'px Barlow, Arial'; g.textAlign = 'right';
       g.fillText('Medidas aproximadas · ilustrativo · ' + D.empresa.nombre, out.width - 16 * k, fy + foot / 2);

@@ -16,9 +16,18 @@
      estado.layout string  → fuerza 'landscape' | 'portrait' en este cuadro
      estado.desde  0..6    → paso del que viene la cámara (por defecto paso − 1)
      estado.instantaneo    → sin transiciones (prefers-reduced-motion / cuadros fijos)
+     estado.lecturas bool  → tarjeta de lectura del medidor en los pasos 5 y 6 (por defecto = etiquetas;
+                             la tarjeta de presiones del paso 2 se dibuja siempre, como antes)
+     estado.orden  bool    → insignias "1 Medición → 2 Control" bajo medidor y válvula en los
+                             pasos 5 y 6 (por defecto = etiquetas)
      c.setTag(tag); c.setLayout(layout); c.anchor(id) → { x, y } px del último cuadro
      c.zonas; c.canvas; c.dispose()
      WT.Cutaway.cargarFuentes() → Promise (precarga Barlow / JetBrains Mono para el lienzo)
+   Orden en las salidas (WT.data.valvulasControl): primero se mide y
+   después se controla. Gas: boquilla superior → placa de orificio (TDG)
+   → PV (contrapresión, PIC). Líquido: boquilla inferior → Coriolis
+   Promass 300 → LV (control de nivel, LIC). LIC y PIC son funciones en
+   el RTU (WT.data.funciones).
    Todo lo que se dibuja depende solo de (t, estado): sin Math.random,
    Date.now ni performance.now. Mismo t → mismo cuadro.
    ===================================================================== */
@@ -49,13 +58,21 @@
     return 'rgb(' + Math.round(lerp(a[0], b[0], k)) + ',' + Math.round(lerp(a[1], b[1], k)) + ',' + Math.round(lerp(a[2], b[2], k)) + ')';
   }
   function fmt(v, d) { return (WT.util && WT.util.fmt) ? WT.util.fmt(v, d) : Number(v).toFixed(d || 0); }
+  function mixHex(h1, h2, k) {
+    var a = hexRgb(h1), b = hexRgb(h2), o = '#';
+    for (var i = 0; i < 3; i++) { var v = Math.round(lerp(a[i], b[i], k)); o += (v < 16 ? '0' : '') + v.toString(16); }
+    return o;
+  }
+  function isHex(h) { return typeof h === 'string' && /^#?[0-9a-f]{3}([0-9a-f]{3})?$/i.test(h); }
 
   /* ------------------------------------------------------------------
      Colores: corrientes y marca desde WT.data.colores; los colores de
-     equipo (verde del recipiente, bridas, remolque…) salen de las fotos
-     de campo y viven aquí como constantes del módulo.
+     equipo (verde del recipiente, bridas, remolque, cabezales E+H, PSV,
+     placa del tag) desde WT.data.colores.equipo (tomados de las fotos de
+     campo). Las constantes de abajo son el respaldo y sus tonos de luz y
+     sombra ya ajustados; si data.js trae otro color se derivan los tonos.
      ------------------------------------------------------------------ */
-  var EQ = {
+  var EQ0 = {
     verde: '#24513b', verdeLuz: '#4d8a66', verdeSombra: '#0f2a1e',   // recipiente (foto 05)
     acero: '#9fb2c6', aceroLuz: '#d6e1ec', aceroOsc: '#4b5f78',        // cortes de sección
     interior: '#5c7290', interiorOsc: '#1c2b40', interiorLuz: '#8fa6c0',
@@ -63,18 +80,76 @@
     remolque: '#f0a51f', remolqueOsc: '#a8670c',                          // bastidor amarillo/naranja
     llanta: '#15181d', rin: '#e9edf1',
     eh: '#1f63b3', ehLuz: '#5d9be0', ehOsc: '#0f3a6e',                    // cabezales E+H (azules)
-    psv: '#c9252f', psvLuz: '#f0646b',
+    psv: '#c9252f', psvLuz: '#f0646b', psvOsc: '#7d0f17',
     placa: '#f28c1b',                                                     // placa naranja del tag
     actuador: '#6d8199', actuadorLuz: '#b8c7d8'
   };
+  var EQ = {};
+  /* llave de WT.data.colores.equipo → [color base, { tono: [hacia, k] }] */
+  var EQ_DATA = {
+    recipiente: ['verde', { verdeLuz: ['#ffffff', 0.22], verdeSombra: ['#000000', 0.58] }],
+    brida: ['brida', { bridaLuz: ['#ffffff', 0.28], bridaOsc: ['#000000', 0.48] }],
+    remolque: ['remolque', { remolqueOsc: ['#000000', 0.32] }],
+    cabezalEH: ['eh', { ehLuz: ['#ffffff', 0.3], ehOsc: ['#000000', 0.42] }],
+    psv: ['psv', { psvLuz: ['#ffffff', 0.3], psvOsc: ['#000000', 0.42] }],
+    placaTag: ['placa', {}]
+  };
   var C = {};
   function loadColors() {
-    var c = (WT.data && WT.data.colores) || {};
+    var c = (WT.data && WT.data.colores) || {}, k, j;
     C.marino = c.marino || '#0b2545'; C.marino900 = c.marino900 || '#061631'; C.marino700 = c.marino700 || '#13315c';
     C.amarillo = c.amarillo || '#ffc20e'; C.celeste = c.celeste || '#4fb3e8'; C.celeste200 = c.celeste200 || '#a9dcf7';
     C.mezcla = c.mezcla || '#8a5a2b'; C.mezclaClaro = c.mezclaClaro || '#b9824a';
     C.gas = c.gas || '#ffd23f'; C.liquido = c.liquido || '#1c140c'; C.ambar = c.liquidoAmbar || '#e8971e';
     C.salida = c.salida || '#7a5233'; C.senal = c.senal || '#4fb3e8';
+    for (k in EQ0) EQ[k] = EQ0[k];
+    var e = c.equipo || {};
+    for (k in EQ_DATA) {
+      var v = e[k], base = EQ_DATA[k][0], tonos = EQ_DATA[k][1];
+      if (!isHex(v)) continue;
+      v = v.charAt(0) === '#' ? v : '#' + v;
+      if (v.toLowerCase() === EQ0[base].toLowerCase()) continue; // mismo color: se quedan los tonos ajustados
+      EQ[base] = v;
+      for (j in tonos) EQ[j] = mixHex(v, tonos[j][0], tonos[j][1]);
+    }
+  }
+
+  /* Textos y lazos desde WT.data (con respaldo) */
+  var FUNC0 = [
+    { tag: 'LIC', en: 'RTU', mide: 'TN', actua: 'LV', desc: 'Control de nivel del separador' },
+    { tag: 'PIC', en: 'RTU', mide: 'TPS', actua: 'PV', desc: 'Control de presión del separador (contrapresión)' }
+  ];
+  var VALV0 = [
+    { tag: 'LV', nombre: 'Válvula de control de nivel', corriente: 'liquido', lazo: 'LIC' },
+    { tag: 'PV', nombre: 'Válvula de control de presión (contrapresión)', corriente: 'gas', lazo: 'PIC' }
+  ];
+  function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
+  /* 'Válvula de control de nivel' → 'Control de nivel'; '… (contrapresión)' → 'Contrapresión' */
+  function nombreCorto(n) {
+    n = String(n || '');
+    var m = /\(([^)]+)\)\s*$/.exec(n);
+    return cap(m ? m[1] : n.replace(/^v[aá]lvula\s+de\s+/i, ''));
+  }
+  function valvula(corriente) {
+    var L = (WT.data && WT.data.valvulasControl) || VALV0, i;
+    for (i = 0; i < L.length; i++) if (L[i].corriente === corriente) return L[i];
+    for (i = 0; i < VALV0.length; i++) if (VALV0[i].corriente === corriente) return VALV0[i];
+    return null;
+  }
+  /* función de control que actúa sobre la válvula `tag` (LIC → LV, PIC → PV) */
+  function funcionDe(tag, lazo) {
+    var D = WT.data || {}, L = D.funciones, i;
+    if (L && L.length) {
+      for (i = 0; i < L.length; i++) if (L[i].actua === tag || (lazo && L[i].tag === lazo && L[i].actua)) return L[i];
+      return null; // data.js lista funciones y ninguna actúa sobre esta válvula: no se dibuja el lazo
+    }
+    for (i = 0; i < FUNC0.length; i++) if (FUNC0[i].actua === tag) return FUNC0[i];
+    return null;
+  }
+  function funcionQueMide(tag) {
+    var L = (WT.data && WT.data.funciones) || [];
+    for (var i = 0; i < L.length; i++) if (L[i].mide === tag && !L[i].actua) return L[i];
+    return null;
   }
 
   /* ------------------------------------------------------------------
@@ -95,15 +170,31 @@
     gasOut: { x: 405, r: 23, wall: 6, yFl: -228, yH: -282 },
     liqOut: { x: 400, r: 21, wall: 6, yFl: 214, yH: 256 },
     xEdge: 805,
-    spY: 26,          // nivel de consigna (SP) en y
+    spY: 26,          // nivel de consigna (SP) en y (se recalcula con WT.data.separador.nivelSP)
     psv: -250, tt: -118, tps: 32, tn: 190,
-    lv: 560, pv: 572, cor: 700, ori: 712,
-    lic: { x: 690, y: -196 },
+    // Salidas: primero el medidor y después la válvula de control (WT.data.valvulasControl)
+    ori: 565, pv: 720,   // gas: placa de orificio (TDG) → PV
+    cor: 575, lv: 720,   // líquido: Coriolis Promass 300 → LV
+    lic: { x: 720, y: 30 },     // LIC en el RTU (arriba de la LV)
+    pic: { x: 720, y: -452 },   // PIC en el RTU (arriba de la PV)
+    xBajada: 640,               // bajada de la señal TN → LIC (libre del registro y de la PV)
+    ySenalTPS: -452,            // tendido de la señal TPS → PIC (sobre la tubería de gas)
     saddles: [-300, 262],
     frameY: 286, wheels: [-40, 104], wheelR: 54,
     manway: { y: 0, r: 58 }
   };
   G.yShellTop = -G.R; G.yShellBot = G.R;
+  /* Ajustes desde WT.data.separador: consigna de nivel y montaje del TN */
+  function pctToY(p) { return G.Ri - p / 100 * 2 * G.Ri; }
+  function loadConfig() {
+    var sep = (WT.data && WT.data.separador) || {}, sp = +sep.nivelSP;
+    G.spY = (isFinite(sp) && sp >= 15 && sp <= 75) ? pctToY(sp) : 26;
+    var tm = sep.tnMontaje, v = tm && typeof tm === 'object' ? tm.valor : tm;
+    // 'Superior (sonda)' (o sin dato) → sonda por la parte superior; 'lateral' / 'costado' / 'cámara' → cámara externa en la tapa
+    G.tnLateral = !!v && /lateral|costado|c[aá]mara|externa|bridle|jaula/i.test(String(v)) && !/superior/i.test(String(v));
+    G.tnMontaje = v ? String(v) : '';
+  }
+  G.cage = { x: 650, y0: -104, y1: 112, r: 15, nozA: -80, nozB: 92 }; // cámara externa del TN (solo si es lateral)
   function headX(y, a, r) { var k = 1 - (y * y) / (r * r); return k > 0 ? a * Math.sqrt(k) : 0; }
   function innerRight(y) { return G.xT + headX(y, G.Ai, G.Ri); }
   function depthAt(y) { var k = G.Ri * G.Ri - y * y; return k > 0 ? Math.sqrt(k) : 0; }
@@ -183,7 +274,7 @@
      resaltado [cx, cy, rx, ry] y ancla del rótulo. Se asocian por `id`
      con WT.data.pasosSeparacion (el texto y el título salen de data.js).
      ------------------------------------------------------------------ */
-  var VIEW0 = { L: { cx: 0, cy: -34, w: 1700, h: 920 }, P: { cx: 10, cy: 0, w: 1210, h: 1400 } };
+  var VIEW0 = { L: { cx: 0, cy: -50, w: 1700, h: 940 }, P: { cx: 10, cy: 0, w: 1210, h: 1400 } };
   var STEP = {
     choque: { L: { cx: -470, cy: -70, w: 620, h: 400 }, P: { cx: -478, cy: -62, w: 430, h: 470 },
       zonas: [[-484, -60, 120, 112]], ancla: [-447, -60] },
@@ -193,22 +284,45 @@
       zonas: [[-40, -8, 385, 172]], ancla: [-40, -88] },
     niebla: { L: { cx: 330, cy: -96, w: 580, h: 390 }, P: { cx: 330, cy: -96, w: 410, h: 470 },
       zonas: [[320, -92, 66, 92]], ancla: [320, -112] },
-    nivel: { L: { cx: 405, cy: -52, w: 980, h: 800 }, P: { cx: 390, cy: -46, w: 700, h: 820 },
-      zonas: [[190, -76, 66, 212], [560, 212, 100, 112], [690, -196, 74, 48]], ancla: [190, 26] },
-    gas: { L: { cx: 530, cy: -210, w: 820, h: 440 }, P: { cx: 510, cy: -200, w: 560, h: 560 },
-      zonas: [[405, -212, 62, 104], [572, -316, 80, 82], [712, -284, 66, 62]], ancla: [405, -236] }
+    // nivel: TN → LIC (RTU) → LV; el líquido sale por el fondo, Coriolis y después LV
+    nivel: { L: { cx: 500, cy: 62, w: 900, h: 690 }, P: { cx: 470, cy: 40, w: 720, h: 900 },
+      zonas: null, ancla: null },
+    // gas: boquilla superior → placa de orificio (TDG) → PV; TPS → PIC (RTU) → PV
+    gas: { L: { cx: 575, cy: -300, w: 740, h: 470 }, P: { cx: 585, cy: -235, w: 560, h: 640 },
+      zonas: null, ancla: [405, -236] }
   };
-  /* Zonas para `resaltar` (ids de internos/accesorios/instrumentos/equipos) */
-  var RES = {
-    deflector: [[-440, -66, 52, 98]], entrada: [[-700, -70, 150, 80]], lineaEntrada: [[-700, -70, 150, 80]],
-    asentamiento: STEP.asentamiento.zonas, extractor: [[320, -92, 66, 92]], niebla: [[320, -92, 66, 92]],
-    nivel: [[190, -76, 66, 212], [690, -196, 74, 48]], valvulas: [[560, 212, 100, 112], [572, -316, 80, 82]],
-    psv: [[-250, -232, 50, 70]], manometro: [[-712, -128, 46, 64]], registro: [[590, 0, 46, 84]],
-    TN: [[190, -76, 66, 212]], TPS: [[32, -228, 46, 66]], TT: [[-118, -150, 46, 140]],
-    LV: [[560, 212, 100, 112]], PV: [[572, -316, 80, 82]], LIC: [[690, -196, 74, 48]], rtu: [[690, -196, 74, 48]],
-    CORIOLIS: [[700, 256, 80, 70]], coriolis: [[700, 256, 80, 70]], TDG: [[712, -284, 66, 62]], placa: [[712, -284, 66, 62]],
-    gas: STEP.gas.zonas, separador: [[0, 0, 640, 220]]
-  };
+  /* Zonas para `resaltar` (ids de internos/accesorios/instrumentos/equipos).
+     Se rellenan en buildZones() porque dependen del montaje del TN. */
+  var RES = {};
+  var Z = {};
+  function buildZones() {
+    var tnZ = G.tnLateral ? [G.cage.x - 8, (G.cage.y0 + G.cage.y1) / 2 - 22, 62, 168] : [G.tn, -76, 66, 212];
+    Z.tn = tnZ;
+    Z.lic = [G.lic.x, G.lic.y, 54, 42];
+    Z.pic = [G.pic.x, G.pic.y, 54, 42];
+    Z.cor = [G.cor, 232, 80, 66];
+    Z.lv = [G.lv, 214, 70, 98];
+    Z.liq = [(G.liqOut.x + G.lv) / 2 + 5, 222, (G.lv - G.liqOut.x) / 2 + 48, 100];  // boquilla → Coriolis → LV
+    Z.ori = [G.ori, -326, 56, 88];
+    Z.pv = [G.pv, -326, 70, 92];
+    Z.gasLinea = [(G.ori + G.pv) / 2, -322, (G.pv - G.ori) / 2 + 78, 96];          // placa → PV
+    Z.gasBoq = [G.gasOut.x, -212, 62, 104];
+    STEP.nivel.zonas = [tnZ, Z.liq, Z.lic];
+    STEP.gas.zonas = [Z.gasBoq, Z.gasLinea, Z.pic];
+    var R = {
+      deflector: [[-440, -66, 52, 98]], entrada: [[-700, -70, 150, 80]], lineaEntrada: [[-700, -70, 150, 80]],
+      asentamiento: STEP.asentamiento.zonas, extractor: [[320, -92, 66, 92]], niebla: [[320, -92, 66, 92]],
+      nivel: [tnZ, Z.lic], valvulas: [Z.lv, Z.pv],
+      psv: [[-250, -232, 50, 70]], manometro: [[-712, -128, 46, 64]], registro: [[590, 0, 46, 84]],
+      TN: [tnZ], TPS: [[G.tps, -228, 46, 66]], TT: [[G.tt, -150, 46, 140]],
+      LV: [Z.lv], PV: [Z.pv], LIC: [Z.lic], PIC: [Z.pic], rtu: [Z.lic, Z.pic],
+      CORIOLIS: [Z.cor], coriolis: [Z.cor], TDG: [Z.ori], placa: [Z.ori],
+      liquido: [Z.liq], salidaLiq: [Z.liq], salidaGas: [Z.gasBoq, Z.gasLinea],
+      gas: STEP.gas.zonas, separador: [[0, 0, 640, 220]]
+    };
+    for (var k in RES) if (!(k in R)) delete RES[k];
+    for (k in R) RES[k] = R[k];
+  }
   function stepId(p) {
     var ps = (WT.data && WT.data.pasosSeparacion) || [];
     return p >= 1 && p <= ps.length ? ps[p - 1].id : null;
@@ -268,23 +382,41 @@
       var s = spline(pts, 12);
       var sPad = 0;
       for (var k = 0; k < s.pts.length; k++) if (s.pts[k][0] >= pad.x0) { sPad = s.L[k]; break; }
-      var rad = 40 - lane;
-      var tail = roundedPolyline([[go.x + lane, -262], [go.x + lane, go.yH + lane], [G.xEdge, go.yH + lane]], rad);
-      var all = s.pts.concat(tail.pts.slice(1));
+      var rad = 40 - lane, xA = G.ori - 80;
+      var tail = roundedPolyline([[go.x + lane, -262], [go.x + lane, go.yH + lane], [xA, go.yH + lane]], rad);
+      // paso por la placa de orificio: las líneas se juntan en el orificio (vena contracta, un poco
+      // aguas abajo de la placa) y se recuperan antes de llegar a la PV
+      var pinch = [];
+      for (var xx = xA + 4; xx <= G.xEdge; xx += 4) {
+        var dx = xx - (G.ori + 10), wpk = dx < 0 ? 26 : 44;
+        pinch.push([xx, go.yH + lane * (1 - 0.66 * Math.exp(-(dx * dx) / (wpk * wpk)))]);
+      }
+      var all = s.pts.concat(tail.pts.slice(1), pinch);
       var path = withLengths(all);
       path.sPad = sPad; path.sOut = s.len; path.f = f;
       out.push(path);
     }
     return out;
   }
+  /* posición del sensado de nivel y de la cabeza del TN (según montaje) */
+  function tnX() { return G.tnLateral ? G.cage.x : G.tn; }
+  function tnHead() { return G.tnLateral ? [G.cage.x, G.cage.y0 - 62] : [G.tn, -243]; }
   function buildPipes() {
-    var go = G.gasOut, lo = G.liqOut, inl = G.inlet;
+    var go = G.gasOut, lo = G.liqOut, inl = G.inlet, lic = G.lic, pic = G.pic;
+    var aLV = lo.yH - 92 - 24, aPV = go.yH - 92 - 24;   // parte superior del actuador de cada válvula
+    var tnS = G.tnLateral
+      ? [[G.cage.x + 22, G.cage.y0 - 40], [lic.x, G.cage.y0 - 40], [lic.x, lic.y - 28]]
+      : [[G.tn + 24, -196], [G.xBajada, -196], [G.xBajada, lic.y], [lic.x - 36, lic.y]];
     return {
       gas: roundedPolyline([[go.x, -G.Ri + 4], [go.x, go.yH], [G.xEdge + 40, go.yH]], 40),
       liq: roundedPolyline([[lo.x, G.Ri - 4], [lo.x, lo.yH], [G.xEdge + 40, lo.yH]], 36),
       inlet: withLengths([[inl.xEdge - 40, inl.y], [inl.xIn + 2, inl.y]]),
-      senal: withLengths([[G.tn + 24, G.lic.y], [G.lic.x - 36, G.lic.y]]),
-      senal2: withLengths([[G.lic.x, G.lic.y + 28], [G.lic.x, G.liqOut.yH - 92], [G.lv + 39, G.liqOut.yH - 92]])
+      // lazo de nivel: TN → LIC (RTU) → LV
+      senal: withLengths(tnS),
+      senal2: withLengths([[lic.x, lic.y + 28], [G.lv, aLV]]),
+      // lazo de presión: TPS → PIC (RTU) → PV
+      senalP1: withLengths([[G.tps, -246], [G.tps, G.ySenalTPS], [pic.x - 36, G.ySenalTPS]]),
+      senalP2: withLengths([[pic.x, pic.y + 28], [G.pv, aPV]])
     };
   }
 
@@ -836,16 +968,21 @@
   }
 
   /* Sonda del TN (pulso que baja hasta la superficie) y termopozo del TT */
-  function drawProbes(ctx, S) {
-    var t = S.t, x = G.tn, yTop = -G.R, yBot = 136;
-    ctx.save(); stadium(ctx, G.xT, G.Ai, G.Ri, G.Ri); ctx.clip();
-    rod(ctx, x, yTop, yBot, 4.4, S);
-    ctx.fillStyle = EQ.aceroOsc; ctx.fillRect(x - 4, yBot - 2, 8, 12);
-    var k = frac(t / 1.15), yp = lerp(yTop + 8, S.lvl, easeInOut(k)), ap = (0.55 + 0.45 * S.em.nivel) * (1 - seg(k, 0.85, 1) * 0.5);
+  function probePulse(ctx, S, x, yTop, rr) {
+    var k = frac(S.t / 1.15), yp = lerp(yTop + 8, S.lvl, easeInOut(k)), ap = (0.55 + 0.45 * S.em.nivel) * (1 - seg(k, 0.85, 1) * 0.5);
     var pg = ctx.createRadialGradient(x, yp, 0, x, yp, 12);
     pg.addColorStop(0, rgba(C.celeste, ap)); pg.addColorStop(1, rgba(C.celeste, 0));
     ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(x, yp, 12, 0, TAU); ctx.fill();
-    if (k > 0.8) ring(ctx, x, S.lvl, 4 + 22 * seg(k, 0.8, 1), C.celeste, (1 - seg(k, 0.8, 1)) * (0.6 + 0.4 * S.em.nivel));
+    if (k > 0.8) ring(ctx, x, S.lvl, 4 + (rr || 22) * seg(k, 0.8, 1), C.celeste, (1 - seg(k, 0.8, 1)) * (0.6 + 0.4 * S.em.nivel));
+  }
+  function drawProbes(ctx, S) {
+    var x = G.tn, yTop = -G.R, yBot = 136;
+    ctx.save(); stadium(ctx, G.xT, G.Ai, G.Ri, G.Ri); ctx.clip();
+    if (!G.tnLateral) {
+      rod(ctx, x, yTop, yBot, 4.4, S);
+      ctx.fillStyle = EQ.aceroOsc; ctx.fillRect(x - 4, yBot - 2, 8, 12);
+      probePulse(ctx, S, x, yTop);
+    }
     // termopozo TT (cónico)
     var tx = G.tt, tb = 64;
     ctx.beginPath(); ctx.moveTo(tx - 5, yTop); ctx.lineTo(tx + 5, yTop); ctx.lineTo(tx + 3.2, tb); ctx.arc(tx, tb, 3.2, 0, PI); ctx.closePath();
@@ -1029,7 +1166,7 @@
     var x = G.psv;
     greenStub(ctx, x, top, -192, 10); flangeV(ctx, x, -194, 10, 22);
     var rg = ctx.createLinearGradient(x - 18, 0, x + 18, 0);
-    rg.addColorStop(0, '#7d0f17'); rg.addColorStop(0.4, EQ.psvLuz); rg.addColorStop(1, EQ.psv);
+    rg.addColorStop(0, EQ.psvOsc); rg.addColorStop(0.4, EQ.psvLuz); rg.addColorStop(1, EQ.psv);
     ctx.fillStyle = rg;
     roundRect(ctx, x - 17, -232, 34, 32, 8); ctx.fill();
     ctx.fillRect(x - 32, -224, 18, 14); flangeH(ctx, x - 34, -217, 7, 15);
@@ -1042,8 +1179,8 @@
     x = G.tps; greenStub(ctx, x, top, -186, 7); flangeV(ctx, x, -188, 7, 16);
     ctx.fillStyle = '#9aa7b5'; ctx.fillRect(x - 9, -206, 18, 12); ctx.fillStyle = '#4c5866'; ctx.fillRect(x - 2, -216, 4, 10); ctx.fillRect(x - 12, -218, 24, 3.5);
     drawEH(ctx, x, -206, 0.85);
-    // TN (brida + cabezal)
-    x = G.tn; greenStub(ctx, x, top, -186, 10); flangeV(ctx, x, -188, 10, 24); drawEH(ctx, x, -195, 1.05);
+    // TN (brida + cabezal) — montaje superior con sonda; si es lateral se dibuja la cámara externa
+    if (!G.tnLateral) { x = G.tn; greenStub(ctx, x, top, -186, 10); flangeV(ctx, x, -188, 10, 24); drawEH(ctx, x, -195, 1.05); }
     // registro bridado en la tapa derecha
     var mw = G.manway, xe = G.xT + G.A - 3;
     var mg = ctx.createLinearGradient(0, -mw.r, 0, mw.r);
@@ -1059,14 +1196,61 @@
       ctx.fillStyle = '#39424c'; ctx.fillRect(xe + 28, by - 4, 6, 8);
     }
     ctx.fillStyle = '#5a646f'; ctx.fillRect(xe + 55, -10, 10, 20); // asa del registro
+    if (G.tnLateral) drawCage(ctx, S);
   }
 
+  /* Cámara externa del TN (solo si WT.data.separador.tnMontaje indica montaje lateral):
+     dos boquillas en la tapa derecha, cámara en sección con el mismo nivel que el
+     recipiente (vasos comunicantes) y sonda de onda guiada con el cabezal E+H arriba. */
+  function drawCage(ctx, S) {
+    var cg = G.cage, x = cg.x, r = cg.r, w = 5, y0 = cg.y0, y1 = cg.y1, i;
+    for (i = 0; i < 2; i++) {
+      var ny = i ? cg.nozB : cg.nozA, xh = G.xT + headX(ny, G.A, G.R) - 4, xc = x - r - w;
+      var ng = ctx.createLinearGradient(0, ny - 7, 0, ny + 7);
+      ng.addColorStop(0, EQ.verdeLuz); ng.addColorStop(0.5, EQ.verde); ng.addColorStop(1, EQ.verdeSombra);
+      ctx.fillStyle = ng; ctx.fillRect(xh, ny - 7, xc - xh, 14);
+      flangeH(ctx, xh + (xc - xh) * 0.55, ny, 7, 17);
+    }
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x - r - w, y0, 2 * (r + w), y1 - y0);
+    ctx.fillStyle = EQ.acero; ctx.fill(); ctx.clip();
+    hatch(ctx, x - r - w - 4, y0, 2 * (r + w) + 8, y1 - y0, 5, 'rgba(40,58,82,0.55)', 0.8);
+    ctx.restore();
+    var yl = clamp(S.lvl, y0 + 10, y1 - 10);
+    ctx.fillStyle = '#0d1f38'; ctx.fillRect(x - r, y0 + 6, 2 * r, yl - y0 - 6);
+    ctx.fillStyle = rgba(C.gas, 0.07); ctx.fillRect(x - r, y0 + 6, 2 * r, yl - y0 - 6);
+    var lg = ctx.createLinearGradient(0, yl, 0, y1);
+    lg.addColorStop(0, '#3d2814'); lg.addColorStop(0.15, C.liquido); lg.addColorStop(1, '#060302');
+    ctx.fillStyle = lg; ctx.fillRect(x - r, yl, 2 * r, y1 - 6 - yl);
+    ctx.strokeStyle = rgba(C.ambar, 0.9); ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(x - r, yl + 0.8 * Math.sin(S.t * 3)); ctx.lineTo(x + r, yl - 0.8 * Math.sin(S.t * 3)); ctx.stroke();
+    ctx.strokeStyle = EQ.aceroOsc; ctx.lineWidth = 1; ctx.strokeRect(x - r - w, y0, 2 * (r + w), y1 - y0);
+    rod(ctx, x, y0 - 2, y1 - 14, 3.6, S);
+    ctx.save(); ctx.beginPath(); ctx.rect(x - r, y0, 2 * r, y1 - y0); ctx.clip();
+    probePulse(ctx, S, x, y0, 9);
+    ctx.restore();
+    flangeV(ctx, x, y0 - 2, r + w, r + w + 11);
+    flangeV(ctx, x, y1 + 2, r + w, r + w + 11);
+    ctx.fillStyle = EQ.aceroOsc; ctx.fillRect(x - 5, y1 + 9, 10, 18);  // dren
+    greenStub(ctx, x, y0 - 9, y0 - 16, 7);
+    drawEH(ctx, x, y0 - 16, 1.05);
+  }
+
+  /* Pulso de "medición" en la pantalla de un transmisor (pasos 5 y 6) */
+  function measurePulse(ctx, x, y, k, t) {
+    if (k <= 0.01) return;
+    for (var i = 0; i < 2; i++) {
+      var u = frac(t / 1.6 + i * 0.5);
+      ctx.strokeStyle = rgba(C.celeste, k * 0.75 * (1 - u)); ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(x, y, 14 + 26 * u, 0, TAU); ctx.stroke();
+    }
+  }
   function drawLineDevices(ctx, S) {
     var go = G.gasOut, lo = G.liqOut;
-    // LV en la salida de líquido, PV en la salida de gas
+    // Válvulas de control aguas abajo de cada medidor: LV (líquido) y PV (gas)
     drawControlValve(ctx, G.lv, lo.yH, S.open, C.liquido, S, rgba(C.ambar, 1));
     drawControlValve(ctx, G.pv, go.yH, S.openPV, '#0d1f38', S, rgba(C.gas, 1));
-    // Coriolis Promass 300 (destino del líquido)
+    // Coriolis Promass 300: primero en la salida de líquido (aguas arriba de la LV)
     var x = G.cor, y = lo.yH;
     flangeH(ctx, x - 52, y, lo.r + lo.wall, 40); flangeH(ctx, x + 52, y, lo.r + lo.wall, 40);
     var cg = ctx.createLinearGradient(0, y - 26, 0, y + 30);
@@ -1080,7 +1264,8 @@
     ctx.fillStyle = '#16324f'; roundRect(ctx, x - 15, y - 69, 30, 18, 3); ctx.fill();
     ctx.fillStyle = C.celeste; ctx.fillRect(x - 11, y - 64, 16, 2); ctx.fillRect(x - 11, y - 59, 10, 2);
     ctx.fillStyle = EQ.eh; ctx.fillRect(x - 26, y - 76, 52, 5);
-    // Placa de orificio + transmisor de presión diferencial (destino del gas)
+    measurePulse(ctx, x, y - 60, S.em.nivel * S.kx, S.t);
+    // Placa de orificio + transmisor de presión diferencial (TDG): primero en la salida de gas (aguas arriba de la PV)
     x = G.ori; y = go.yH;
     flangeH(ctx, x - 8, y, go.r + go.wall, 46); flangeH(ctx, x + 8, y, go.r + go.wall, 46);
     ctx.fillStyle = '#d7dee6'; ctx.fillRect(x - 1.6, y - go.r - 22, 3.2, go.r * 0.55 + 22); ctx.fillRect(x - 1.6, y + go.r * 0.45, 3.2, go.r * 0.55);
@@ -1090,6 +1275,16 @@
     ctx.beginPath(); ctx.moveTo(x + 10, y - go.r - 6); ctx.lineTo(x + 10, y - 66); ctx.lineTo(x + 14, y - 72); ctx.stroke();
     ctx.fillStyle = '#9aa7b5'; roundRect(ctx, x - 20, y - 82, 40, 14, 3); ctx.fill();
     drawEH(ctx, x, y - 80, 0.85);
+    // tomas de alta (H, aguas arriba) y baja presión (L, aguas abajo) en el paso de gas
+    var kg = S.em.gas * S.kx;
+    if (kg > 0.01) {
+      ctx.save(); ctx.globalAlpha = kg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 11px "JetBrains Mono", ui-monospace, monospace';
+      ctx.fillStyle = 'rgba(6,22,49,0.9)'; roundRect(ctx, x - 29, y - 58, 12, 13, 3); ctx.fill(); roundRect(ctx, x + 17, y - 58, 12, 13, 3); ctx.fill();
+      ctx.fillStyle = C.celeste200; ctx.fillText('H', x - 23, y - 51); ctx.fillText('L', x + 23, y - 51);
+      ctx.restore();
+    }
+    measurePulse(ctx, x, y - 109, kg, S.t);
     // Manómetro local (PI) en la línea de entrada
     x = -712; y = G.inlet.y - G.inlet.r - G.inlet.wall;
     ctx.fillStyle = '#9aa7b5'; ctx.fillRect(x - 2, y - 30, 4, 30); ctx.fillRect(x - 6, y - 14, 12, 7);
@@ -1105,31 +1300,45 @@
     ctx.fillStyle = '#2a323c'; ctx.beginPath(); ctx.arc(x, dy, 2, 0, TAU); ctx.fill();
   }
 
-  /* Lazo de nivel: TN → LIC (RTU) → LV, señal eléctrica (ISA: discontinua) */
+  /* Lazos de control (señal eléctrica, ISA: discontinua), funciones en el RTU
+     (WT.data.funciones): TN → LIC → LV (nivel) y TPS → PIC → PV (contrapresión).
+     Cada lazo se enfatiza en su paso; en los demás queda tenue. */
+  function loopsOf(S) {
+    var out = [], pp = S.pipes, vl = valvula('liquido'), vg = valvula('gas');
+    var fl = vl ? funcionDe(vl.tag, vl.lazo) : null, fg = vg ? funcionDe(vg.tag, vg.lazo) : null;
+    if (fl) out.push({ id: 'LIC', f: fl, box: G.lic, paths: [pp.senal, pp.senal2], e: S.em.nivel, base: 0.55, ph: 0 });
+    if (fg) out.push({ id: 'PIC', f: fg, box: G.pic, paths: [pp.senalP1, pp.senalP2], e: S.em.gas, base: 0.4, ph: 0.37 });
+    return out;
+  }
   function drawSignals(ctx, S) {
-    var t = S.t, e = S.em.nivel, a = 0.55 + 0.45 * e, pp = S.pipes, paths = [pp.senal, pp.senal2], i, j;
+    var t = S.t, loops = S.loops, i, j, l;
     ctx.save(); ctx.lineCap = 'round';
-    for (i = 0; i < paths.length; i++) {
-      strokePath(ctx, paths[i]);
-      ctx.strokeStyle = rgba(C.senal, 0.12 + 0.12 * e); ctx.lineWidth = 6; ctx.stroke();
-      ctx.setLineDash([8, 6]); ctx.lineDashOffset = -t * 24;
-      ctx.strokeStyle = rgba(C.senal, a); ctx.lineWidth = 1.8; ctx.stroke(); ctx.setLineDash([]);
-      for (j = 0; j < 2; j++) {
-        var q = along(paths[i], frac(t * 0.35 + j / 2 + i * 0.25) * paths[i].len);
-        var g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, 9);
-        g.addColorStop(0, rgba('#ffffff', 0.9 * a)); g.addColorStop(0.4, rgba(C.senal, 0.8 * a)); g.addColorStop(1, rgba(C.senal, 0));
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(q.x, q.y, 9, 0, TAU); ctx.fill();
+    for (l = 0; l < loops.length; l++) {
+      var L = loops[l], e = L.e, a = L.base + (1 - L.base) * e;
+      for (i = 0; i < L.paths.length; i++) {
+        var pth = L.paths[i];
+        strokePath(ctx, pth);
+        ctx.strokeStyle = rgba(C.senal, 0.1 + 0.14 * e); ctx.lineWidth = 6; ctx.stroke();
+        ctx.setLineDash([8, 6]); ctx.lineDashOffset = -t * 24;
+        ctx.strokeStyle = rgba(C.senal, a); ctx.lineWidth = 1.8; ctx.stroke(); ctx.setLineDash([]);
+        var sp = 0.35 * Math.min(1, 520 / pth.len);   // misma velocidad aparente en tramos largos
+        for (j = 0; j < 2; j++) {
+          var q = along(pth, frac(t * sp + j / 2 + i * 0.25 + L.ph) * pth.len);
+          var g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, 9);
+          g.addColorStop(0, rgba('#ffffff', 0.9 * a)); g.addColorStop(0.4, rgba(C.senal, 0.8 * a)); g.addColorStop(1, rgba(C.senal, 0));
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(q.x, q.y, 9, 0, TAU); ctx.fill();
+        }
       }
+      // función compartida en el RTU (ISA: círculo inscrito en un cuadro)
+      var x = L.box.x, y = L.box.y;
+      ctx.fillStyle = 'rgba(6,22,49,0.92)'; ctx.fillRect(x - 36, y - 28, 72, 56);
+      ctx.strokeStyle = rgba(C.celeste, Math.max(a, 0.75)); ctx.lineWidth = 1.6; ctx.strokeRect(x - 36, y - 28, 72, 56);
+      ctx.beginPath(); ctx.arc(x, y, 26, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - 26, y); ctx.lineTo(x + 26, y); ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 15px "Barlow Condensed", "Arial Narrow", Arial, sans-serif'; ctx.fillText(String(L.f.tag), x, y - 11);
+      ctx.fillStyle = C.celeste200; ctx.font = '600 11px "Barlow Condensed", "Arial Narrow", Arial, sans-serif'; ctx.fillText(String(L.f.en || 'RTU'), x, y + 11);
     }
-    // LIC: función compartida en el RTU (cuadro con círculo inscrito)
-    var x = G.lic.x, y = G.lic.y;
-    ctx.fillStyle = 'rgba(6,22,49,0.92)'; ctx.fillRect(x - 36, y - 28, 72, 56);
-    ctx.strokeStyle = C.celeste; ctx.lineWidth = 1.6; ctx.strokeRect(x - 36, y - 28, 72, 56);
-    ctx.beginPath(); ctx.arc(x, y, 26, 0, TAU); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x - 26, y); ctx.lineTo(x + 26, y); ctx.stroke();
-    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '700 15px "Barlow Condensed", "Arial Narrow", Arial, sans-serif'; ctx.fillText('LIC', x, y - 11);
-    ctx.fillStyle = C.celeste200; ctx.font = '600 11px "Barlow Condensed", "Arial Narrow", Arial, sans-serif'; ctx.fillText('RTU', x, y + 11);
     ctx.restore();
   }
 
@@ -1277,11 +1486,46 @@
       ctx.beginPath(); ctx.moveTo(x0, G.spY); ctx.lineTo(x1, G.spY); ctx.stroke(); ctx.restore();
       var up = S.lvlTrend > 0;
       arrow(ctx, up ? [[262, S.lvl + 34], [262, S.lvl - 8]] : [[262, S.lvl - 34], [262, S.lvl + 8]], C.celeste, 3, k);
+      // el líquido sale por el fondo: primero se mide (Coriolis) y después pasa por la LV
+      arrow(ctx, [[G.liqOut.x, 150], [G.liqOut.x, 226]], C.ambar, 4, k);
+      var vl = valvula('liquido');
+      if (S.orden) orderPair(ctx, S, G.cor, G.lv, G.frameY + 52, vl ? nombreCorto(vl.nombre) : 'Control de nivel', k);
     }
     if ((k = em.gas * S.kx) > 0.01) {
+      // el gas sale por arriba: primero se mide (placa de orificio + TDG) y después pasa por la PV
       arrow(ctx, [[G.gasOut.x, -150], [G.gasOut.x, -214]], C.gas, 4, k);
-      arrow(ctx, [[620, G.gasOut.yH - 44], [680, G.gasOut.yH - 44]], C.gas, 3, k);
+      var vg = valvula('gas'), yb = G.gasOut.yH + 60;
+      if (S.orden) orderPair(ctx, S, G.ori, G.pv, yb, vg ? nombreCorto(vg.nombre) : 'Contrapresión', k);
     }
+  }
+  /* Par de insignias "1 Medición → 2 Control" bajo el medidor y la válvula de una salida */
+  function orderPair(ctx, S, xa, xb, y, txtB, a) {
+    if (a <= 0.01) return;
+    // si en pantallas chicas no caben centradas bajo cada equipo, se separan alrededor del punto medio
+    var wa = orderBadge(ctx, S, xa, y, 1, 'Medición', 0), wb = orderBadge(ctx, S, xb, y, 2, txtB, 0), gap = 30 / S.scale;
+    if ((xb - xa) < (wa + wb) / 2 + gap) { var mid = (xa + xb) / 2 + (wa - wb) / 4; xa = mid - gap / 2 - wa / 2; xb = mid + gap / 2 + wb / 2; }
+    var ra = orderBadge(ctx, S, xa, y, 1, 'Medición', a), rb = orderBadge(ctx, S, xb, y, 2, txtB, a);
+    if (ra && rb && rb.x0 - ra.x1 > 22 / S.scale) arrow(ctx, [[ra.x1 + 5 / S.scale, y], [rb.x0 - 5 / S.scale, y]], C.celeste200, 1.6 / Math.max(0.6, S.scale), a * 0.9, 7 / Math.max(0.6, S.scale));
+  }
+  /* Insignia numerada (espacio de dibujo; tamaño mínimo legible en pantalla) → { x0, x1 };
+     con a = 0 solo mide y devuelve el ancho total */
+  function orderBadge(ctx, S, x, y, n, txt, a) {
+    var s = Math.max(1, 0.92 / S.scale), fs = 14 * s, r = 10.5 * s;
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.font = '700 ' + fs.toFixed(1) + 'px "Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+    var tw = ctx.measureText(txt).width, w = r * 2 + 6 * s + tw + 10 * s, x0 = x - w / 2;
+    if (a <= 0.01) { ctx.restore(); return w + 6 * s; }
+    ctx.fillStyle = 'rgba(6,22,49,0.9)'; roundRect(ctx, x0 - 3 * s, y - r - 3 * s, w + 6 * s, 2 * r + 6 * s, r + 3 * s); ctx.fill();
+    ctx.strokeStyle = 'rgba(169,220,247,0.35)'; ctx.lineWidth = 1 * s; ctx.stroke();
+    ctx.fillStyle = C.amarillo; ctx.beginPath(); ctx.arc(x0 + r, y, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = C.marino; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '800 ' + (fs * 1.02).toFixed(1) + 'px "Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+    ctx.fillText(String(n), x0 + r, y + 0.5 * s);
+    ctx.fillStyle = '#eef5fb'; ctx.textAlign = 'left';
+    ctx.font = '700 ' + fs.toFixed(1) + 'px "Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+    ctx.fillText(txt, x0 + 2 * r + 6 * s, y + 0.5 * s);
+    ctx.restore();
+    return { x0: x0 - 3 * s, x1: x0 + w + 3 * s };
   }
 
   /* ---------- texto en pantalla ---------- */
@@ -1331,12 +1575,17 @@
     var D = WT.data || {}, U = WT.util || {}, sep = D.separador || {}, out = [];
     function byId(list, id) { list = list || []; for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
     function nombre(o, d) { return o && o.nombre ? o.nombre : d; }
+    function corto(o, d) { return o && (o.corto || o.nombre) ? (o.corto || o.nombre) : d; }
     function inst(tag) { return U.instrumento ? U.instrumento(tag) : null; }
     function eq(id) { return U.equipo ? U.equipo(id) : null; }
     function add(o) { out.push(o); }
     var go = G.gasOut, lo = G.liqOut;
     var tTN = inst('TN'), tTPS = inst('TPS'), tTT = inst('TT'), tCOR = inst('CORIOLIS'), tTDG = inst('TDG');
-    var rtu = eq('rtu'), placa = eq('placa');
+    var rtu = eq('rtu'), placa = eq('placa'), cor = eq('coriolis'), rtuTxt = 'en ' + corto(rtu, 'RTU');
+    var vl = valvula('liquido'), vg = valvula('gas');
+    var fl = vl ? funcionDe(vl.tag, vl.lazo) : null, fg = vg ? funcionDe(vg.tag, vg.lazo) : null;
+    var corTxt = tCOR && tCOR.marca ? String(tCOR.marca).replace('Endress+Hauser', 'E+H') : String(corto(cor, 'Coriolis')).replace(/^coriolis\s+/i, '');
+    var placaTxt = placa ? (placa.corto || String(placa.nombre).split(' + ')[0]) : 'Placa de orificio';
     add({ id: 'entrada', sec: true, at: [-768, G.inlet.y + 28], long: nombre(eq('lineaEntrada'), 'Línea de entrada') + ' · mezcla', short: 'Mezcla',
       col: C.mezclaClaro, L: [20, 66], P: [70, 70], steps: ['choque', 'liberacion'] });
     add({ id: 'manometro', sec: true, at: [-712, -126], long: nombre(byId(sep.accesorios, 'manometro'), 'Manómetro'), short: 'PI', L: [-10, -52], P: [40, -60], steps: ['choque'] });
@@ -1345,21 +1594,26 @@
     add({ id: 'psv', at: [G.psv, -284], long: nombre(byId(sep.accesorios, 'psv'), 'PSV'), short: 'PSV', col: EQ.psvLuz, L: [-30, -44], P: [-20, -150], steps: [] });
     if (tTT) add({ id: 'TT', at: [G.tt, -232], tag: tTT.tag, long: tTT.variable, short: '', L: [0, -86], P: [0, -110], steps: [] });
     if (tTPS) add({ id: 'TPS', at: [G.tps, -246], tag: tTPS.tag, long: tTPS.variable, short: '', L: [0, -44], P: [10, -170], steps: ['liberacion', 'gas'] });
-    if (tTN) add({ id: 'TN', at: [G.tn, -243], tag: tTN.tag, long: tTN.variable, short: '', L: [-50, -90], P: [-60, -240], steps: ['nivel'] });
-    add({ id: 'LIC', sec: true, at: [G.lic.x + 36, G.lic.y + 10], tag: 'LIC', long: 'en ' + nombre(rtu, 'RTU'), short: 'RTU', L: [70, 34], P: [-40, 70], steps: ['nivel'] });
+    if (tTN) add({ id: 'TN', at: tnHead(), tag: tTN.tag, long: tTN.variable, short: '', L: G.tnLateral ? [60, -40] : [-50, -90], P: G.tnLateral ? [40, -60] : [-60, -240], steps: ['nivel'] });
+    if (fl) add({ id: 'LIC', sec: true, solo: true, at: [G.lic.x - 36, G.lic.y], tag: fl.tag, long: rtuTxt, short: 'RTU', L: [-110, 0], P: [-90, 0], steps: ['nivel'] });
+    if (fg) add({ id: 'PIC', sec: true, solo: true, at: [G.pic.x - 36, G.pic.y - 20], tag: fg.tag, long: rtuTxt, short: 'RTU', L: [-104, -12], P: [-70, -40], steps: ['gas'] });
     add({ id: 'extractor', at: [G.pad.x0 + 22, G.pad.y0 + 10], long: nombre(byId(sep.internos, 'extractor'), 'Extractor de niebla'), short: 'Extractor',
       col: C.amarillo, L: [-150, 34], P: [-100, -70], steps: ['niebla'] });
     add({ id: 'salidaGas', sec: true, at: [go.x + go.r + 8, -214], long: 'Salida de gas', short: 'Gas', col: C.gas, L: [-120, -30], P: [-110, -120], steps: ['niebla', 'gas'] });
-    add({ id: 'PV', at: [G.pv + 30, go.yH - 104], tag: 'PV', long: 'Contrapresión', short: '', L: [-60, -40], P: [10, -110], steps: ['gas'] });
-    add({ id: 'placa', sec: true, at: [G.ori, go.yH - 124], tag: tTDG ? tTDG.tag : 'TDG', long: placa ? String(placa.nombre).split(' + ')[0] : 'Placa de orificio', short: '',
-      L: [40, -30], P: [-40, -70], steps: ['gas'] });
-    add({ id: 'registro', sec: true, at: [G.xT + G.A + 52, -G.manway.r + 6], long: nombre(byId(sep.accesorios, 'registro'), 'Registro'), short: 'Registro', L: [60, 70], P: [-60, -330], steps: [] });
+    add({ id: 'placa', sec: true, at: [G.ori - 14, go.yH - 112], tag: tTDG ? tTDG.tag : 'TDG', long: placaTxt, short: '',
+      L: [-84, -22], P: [-30, -60], L0: [-70, -36], steps: ['gas'] });
+    if (vg) add({ id: 'PV', at: [G.pv + 38, go.yH - 98], tag: vg.tag,
+      dyn: function (S) { return (S.long ? nombreCorto(vg.nombre) + ' · ' : '') + Math.round(S.openPV) + ' %'; }, short: '',
+      L: [72, 36], P: [20, 70], steps: ['gas'] });
+    add({ id: 'registro', sec: true, at: [G.xT + G.A + 52, -G.manway.r + 6], long: nombre(byId(sep.accesorios, 'registro'), 'Registro'), short: 'Registro', L: [96, -36], P: [-60, -330], steps: [] });
     add({ id: 'salidaLiq', sec: true, at: [lo.x - lo.r - 6, 200], long: 'Salida de líquido (aceite + agua)', short: 'Líquido', col: C.ambar, L: [-150, 70], P: [-140, 150], steps: ['nivel'] });
-    add({ id: 'LV', at: [G.lv - 40, lo.yH - 92], tag: 'LV', dyn: function (S) { return (S.long ? 'Control de nivel · ' : '') + Math.round(S.open) + ' %'; }, short: '',
-      L: [-20, 100], P: [-30, 150], steps: ['nivel'] });
-    add({ id: 'coriolis', sec: true, at: [G.cor, lo.yH + 30], tag: tCOR ? tCOR.tag : 'CORIOLIS', long: tCOR ? String(tCOR.marca).replace('Endress+Hauser', 'E+H') : '', short: '',
-      L: [10, 60], P: [-40, 100], steps: ['nivel'] });
-    add({ id: 'nivel', at: function (S) { return [G.tn + 4, S.lvl]; }, dyn: function (S) { return 'Nivel ' + Math.round(S.lvlPct) + ' %' + (S.em.nivel > 0.3 ? ' · SP ' + Math.round(S.spPct) + ' %' : ''); },
+    if (vl) add({ id: 'LV', at: [G.lv - 38, lo.yH - 98], tag: vl.tag,
+      dyn: function (S) { return (S.long ? nombreCorto(vl.nombre) + ' · ' : '') + Math.round(S.open) + ' %'; }, short: '',
+      L: [-72, -52], P: [-40, -70], at0: [G.lv + 38, lo.yH - 92], L0: [60, 112], P0: [20, 150], steps: ['nivel'] });
+    add({ id: 'coriolis', sec: true, at: [G.cor - 22, lo.yH - 78], tag: tCOR ? tCOR.tag : 'CORIOLIS', long: corTxt, short: '',
+      L: [-96, -46], P: [-60, -60], at0: [G.cor, lo.yH + 30], L0: [-20, 58], P0: [-40, 100], steps: ['nivel'] });
+    add({ id: 'nivel', at: function (S) { return [G.tnLateral ? G.xT - 60 : tnX() + 4, S.lvl]; },
+      dyn: function (S) { return 'Nivel ' + Math.round(S.lvlPct) + ' %' + (S.em.nivel > 0.3 ? ' · SP ' + Math.round(S.spPct) + ' %' : ''); },
       col: C.celeste, L: [110, 40], P: [90, 40], steps: ['nivel'] });
     add({ id: 'asentamiento', zona: true, at: [-20, -58], long: nombre(byId(sep.internos, 'asentamiento'), 'Sección de asentamiento'), short: 'Asentamiento', steps: ['asentamiento'] });
     return out;
@@ -1371,9 +1625,11 @@
     for (var i = 0; i < labels.length; i++) {
       var lab = labels[i], rel = !S.stepId || lab.steps.indexOf(S.stepId) >= 0 || S.resaltar === lab.id;
       if (lab.sec && S.small && !(S.stepId && rel)) continue;
+      if (lab.solo && !((S.stepId && lab.steps.indexOf(S.stepId) >= 0) || S.resaltar === lab.id)) continue; // solo en su paso
       var a = (rel ? 1 : 1 - S.dimLabels) * S.labelAlpha;
       if (a < 0.03) continue;
-      var w = typeof lab.at === 'function' ? lab.at(S) : lab.at, p = S.toScreen(w[0], w[1]);
+      var ov = S.paso === 0 && !S.resaltar, at = (ov && lab.at0) || lab.at;  // en la vista general algunos rótulos van en otro lado
+      var w = typeof at === 'function' ? at(S) : at, p = S.toScreen(w[0], w[1]);
       if (p.x < -10 || p.x > W + 10 || p.y < -10 || p.y > H + 10) continue;
       if (lab.zona) {
         var zs = fs * 1.05;
@@ -1393,7 +1649,7 @@
       var name = lab.dyn ? lab.dyn(S) : (S.long ? lab.long : lab.short);
       if (name) parts.push({ t: name, col: '#eef5fb', w: '600' });
       if (!parts.length) continue;
-      var off = lab[S.lay] || [0, -40], c = { x: p.x + off[0] * S.ui, y: p.y + off[1] * S.ui };
+      var off = (ov && lab[S.lay + '0']) || lab[S.lay] || [0, -40], c = { x: p.x + off[0] * S.ui, y: p.y + off[1] * S.ui };
       var mm = chip(ctx, 0, 0, parts, fs, 1, { measure: true });
       var r = { x: c.x - mm.w / 2, y: c.y - mm.h / 2, w: mm.w, h: mm.h };
       r.x = clamp(r.x, m, W - m - r.w); r.y = clamp(r.y, m, H - m - r.h);
@@ -1433,7 +1689,7 @@
     var eh = fs * 1.2, ch = pad * 2 + eh + tl.length * tfs * 1.08 + (bl.length ? fs * 0.6 + bl.length * fs * 1.42 : 0);
     ch = Math.max(ch, pad * 2 + nr * 2);
     var r = { x: m, y: m + (1 - k1) * -10, w: cw, h: ch };
-    var anc = info.id === 'nivel' ? [G.tn, S.lvl] : st.ancla, p = S.toScreen(anc[0], anc[1]);
+    var anc = info.id === 'nivel' ? [tnX(), S.lvl] : st.ancla, p = S.toScreen(anc[0], anc[1]);
     // línea guía
     var e, mid;
     if (S.lay === 'L' && p.x > r.x + r.w + 12) { e = { x: r.x + r.w, y: r.y + r.h / 2 }; mid = { x: p.x, y: e.y }; }
@@ -1564,6 +1820,77 @@
     return { x: x, y: y, w: cw, h: ch };
   }
 
+  /* Tarjeta de lectura del medidor (pasos 5 y 6): lo que mide el Coriolis en la
+     salida de líquido y la placa de orificio (TDG) en la de gas, ANTES de la
+     válvula de control. Valores de WT.data.demo (simulados, con aviso). */
+  function readingRows(S) {
+    var D = WT.data || {}, demo = D.demo || {}, U = WT.util || {};
+    function inst(tag) { return U.instrumento ? U.instrumento(tag) : null; }
+    function vr(id) { var L = D.variables || []; for (var i = 0; i < L.length; i++) if (L[i].id === id) return L[i]; return null; }
+    var rows = [], head = null, k = 0;
+    if (S.em.nivel > 0.01 && S.em.nivel >= S.em.gas) {
+      var ic = inst('CORIOLIS'), eqc = U.equipo ? U.equipo('coriolis') : null, qv = vr('qMezcla'), av = vr('pctAgua');
+      if (!ic || demo.qMezcla == null) return null;
+      k = S.em.nivel;
+      head = [ic.tag, ic.marca ? String(ic.marca).replace('Endress+Hauser', 'E+H') : (eqc && eqc.corto) || 'Coriolis'];
+      var q = demo.qMezcla * (1 + 0.18 * (S.open - 50) / 46);   // sigue a la apertura de la LV (aguas abajo)
+      rows.push(['', qv ? qv.nombre : 'Q líquido', fmt(q, 0) + ' ' + (qv ? qv.unidad : 'bpd')]);
+      if (demo.densidad != null && !S.small) rows.push(['', 'Densidad', fmt(demo.densidad, 0) + ' kg/m³']);
+      if (demo.pctAgua != null) rows.push(['', av ? av.nombre : '% Agua', fmt(demo.pctAgua, 1) + ' %']);
+    } else if (S.em.gas > 0.01) {
+      var it = inst('TDG'), ip = inst('TPS'), gv = vr('qGas'), fq = funcionQueMide(it ? it.tag : 'TDG');
+      var placa = U.equipo ? U.equipo('placa') : null;
+      if (!it || demo.dpGas == null) return null;
+      k = S.em.gas;
+      head = [it.tag, (placa && placa.corto) || 'Placa de orificio'];
+      var dp = demo.dpGas * (1 + 0.035 * Math.sin(S.t * 0.9) + 0.02 * Math.sin(S.t * 2.3 + 1));
+      rows.push(['', 'Presión diferencial', fmt(dp, 0) + ' ' + it.unidad]);
+      if (demo.qGas != null) rows.push([fq ? fq.tag : '', gv ? gv.nombre : 'Q gas', fmt(demo.qGas * Math.sqrt(dp / demo.dpGas), 2) + ' ' + (gv ? gv.unidad : 'MMpcd')]);
+      if (ip && demo.pSep != null && !S.small) rows.push([ip.tag, ip.variable, fmt(demo.pSep, 1) + ' ' + ip.unidad]);
+    }
+    return head ? { head: head, rows: rows, k: k, aviso: demo.aviso || 'Valores simulados' } : null;
+  }
+  function drawReadingCard(ctx, S) {
+    if (!S.lecturas || S.small) return null;   // en pantallas chicas taparía el medidor y la válvula
+    var R = readingRows(S); if (!R) return null;
+    var k = R.k * S.kx; if (k < 0.02) return null;
+    var fs = S.fs, m = Math.round(16 * S.ui + 4), pad = fs * 0.8, lh = fs * 1.62, i;
+    ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+    var wt = 0, wn = 0, wv = 0;
+    ctx.font = font('700', fs * 0.86, 'mono');
+    for (i = 0; i < R.rows.length; i++) if (R.rows[i][0]) wt = Math.max(wt, ctx.measureText(R.rows[i][0]).width + fs * 0.6);
+    ctx.font = font('600', fs, 'body');
+    for (i = 0; i < R.rows.length; i++) wn = Math.max(wn, ctx.measureText(R.rows[i][1]).width);
+    ctx.font = font('700', fs * 1.08, 'mono');
+    for (i = 0; i < R.rows.length; i++) wv = Math.max(wv, ctx.measureText(R.rows[i][2]).width);
+    ctx.font = font('700', fs * 0.86, 'mono'); var wh = ctx.measureText(R.head[0]).width;
+    ctx.font = font('700', fs * 1.12, 'cond'); wh += fs * 0.5 + ctx.measureText(R.head[1]).width;
+    var cw = Math.max(pad * 2 + wt + wn + fs * 1.2 + wv, pad * 2 + wh), hh = fs * 1.7;
+    var ch = pad * 2 + hh + lh * R.rows.length + fs * 1.15;
+    var x = S.lay === 'P' ? (S.W - cw) / 2 : m, y = S.H - m - ch - (S.lay === 'P' ? Math.max(10, fs * 0.78) * 1.2 : 0);
+    if (cw > S.W - 2 * m) { cw = S.W - 2 * m; x = m; }
+    ctx.save(); ctx.globalAlpha = k;
+    ctx.fillStyle = 'rgba(6,22,49,0.92)'; roundRect(ctx, x, y, cw, ch, 10); ctx.fill();
+    ctx.strokeStyle = 'rgba(169,220,247,0.28)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = C.celeste; ctx.fillRect(x, y + 10, 3, ch - 20);
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    var hy = y + pad + hh / 2;
+    ctx.fillStyle = C.amarillo; ctx.font = font('700', fs * 0.86, 'mono'); ctx.fillText(R.head[0], x + pad, hy);
+    var hx = x + pad + ctx.measureText(R.head[0]).width + fs * 0.5;
+    ctx.fillStyle = '#ffffff'; ctx.font = font('700', fs * 1.12, 'cond'); ctx.fillText(R.head[1], hx, hy);
+    ctx.strokeStyle = 'rgba(169,220,247,0.18)'; ctx.beginPath(); ctx.moveTo(x + pad, y + pad + hh); ctx.lineTo(x + cw - pad, y + pad + hh); ctx.stroke();
+    for (i = 0; i < R.rows.length; i++) {
+      var ry = y + pad + hh + lh * i + lh / 2 + 2;
+      if (R.rows[i][0]) { ctx.textAlign = 'left'; ctx.fillStyle = C.amarillo; ctx.font = font('700', fs * 0.86, 'mono'); ctx.fillText(R.rows[i][0], x + pad, ry); }
+      ctx.textAlign = 'left'; ctx.fillStyle = '#dfe9f3'; ctx.font = font('600', fs, 'body'); ctx.fillText(R.rows[i][1], x + pad + wt, ry);
+      ctx.textAlign = 'right'; ctx.fillStyle = '#ffffff'; ctx.font = font('700', fs * 1.08, 'mono'); ctx.fillText(R.rows[i][2], x + cw - pad, ry);
+    }
+    ctx.textAlign = 'left'; ctx.fillStyle = '#7f97b3'; ctx.font = font('500', fs * 0.78, 'body');
+    ctx.fillText(R.aviso, x + pad, y + ch - pad - fs * 0.2);
+    ctx.restore();
+    return { x: x, y: y, w: cw, h: ch };
+  }
+
   function drawHeaderAndNote(ctx, S) {
     ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
     var fs = S.fs, m = Math.round(16 * S.ui + 4), out = [];
@@ -1590,17 +1917,23 @@
      ================================================================== */
   function levelY(t, amp) { return G.spY - amp * (Math.sin(t * TAU / 14) + 0.3 * Math.sin(t * TAU / 5.3 + 1.1)); }
   function pct(y) { return (G.Ri - y) / (2 * G.Ri) * 100; }
-  var ANCH = {
-    deflector: [-432, -69], extractor: [320, -92], asentamiento: [-20, -40], TN: [G.tn, -243], TPS: [G.tps, -246], TT: [G.tt, -232],
-    psv: [G.psv, -280], LV: [G.lv, G.liqOut.yH], PV: [G.pv, G.gasOut.yH], coriolis: [G.cor, G.liqOut.yH], CORIOLIS: [G.cor, G.liqOut.yH],
-    placa: [G.ori, G.gasOut.yH], TDG: [G.ori, G.gasOut.yH - 110], entrada: [-700, G.inlet.y], manometro: [-712, -126],
-    registro: [G.xT + G.A + 40, 0], LIC: [G.lic.x, G.lic.y], salidaGas: [G.gasOut.x, -200], salidaLiq: [G.liqOut.x, 200], separador: [0, 0]
-  };
+  /* Anclas para c.anchor(id) (coordenadas de dibujo; se actualizan en create según el montaje del TN) */
+  var ANCH = {};
+  function buildAnchors() {
+    var A = {
+      deflector: [-432, -69], extractor: [320, -92], asentamiento: [-20, -40], TN: tnHead(), TPS: [G.tps, -246], TT: [G.tt, -232],
+      psv: [G.psv, -280], LV: [G.lv, G.liqOut.yH], PV: [G.pv, G.gasOut.yH], coriolis: [G.cor, G.liqOut.yH], CORIOLIS: [G.cor, G.liqOut.yH],
+      placa: [G.ori, G.gasOut.yH], TDG: [G.ori, G.gasOut.yH - 110], entrada: [-700, G.inlet.y], manometro: [-712, -126],
+      registro: [G.xT + G.A + 40, 0], LIC: [G.lic.x, G.lic.y], PIC: [G.pic.x, G.pic.y], rtu: [G.lic.x, G.lic.y],
+      salidaGas: [G.gasOut.x, -200], salidaLiq: [G.liqOut.x, 200], separador: [0, 0]
+    };
+    for (var k in A) ANCH[k] = A[k];
+  }
 
   WT.Cutaway = {
     create: function (container, opts) {
       opts = opts || {};
-      loadColors();
+      loadColors(); loadConfig(); buildZones(); buildAnchors();
       var sep = (WT.data && WT.data.separador) || {};
       var root = document.createElement('div');
       root.className = 'wt-cutaway';
@@ -1682,12 +2015,15 @@
           openPV: 48 + 7 * Math.sin(t * 0.37 + 0.6), ui: ui, fs: clamp(12.5 * ui, 10.5, 30),
           long: lay === 'L' ? W >= 760 : W >= 520, small: Math.min(W, H) < 480, etiquetas: st.etiquetas == null ? state.labels : !!st.etiquetas,
           texto: !!st.texto, labelAlpha: smooth(seg(ap, 0.75, 1)),
+          lecturas: st.lecturas == null ? (st.etiquetas == null ? state.labels : !!st.etiquetas) : !!st.lecturas,
+          orden: st.orden == null ? (st.etiquetas == null ? state.labels : !!st.etiquetas) : !!st.orden,
           cutX: ap < 1 ? lerp(-G.xT - G.A - 14, G.xT + G.A + 14, easeInOut(seg(ap, 0.08, 0.92))) : Infinity
         };
         S.toScreen = function (x, y) { return { x: W / 2 + (x - cx) * scale, y: H / 2 + (y - cy) * scale }; };
         S.world = function (c) { c.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * (W / 2 - cx * scale), dpr * (H / 2 - cy * scale)); };
         S.view = { x0: cx - W / 2 / scale, x1: cx + W / 2 / scale, y0: cy - H / 2 / scale, y1: cy + H / 2 / scale };
         S.front = liquidFront(S);
+        S.loops = loopsOf(S);
 
         // ---- dibujo
         ctx.save();
@@ -1726,6 +2062,7 @@
         var rc = (st.rotuloPaso == null ? S.etiquetas : !!st.rotuloPaso) ? drawCallout(ctx, S) : null; if (rc) reserved.push(rc);
         var rm = drawMagnifier(ctx, S); if (rm) reserved.push(rm);
         var rp = drawPressureCard(ctx, S); if (rp) reserved.push(rp);
+        var rl = drawReadingCard(ctx, S); if (rl) reserved.push(rl);
         S.reserved = reserved;
         if (S.etiquetas) drawLabels(ctx, S, labels);
         ctx.restore();
@@ -1744,7 +2081,7 @@
         setLayout: function (l) { state.layout = l === 'portrait' ? 'portrait' : 'landscape'; return self; },
         anchor: function (name) {
           var S = state.last; if (!S) return null;
-          var w = name === 'nivel' ? [G.tn, S.lvl] : ANCH[name]; if (!w) return null;
+          var w = name === 'nivel' ? [tnX(), S.lvl] : ANCH[name]; if (!w) return null;
           return S.toScreen(w[0], w[1]);
         },
         dispose: function () { if (root.parentNode) root.parentNode.removeChild(root); state.last = null; }
@@ -1755,8 +2092,8 @@
   };
 
   /* Fuentes que usa el lienzo (para precargarlas antes de capturar cuadros de video) */
-  WT.Cutaway.fuentes = ['700 20px "Barlow Condensed"', '800 20px "Barlow Condensed"', '400 20px "Barlow"', '500 20px "Barlow"',
-    '600 20px "Barlow"', '700 20px "JetBrains Mono"'];
+  WT.Cutaway.fuentes = ['600 20px "Barlow Condensed"', '700 20px "Barlow Condensed"', '800 20px "Barlow Condensed"', '400 20px "Barlow"',
+    '500 20px "Barlow"', '600 20px "Barlow"', '700 20px "JetBrains Mono"'];
   WT.Cutaway.cargarFuentes = function () {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
     return Promise.all(WT.Cutaway.fuentes.map(function (f) { return document.fonts.load(f).catch(function () { return null; }); }));

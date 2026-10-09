@@ -97,7 +97,6 @@
   .ficha dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; font-size: 13px; }
   .ficha dt { color: var(--muted); font-weight: 600; }
   .ficha dd { margin: 0; color: var(--fg); }
-  .ficha .conf { margin-top: 8px; font-size: 12px; color: var(--warn); }
 
   /* corrientes */
   .streams { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; animation: wt-rise .9s .16s var(--ease) both; }
@@ -146,7 +145,6 @@
   tbody tr:focus-visible { outline: 3px solid var(--rb-celeste); outline-offset: -3px; }
   td.tg { font: 700 13px var(--font-mono); color: var(--rb-amarillo); white-space: nowrap; }
   td.isa { font: 700 14px var(--font-display); white-space: nowrap; }
-  td .wt-confirmar { font-size: 11.5px; white-space: nowrap; }
   .note { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
 
   @keyframes wt-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
@@ -177,7 +175,7 @@
     tbody { display: grid; gap: 10px; }
     tbody tr { display: grid; grid-template-columns: auto auto 1fr; gap: 2px 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(6,22,49,.45); }
     td { border: 0; padding: 0; }
-    td.tg { grid-column: 1; } td.isa { grid-column: 2; } td.est { grid-column: 3; justify-self: end; }
+    td.tg { grid-column: 1; } td.isa { grid-column: 2; }
     td.var { grid-column: 1 / -1; color: var(--fg); font-weight: 600; margin-top: 4px; }
     td.pt, td.un, td.sg { grid-column: 1 / -1; color: var(--fg-2); font-size: 13px; }
     td.pt::before { content: 'Punto: '; color: var(--muted); }
@@ -328,11 +326,11 @@
       <h2>Lista de instrumentos</h2>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th scope="col">Tag</th><th scope="col">ISA</th><th scope="col">Variable</th><th scope="col">Punto de medición</th><th scope="col">Unidad</th><th scope="col">Señal</th><th scope="col">Estado</th></tr></thead>
+          <thead><tr><th scope="col">Tag</th><th scope="col">ISA</th><th scope="col">Variable</th><th scope="col">Punto de medición</th><th scope="col">Unidad</th><th scope="col">Señal</th></tr></thead>
           <tbody id="tblBody"></tbody>
         </table>
       </div>
-      <p class="note">Pase el cursor o toque una fila para ubicar el instrumento en el DTI. «Por confirmar»: asignación tag ↔ variable a validar con el área técnica.</p>
+      <p class="note">Pase el cursor o toque una fila para ubicar el instrumento en el DTI.</p>
     </article>
   </section>
 </main>
@@ -576,19 +574,27 @@
     var v = isa.indexOf('PD') === 0 ? 'PD' : isa.charAt(0), f = isa.slice(v.length);
     return (ISA_F[f] || '') + (ISA_V[v] || '');
   }
-  var FUNCS = {
-    LIC: { isa: 'LIC', sub: 'TN', t: 'Control de nivel', d: 'Función en el RTU: compara el nivel del TN con el punto de ajuste y posiciona la LV de la salida de líquido.' },
-    PIC: { isa: 'PIC', sub: 'TPS', t: 'Control de presión', d: 'Función en el RTU: con la presión del TPS posiciona la PV de la salida de gas para mantener la contrapresión del separador.' },
-    FQI: { isa: 'FQI', sub: 'TDG', t: 'Gasto y acumulado de gas', d: 'Función en el RTU: calcula el gasto de gas a partir del diferencial de la placa de orificio (TDG) y lo acumula para el SCADA.' },
-    PI: { isa: 'PI', sub: 'local', t: 'Manómetro local', d: 'Indicación local de presión en la línea de entrada al separador (sin señal al RTU).' }
-  };
+  /* Funciones del RTU y válvulas de control desde WT.data (con respaldo) */
+  function porTag(arr, t) { arr = arr || []; for (var i = 0; i < arr.length; i++) if (arr[i].tag === t) return arr[i]; return null; }
+  function fnD(t, def) { var f = porTag(D.funciones, t) || {}; return { tag: f.tag || t, mide: f.mide || def.mide, actua: f.actua || def.actua, desc: f.desc || def.desc }; }
+  function valv(t) { return porTag(D.valvulasControl, t) || { tag: t }; }
+  var fLIC = fnD('LIC', { mide: 'TN', actua: 'LV', desc: 'Control de nivel del separador' });
+  var fPIC = fnD('PIC', { mide: 'TPS', actua: 'PV', desc: 'Control de presión del separador (contrapresión)' });
+  var fFQI = fnD('FQI', { mide: 'TDG', desc: 'Cálculo de gasto y acumulado de gas' });
+  var vLV = valv(fLIC.actua), vPV = valv(fPIC.actua);
+  var eqCor = U.equipo('coriolis'), eqPlaca = U.equipo('placa');
+  function minus(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+  var FUNCS = {};
+  FUNCS[fLIC.tag] = { isa: fLIC.tag, sub: fLIC.mide, t: fLIC.desc, d: 'Función en el RTU: compara el nivel del ' + fLIC.mide + ' con el punto de ajuste y posiciona la ' + fLIC.actua + ' (' + minus(vLV.ubicacion || 'salida de líquido') + ').' };
+  FUNCS[fPIC.tag] = { isa: fPIC.tag, sub: fPIC.mide, t: fPIC.desc, d: 'Función en el RTU: con la presión del ' + fPIC.mide + ' posiciona la ' + fPIC.actua + ' (' + minus(vPV.ubicacion || 'salida de gas') + ') para mantener la contrapresión del separador.' };
+  FUNCS[fFQI.tag] = { isa: fFQI.tag, sub: fFQI.mide, t: fFQI.desc, d: 'Función en el RTU: calcula el gasto de gas a partir del diferencial de la placa de orificio (' + fFQI.mide + ') y lo acumula para el SCADA.' };
+  FUNCS.PI = { isa: 'PI', sub: 'local', t: 'Manómetro local', d: 'Indicación local de presión en la línea de entrada al separador (sin señal al RTU).' };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function showFicha(tag, anchorEl) {
     var ins = U.instrumento(tag), f = FUNCS[tag], html;
     if (ins) {
       html = '<div class="top"><div class="bub">' + esc(ins.isa) + '<small>' + esc(ins.tag) + '</small></div><div><h3>' + esc(ins.variable) + '</h3><div class="isa">' + esc(ins.isa) + ' · ' + esc(isaMeaning(ins.isa)) + '</div></div></div>' +
-        '<dl><dt>Tag</dt><dd>' + esc(ins.tag) + '</dd><dt>Punto</dt><dd>' + esc(ins.punto) + '</dd><dt>Unidad</dt><dd>' + esc(ins.unidad) + '</dd><dt>Marca</dt><dd>' + esc(ins.marca) + '</dd><dt>Señal</dt><dd>' + esc(ins.senal) + ' → RTU</dd></dl>' +
-        (ins.confirmar ? '<div class="conf">Asignación tag ↔ variable por confirmar</div>' : '');
+        '<dl><dt>Tag</dt><dd>' + esc(ins.tag) + '</dd><dt>Punto</dt><dd>' + esc(ins.punto) + '</dd><dt>Unidad</dt><dd>' + esc(ins.unidad) + '</dd><dt>Marca</dt><dd>' + esc(ins.marca) + '</dd><dt>Señal</dt><dd>' + esc(ins.senal) + ' → RTU</dd></dl>';
     } else if (f) {
       html = '<div class="top"><div class="bub' + (tag === 'PI' ? '' : ' fn') + '">' + esc(f.isa) + '<small>' + esc(f.sub) + '</small></div><div><h3>' + esc(f.t) + '</h3><div class="isa">' + esc(f.isa) + ' · ' + esc(isaMeaning(f.isa)) + '</div></div></div><dl><dt></dt><dd>' + esc(f.d) + '</dd></dl>';
     } else return;
@@ -730,14 +736,14 @@
   /* ---------------- tarjetas: lazos y lista ---------------- */
   var lz = document.getElementById('lazos');
   [
-    { k: 'Nivel', c: [['TN', 'LIT'], ['LIC', 'fn'], ['LV', 'v']], p: 'Al subir el nivel, el LIC abre la LV y el líquido sale hacia el Coriolis Promass 300.' },
-    { k: 'Presión', c: [['TPS', 'PIT'], ['PIC', 'fn'], ['PV', 'v']], p: 'La PV en la salida de gas mantiene la contrapresión del separador.' },
-    { k: 'Gas', c: [['TDG', 'PDIT'], ['FQI', 'fn']], p: 'El ΔP en la placa de orificio se convierte en gasto y acumulado de gas (MMpcd).' },
+    { k: 'Nivel', c: [[fLIC.mide, ''], [fLIC.tag, 'fn'], [fLIC.actua, 'v']], p: 'El líquido se mide primero en el ' + ((eqCor && eqCor.corto) || 'Coriolis') + ' y después pasa por la ' + fLIC.actua + ': al subir el nivel, el ' + fLIC.tag + ' abre la ' + fLIC.actua + '.' },
+    { k: 'Presión', c: [[fPIC.mide, ''], [fPIC.tag, 'fn'], [fPIC.actua, 'v']], p: 'El gas se mide primero en la ' + minus((eqPlaca && eqPlaca.corto) || 'Placa de orificio') + ' y después pasa por la ' + fPIC.actua + ', que mantiene la contrapresión del separador.' },
+    { k: 'Gas', c: [[fFQI.mide, ''], [fFQI.tag, 'fn']], p: 'El ΔP en la placa de orificio se convierte en gasto y acumulado de gas (MMpcd).' },
     { k: 'Monitoreo', c: [['8 tags', ''], ['RTU', 'fn'], ['SAF-900', 'fn']], p: 'Todas las señales llegan al ' + U.equipo('rtu').nombre + ' y se visualizan en el ' + U.equipo('scada').nombre + '.' }
   ].forEach(function (L) {
     var d = document.createElement('div'); d.className = 'loop';
     var ch = L.c.map(function (n) {
-      var target = U.instrumento(n[0]) || FUNCS[n[0]] ? n[0] : n[0] === 'LV' ? 'liquido' : n[0] === 'PV' ? 'gas' : n[0] === 'RTU' || n[0] === 'SAF-900' || n[0] === '8 tags' ? 'senal' : null;
+      var target = U.instrumento(n[0]) || FUNCS[n[0]] ? n[0] : n[1] === 'v' ? (n[0] === fLIC.actua ? 'lv' : n[0] === fPIC.actua ? 'pv' : valv(n[0]).corriente || null) : n[0] === 'RTU' || n[0] === 'SAF-900' || n[0] === '8 tags' ? 'senal' : null;
       return '<button type="button" class="n' + (n[1] === 'fn' ? ' fn' : '') + '" data-go="' + (target || '') + '" style="font:inherit">' + esc(n[0]) + '</button>';
     }).join('<span class="a" aria-hidden="true">→</span>');
     d.innerHTML = '<span class="k">' + L.k + '</span><span class="chain">' + ch + '</span><p>' + esc(L.p) + '</p>';
@@ -754,7 +760,7 @@
   var tb = document.getElementById('tblBody');
   D.instrumentos.forEach(function (ins) {
     var tr = document.createElement('tr'); tr.setAttribute('data-tag', ins.tag); tr.tabIndex = 0;
-    tr.innerHTML = '<td class="tg">' + esc(ins.tag) + '</td><td class="isa">' + esc(ins.isa) + '</td><td class="var">' + esc(ins.variable) + '</td><td class="pt">' + esc(ins.punto) + '</td><td class="un">' + esc(ins.unidad) + '</td><td class="sg">' + esc(ins.senal) + '</td><td class="est">' + (ins.confirmar ? '<span class="wt-confirmar">Por confirmar</span>' : 'Confirmado') + '</td>';
+    tr.innerHTML = '<td class="tg">' + esc(ins.tag) + '</td><td class="isa">' + esc(ins.isa) + '</td><td class="var">' + esc(ins.variable) + '</td><td class="pt">' + esc(ins.punto) + '</td><td class="un">' + esc(ins.unidad) + '</td><td class="sg">' + esc(ins.senal) + '</td>';
     tb.appendChild(tr);
   });
   tb.addEventListener('mouseover', function (e) { var r = e.target.closest('tr'); if (r) setHl(r.getAttribute('data-tag')); });

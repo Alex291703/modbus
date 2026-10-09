@@ -93,6 +93,9 @@
   .how-step p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--fg-2); }
   .how-step .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 6px; }
   .how-step .st { height: 4px; border-radius: 2px; width: 56px; }
+  .how-step .par { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .how-step .arr { font: 700 13px/1 var(--font-mono); color: var(--rb-amarillo); }
+  .wt-tag.vlv { background: rgba(238,245,251,0.06); color: var(--fg); border-color: var(--line-strong); }
 
   /* ---------- ENTREGABLES ---------- */
   .deliv { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
@@ -199,8 +202,6 @@
   .isa i { position: absolute; top: 12px; font-style: normal; }
   .isa u { position: absolute; bottom: 12px; text-decoration: none; font-size: 9.5px; color: var(--rb-celeste-200); }
   .inst td strong { color: var(--fg); font-weight: 600; }
-  .inst sup { color: var(--warn); font-weight: 700; }
-  .inst-note { margin: 12px 4px 0; }
 
   /* ---------- GALERÍA ---------- */
   .gal { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 230px; grid-auto-flow: dense; gap: 14px; }
@@ -415,7 +416,6 @@
           <tbody class="js-inst"></tbody>
         </table>
       </div>
-      <p class="wt-note inst-note rv"><sup class="wt-confirmar">*</sup> Asignación tag ↔ variable interpretada a partir de las variables reportadas y del cableado del RTU; por confirmar con el área técnica.</p>
     </div>
   </section>
 
@@ -477,6 +477,10 @@
   function $$(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var eq = function (id) { return U.equipo(id) || { nombre: id, desc: '' }; };
+  var corto = function (id) { var e = eq(id); return e.corto || e.nombre; };
+  /* Válvula de control de cada salida (va DESPUÉS del medidor): gas → PV, líquido → LV */
+  var valv = function (corriente, fb) { var l = D.valvulasControl || []; for (var i = 0; i < l.length; i++) if (l[i].corriente === corriente) return l[i]; return { tag: fb, nombre: '' }; };
+  var V_GAS = valv('gas', 'PV'), V_LIQ = valv('liquido', 'LV');
   var SEP = D.separador, M = D.medicion;
 
   /* ====================== textos desde WT.data ====================== */
@@ -484,11 +488,11 @@
   $('.js-servicioEs').textContent = D.empresa.servicioEs;
   $('.js-lema').textContent = D.empresa.lema + '.';
   $('.js-chips').innerHTML = [
-    SEP.tipo.replace(/\s*\(.*\)/, '') + ' ' + SEP.tags.join(' / '),
+    (U.equipo('separador') ? eq('separador').nombre : SEP.tipo.replace(/\s*\(.*\)/, '')) + ' ' + SEP.tags.join(' / '),
     'Medición de ' + M.horasMedicion + ' h',
     'Circuito cerrado · sin venteo',
     'Instrumentación ' + (U.instrumento('TPS') || {}).marca,
-    eq('rtu').nombre.replace(/^RTU\s*/, 'RTU ') + ' → ' + eq('scada').nombre.replace(/\s*\(.*\)/, '')
+    eq('rtu').nombre + ' → ' + corto('scada')
   ].map(function (t) { return '<li><i aria-hidden="true"></i>' + esc(t) + '</li>'; }).join('');
   var STATS = [
     { n: M.horasMedicion, s: 'h', t: 'de medición continua en sitio' },
@@ -499,13 +503,16 @@
   $('.js-stats').innerHTML = STATS.map(function (s) { return '<div><dt><span data-n="' + s.n + '">' + s.n + '</span>' + (s.s ? '<small>' + s.s + '</small>' : '') + '</dt><dd>' + esc(s.t) + '</dd></div>'; }).join('');
   $('.js-legend').innerHTML = [['Mezcla (pozo → separador)', C.mezcla], ['Gas', C.gas], ['Líquido: aceite + agua', 'linear-gradient(90deg,' + C.liquido + ' 50%,' + C.liquidoAmbar + ' 50%)'], ['Señal de instrumento', C.senal]]
     .map(function (l) { return '<li><span class="bar" style="background:' + l[1] + '"></span>' + esc(l[0]) + '</li>'; }).join('');
-  $('.js-circuito').textContent = SEP.circuito + '. Cada corriente se mide por separado y todas las señales se concentran en el ' + eq('rtu').nombre + ' para el ' + eq('scada').nombre.replace(/\s*\(.*\)/, '') + '.';
+  // orden en cada salida: primero el medidor y después la válvula de control
+  var nw = function (t) { return '<span style="white-space:nowrap">' + esc(t) + '</span>'; };
+  $('.js-circuito').innerHTML = esc(SEP.circuito) + '. Cada corriente se mide y después pasa por su válvula de control: líquido → ' + nw(corto('coriolis')) + ' → ' + esc(V_LIQ.tag) +
+    '; gas → ' + esc(corto('placa').toLowerCase()) + ' → ' + esc(V_GAS.tag) + '. Todas las señales llegan al ' + nw(eq('rtu').nombre) + ' y al ' + nw(corto('scada')) + '.';
   $('.js-hm').textContent = M.horasMedicion;
-  $('.js-scada-eyebrow').textContent = eq('scada').nombre.replace(/\s*\(.*\)/, '') + ' · simulación en vivo';
+  $('.js-scada-eyebrow').textContent = corto('scada') + ' · simulación en vivo';
   $('.js-scada-p').textContent = eq('scada').desc + ' Aquí se recorren las ' + WT.SCADA.horas.total + ' h simuladas en un minuto: estabilización, medición de ' + M.horasMedicion + ' h y cierre.';
-  $('.js-aviso').textContent = D.demo.aviso + ' · Pase el puntero para enderezar la pantalla.';
+  $('.js-aviso').textContent = D.demo.aviso + (FINE && !REDUCED ? ' · Pase el puntero para enderezar la pantalla.' : '.');
   $('.js-ninst').textContent = D.instrumentos.length;
-  $('.js-inst-p').textContent = 'Transmisores Endress+Hauser y medidor Coriolis ' + (eq('coriolis').nombre.match(/Promass\s*\d+/) || [''])[0] + '; todos llegan al ' + eq('rtu').nombre + '. Identificación funcional según ISA-5.1.';
+  $('.js-inst-p').textContent = 'Transmisores ' + ((U.instrumento('TPS') || {}).marca || 'Endress+Hauser') + ' y medidor ' + corto('coriolis') + '; todos llegan al ' + eq('rtu').nombre + '. Identificación funcional según ISA-5.1.';
 
   /* ====================== Escena axonométrica (SVG) ====================== */
   var SVGNS = 'http://www.w3.org/2000/svg';
@@ -749,31 +756,36 @@
     I.cylY(13.4, 0.55, 1.75, 3.0, 0.07, '#7f8a95', gV, 8);
     A.TN = I.transmitter(13.4, 3.0, 0.55, gV, 0.12);
 
-    // ---- salida de gas (arriba) → PV → placa de orificio → bajada ----
+    // ---- salida de gas (arriba) → placa de orificio (TDG) → PV → bajada ----
     var gGs = sv('g', null, gM);
     var gas3 = [[13.2, vy + vr - 0.1, 0], [13.2, 3.95, 0], [16.2, 3.95, 0], [19.6, 3.95, 0], [19.6, 0.6, 0]];
     var dGas = I.pipe(gas3, 0.22 * (o.S || 27), PIPE, gGs);
-    I.cylY(15.2, 0, 3.6, 3.95, 0.05, '#7d858d', gGs, 6);          // PV: actuador
-    I.cylY(15.2, 0, 4.2, 4.5, 0.26, '#d7dbe0', gGs, 16);
-    I.box(14.95, 15.45, 3.75, 4.15, -0.2, 0.2, '#2b5642', gGs);
-    I.flange(16.9, 3.95, 0, gGs, 0.2); I.flange(17.15, 3.95, 0, gGs, 0.2);
-    A.TDG = I.transmitter(17.02, 4.12, 0, gGs, 0.18);
-    A.placa = [17.02, 3.95, 0];
+    // placa de orificio entre bridas + transmisor de presión diferencial (TDG)
+    I.flange(14.98, 3.95, 0, gGs, 0.2); I.flange(15.23, 3.95, 0, gGs, 0.2);
+    A.TDG = I.transmitter(15.1, 4.12, 0, gGs, 0.18);
+    A.placa = [15.1, 3.95, 0];
+    // PV (contrapresión), aguas abajo de la placa: cuerpo + vástago + actuador
+    I.box(17.35, 17.85, 3.75, 4.15, -0.2, 0.2, '#2b5642', gGs);
+    I.cylY(17.6, 0, 4.15, 4.22, 0.05, '#7d858d', gGs, 6);
+    I.cylY(17.6, 0, 4.22, 4.52, 0.26, '#d7dbe0', gGs, 16);
+    A.PV = [17.6, 4.52, 0];
     // soportes
     I.cylY(16.2, 0, 0, 3.85, 0.05, '#6c747c', gGs, 6); I.cylY(19.6, 0, 0, 0.5, 0.12, '#6c747c', gGs, 8);
 
-    // ---- salida de líquido (abajo) → LV → Coriolis ----
+    // ---- salida de líquido (abajo) → Coriolis → LV ----
     var gLq = sv('g', null, gM);
     var liq3 = [[13.6, vy - vr + 0.15, 0.35], [13.6, 1.45, 0.35], [15.4, 1.45, 0.35], [15.4, 0.6, 0.35], [19.45, 0.6, 0.35], [19.6, 0.6, 0]];
     var dLiq = I.pipe(liq3, 0.22 * (o.S || 27), PIPE, gLq);
-    I.box(16.0, 16.45, 0.42, 0.8, 0.15, 0.55, '#2b5642', gLq);     // LV
-    I.cylY(16.22, 0.35, 0.8, 1.05, 0.04, '#7d858d', gLq, 6);
-    I.cylY(16.22, 0.35, 1.05, 1.3, 0.22, '#d7dbe0', gLq, 14);
     // Coriolis Promass (cuerpo + cabezal)
-    I.box(17.3, 18.6, 0.42, 0.8, 0.15, 0.55, '#c9d0d7', gLq);
-    I.flange(17.3, 0.6, 0.35, gLq, 0.22); I.flange(18.6, 0.6, 0.35, gLq, 0.22);
-    A.CORIOLIS = I.transmitter(17.95, 0.8, 0.35, gLq, 0.2);
-    A.coriolis = [17.95, 0.6, 0.35];
+    I.box(15.8, 17.1, 0.42, 0.8, 0.15, 0.55, '#c9d0d7', gLq);
+    I.flange(15.8, 0.6, 0.35, gLq, 0.22); I.flange(17.1, 0.6, 0.35, gLq, 0.22);
+    A.CORIOLIS = I.transmitter(16.45, 0.8, 0.35, gLq, 0.2);
+    A.coriolis = [16.45, 0.6, 0.35];
+    // LV (control de nivel), aguas abajo del Coriolis
+    I.box(18.05, 18.5, 0.42, 0.8, 0.15, 0.55, '#2b5642', gLq);
+    I.cylY(18.27, 0.35, 0.8, 1.05, 0.04, '#7d858d', gLq, 6);
+    I.cylY(18.27, 0.35, 1.05, 1.3, 0.22, '#d7dbe0', gLq, 14);
+    A.LV = [18.27, 1.3, 0.35];
     // ---- reincorporación y línea a batería ----
     var gOut = sv('g', null, gM);
     var sal3 = [[19.6, 0.6, 0], [23.0, 0.6, 0], [27.9, 0.6, 0]];
@@ -849,12 +861,12 @@
     if (o.labels) {
       var gLb = sv('g', null, svg), LBL = [
         { a: 'arbol', t: eq('arbol').nombre, s: 'TDP · boca de pozo', dx: -60, dy: -80 },
-        { a: 'estrangulador', t: 'Estrangulador TP/TR', dx: 96, dy: -98 },
+        { a: 'estrangulador', t: corto('estrangulador'), dx: 96, dy: -98 },
         { a: 'separador', t: eq('separador').nombre + ' ' + (o.tag || SEP.tagDefault), s: 'TPS · TT · TN', dx: 64, dy: -112 },
-        { a: 'rtu', t: 'RTU ControlEdge 2020', s: 'recibe las 8 señales', dx: 176, dy: -178 },
-        { a: 'placa', t: 'Placa de orificio', s: 'TDG · gasto de gas', dx: 210, dy: -78 },
-        { a: 'caseta', t: 'Caseta · PC de campo', s: eq('scada').nombre.replace(/\s*\(.*\)/, ''), dx: 196, dy: 24 },
-        { a: 'coriolis', t: 'Coriolis ' + (eq('coriolis').nombre.match(/Promass\s*\d+/) || [''])[0], s: 'masa · densidad · % agua', dx: -70, dy: 96 },
+        { a: 'rtu', t: corto('rtu'), s: 'recibe las ' + D.instrumentos.length + ' señales', dx: 176, dy: -178 },
+        { a: 'placa', t: corto('placa') + ' → ' + V_GAS.tag, s: 'TDG: gasto de gas · ' + V_GAS.tag + ': contrapresión', dx: 262, dy: -64 },
+        { a: 'caseta', t: 'Caseta · PC de campo', s: corto('scada'), dx: 196, dy: 24 },
+        { a: 'coriolis', t: corto('coriolis') + ' → ' + V_LIQ.tag, s: 'masa · densidad · % agua · ' + V_LIQ.tag + ': nivel', dx: -30, dy: 108 },
         { a: 'bateria', t: 'A batería', s: 'TDM · TPL · circuito cerrado', dx: -20, dy: 70 }
       ];
       LBL.forEach(function (l, i) {
@@ -909,7 +921,9 @@
     arbol: '<path class="d" pathLength="1" d="M24 6v36M17 10h14M15 42h18M17 20h14v8H17zM24 24H8m0-4v8M31 24h10"/><circle class="d" pathLength="1" cx="11" cy="15" r="3"/>',
     estrangulador: '<path class="d" pathLength="1" d="M4 24h9m22 0h9M13 15l22 18V15L13 33z"/><path class="d" pathLength="1" d="M16 38L34 9m-6 0h6v6" stroke="#ffc20e"/>',
     separador: '<rect class="d" pathLength="1" x="5" y="13" width="38" height="22" rx="11"/><path class="d" pathLength="1" d="M9 27c6-2 10 2 15 0s9-2 15 0" stroke="#e8971e"/><path class="d" pathLength="1" d="M33 13V6h8M15 35v6M1 22h4"/><circle cx="18" cy="21" r="1.6" fill="#ffd23f" stroke="none"/><circle cx="23" cy="18.5" r="1.2" fill="#ffd23f" stroke="none"/><circle cx="28" cy="21.5" r="1.4" fill="#ffd23f" stroke="none"/>',
-    medicion: '<path class="d" pathLength="1" d="M3 34h8m26 0h8M11 30h26v8H11z"/><path class="d" pathLength="1" d="M15 30c0-8 18-8 18 0"/><path class="d" pathLength="1" d="M3 12h14m6 0h22M18 5v14M22 5v14" stroke="#ffd23f"/>',
+    // medidor → válvula: arriba gas (placa de orificio → PV), abajo líquido (Coriolis → LV)
+    medicion: '<path class="d" pathLength="1" d="M2 12h8m3 0h13m10 0h10M10 6v12M13 6v12M26 7l10 10V7L26 17zM31 12V5m-3 0h6" stroke="#ffd23f"/>' +
+      '<path class="d" pathLength="1" d="M2 35h3m17 0h4m10 0h10M5 31h17v8H5z"/><path class="d" pathLength="1" d="M8 31c0-6 11-6 11 0"/><path class="d" pathLength="1" d="M26 30l10 10V30L26 40zM31 35v-7m-3 0h6"/>',
     bateria: '<path class="d" pathLength="1" d="M4 10h12c6 0 8 14 14 14h6M4 38h12c6 0 8-14 14-14"/><path class="d" pathLength="1" d="M36 24h8m-5-5l5 5-5 5" stroke="#ffc20e"/>',
     scada: '<rect class="d" pathLength="1" x="15" y="8" width="30" height="22" rx="2"/><path class="d" pathLength="1" d="M19 24l5-6 5 3 6-8 6 4M26 36h8M30 30v6" stroke="#4fb3e8"/><rect class="d" pathLength="1" x="3" y="16" width="8" height="20" rx="1"/><path class="d" pathLength="1" d="M11 22h4" stroke="#4fb3e8"/>'
   };
@@ -917,7 +931,8 @@
     { id: 'arbol', eqs: ['arbol'], tags: ['TDP'], st: C.mezcla },
     { id: 'estrangulador', eqs: ['estrangulador', 'manifold'], tags: [], st: C.mezcla },
     { id: 'separador', eqs: ['separador'], tags: ['TPS', 'TT', 'TN'], st: 'linear-gradient(90deg,' + C.mezcla + ',' + C.gas + ')' },
-    { id: 'medicion', titulo: 'Medición de líquido y gas', eqs: ['coriolis', 'placa'], tags: ['CORIOLIS', 'TDG'], st: 'linear-gradient(90deg,' + C.liquidoAmbar + ' 50%,' + C.gas + ' 50%)' },
+    // en cada salida: primero el medidor y después la válvula de control
+    { id: 'medicion', titulo: 'Medición de líquido y gas', eqs: ['coriolis', 'placa'], tags: [], pares: [['CORIOLIS', V_LIQ.tag], ['TDG', V_GAS.tag]], st: 'linear-gradient(90deg,' + C.liquidoAmbar + ' 50%,' + C.gas + ' 50%)' },
     { id: 'bateria', titulo: 'Reincorporación a batería', eqs: ['recombinacion', 'lineaBateria'], tags: ['TDM', 'TPL'], st: C.salida },
     { id: 'scada', titulo: 'RTU → SCADA', eqs: ['rtu', 'scada'], tags: [], st: C.senal }
   ];
@@ -925,8 +940,12 @@
     var e0 = eq(s.eqs[0]);
     var titulo = s.titulo || (s.id === 'estrangulador' ? 'Estrangulador TP/TR' : e0.nombre);
     var txt = s.eqs.map(function (id) { return eq(id).desc; }).join(' ');
+    if (s.id === 'medicion') txt = s.eqs.map(function (id) { var d = eq(id).desc; return corto(id) + ' ' + d.charAt(0).toLowerCase() + d.slice(1); }).join(' ');
     if (s.id === 'scada') txt = eq('rtu').nombre + ': ' + eq('rtu').desc.charAt(0).toLowerCase() + eq('rtu').desc.slice(1) + ' ' + eq('scada').desc;
     var tags = s.tags.filter(function (t) { return U.instrumento(t); }).map(function (t) { return '<span class="wt-tag">' + esc(t) + '</span>'; }).join('');
+    if (s.pares) tags += s.pares.filter(function (p) { return U.instrumento(p[0]); }).map(function (p) {
+      return '<span class="par"><span class="wt-tag">' + esc(p[0]) + '</span><span class="arr" aria-label="y después">→</span><span class="wt-tag vlv">' + esc(p[1]) + '</span></span>';
+    }).join('');
     return '<li class="how-step wt-card rv" style="--d:' + i + '"><span class="st" style="background:' + s.st + '" aria-hidden="true"></span>' +
       '<div class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="#a9dcf7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + ICONS[s.id] + '</svg><span class="num">' + String(i + 1).padStart(2, '0') + '</span></div>' +
       '<div class="txt"><h3>' + esc(titulo) + '</h3><p>' + esc(txt) + '</p>' + (tags ? '<div class="tags" aria-label="Instrumentos">' + tags + '</div>' : '') + '</div></li>';
@@ -970,16 +989,18 @@
     },
     dti: function () {
       function bub(x, y, a, b) { return '<g><circle cx="' + x + '" cy="' + y + '" r="13" fill="#071a36" stroke="#eef5fb" stroke-width="1.4"/><path d="M' + (x - 13) + ' ' + y + 'h26" stroke="#eef5fb" stroke-width="1"/><text x="' + x + '" y="' + (y - 3) + '" text-anchor="middle" font-size="7.5" font-family="JetBrains Mono" fill="#eef5fb">' + a + '</text><text x="' + x + '" y="' + (y + 9) + '" text-anchor="middle" font-size="6.5" font-family="JetBrains Mono" fill="#a9dcf7">' + b + '</text></g>'; }
-      var I2 = D.instrumentos;
+      var it = function (tag) { return U.instrumento(tag) || { isa: '', tag: tag }; };
       return '<svg viewBox="0 0 320 200" aria-hidden="true"><rect width="320" height="200" fill="#0a2142"/><path d="M0 20h320M0 40h320M0 60h320M0 80h320M0 100h320M0 120h320M0 140h320M0 160h320M0 180h320M20 0v200M40 0v200M60 0v200M80 0v200M100 0v200M120 0v200M140 0v200M160 0v200M180 0v200M200 0v200M220 0v200M240 0v200M260 0v200M280 0v200M300 0v200" stroke="#a9dcf7" stroke-opacity=".07"/>' +
         '<rect x="8" y="8" width="304" height="184" fill="none" stroke="#eef5fb" stroke-opacity=".5"/>' +
         '<path d="M28 112h22l8-6v12l8-6h40" stroke="' + C.mezclaClaro + '" stroke-width="2" fill="none"/>' +
         '<rect x="106" y="94" width="78" height="36" rx="18" fill="none" stroke="#eef5fb" stroke-width="2"/>' +
         '<path d="M170 94V70h92v56" stroke="' + C.gas + '" stroke-width="2" fill="none"/><path d="M168 130v14h94" stroke="' + C.liquidoAmbar + '" stroke-width="2" fill="none"/>' +
         '<path d="M262 126v18h40" stroke="' + C.mezclaClaro + '" stroke-width="2.4" fill="none"/><path d="M296 140l6 4-6 4" fill="none" stroke="' + C.mezclaClaro + '" stroke-width="2"/>' +
-        '<path d="M206 64l10 6-10 6zM226 64l-10 6 10 6z" fill="none" stroke="#eef5fb" stroke-width="1.4"/><path d="M200 138l10 6-10 6zM220 138l-10 6 10 6z" fill="none" stroke="#eef5fb" stroke-width="1.4"/>' +
-        '<path d="M40 112V58M145 94V58M240 70V44M240 144v20M282 144V172" stroke="#4fb3e8" stroke-width="1.2" stroke-dasharray="3 3" class="pulse"/>' +
-        bub(40, 46, I2[0].isa, I2[0].tag) + bub(145, 46, I2[1].isa, I2[1].tag) + bub(240, 32, I2[5].isa, I2[5].tag) + bub(240, 176, 'FIT', 'COR') +
+        // medidor → válvula en cada salida: gas = placa de orificio (TDG) → PV; líquido = Coriolis → LV
+        '<path d="M197 62v16M203 62v16" stroke="#eef5fb" stroke-width="1.6"/><rect x="190" y="139" width="20" height="10" rx="2" fill="#0a2142" stroke="#eef5fb" stroke-width="1.4"/>' +
+        '<path d="M226 64l10 6-10 6zM246 64l-10 6 10 6z" fill="none" stroke="#eef5fb" stroke-width="1.4"/><path d="M226 138l10 6-10 6zM246 138l-10 6 10 6z" fill="none" stroke="#eef5fb" stroke-width="1.4"/>' +
+        '<path d="M40 112V58M145 94V58M200 62V44M200 149v14M282 144V172" stroke="#4fb3e8" stroke-width="1.2" stroke-dasharray="3 3" class="pulse"/>' +
+        bub(40, 46, it('TDP').isa, it('TDP').tag) + bub(145, 46, it('TPS').isa, it('TPS').tag) + bub(200, 32, it('TDG').isa, it('TDG').tag) + bub(200, 176, it('CORIOLIS').isa, 'COR') +
         '<rect x="214" y="168" width="0" height="0"/><rect x="248" y="8" width="64" height="22" fill="#071a36" stroke="#eef5fb" stroke-opacity=".5"/><text x="280" y="23" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ffc20e">DTI · ISA</text></svg>';
     }
   };
@@ -1083,7 +1104,7 @@
   /* ====================== Instrumentación ====================== */
   $('.js-inst').innerHTML = D.instrumentos.map(function (it) {
     return '<tr><td class="is"><span class="isa" aria-label="ISA ' + esc(it.isa) + '"><i>' + esc(it.isa) + '</i><u>' + esc(it.tag.length > 4 ? it.tag.slice(0, 3) : it.tag) + '</u></span></td>' +
-      '<td class="tg"><span class="wt-tag">' + esc(it.tag) + '</span>' + (it.confirmar ? '<sup title="Por confirmar">*</sup>' : '') + '</td>' +
+      '<td class="tg"><span class="wt-tag">' + esc(it.tag) + '</span></td>' +
       '<td><strong>' + esc(it.variable) + '</strong><br><span class="wt-note">' + esc(it.unidad) + '</span></td><td>' + esc(it.punto) + '</td><td>' + esc(it.marca) + '<br><span class="wt-note">' + esc(it.senal) + '</span></td></tr>';
   }).join('');
 
@@ -1114,7 +1135,7 @@
     '<strong>' + esc(D.empresa.nombre) + ' · ' + esc(D.empresa.servicio) + '</strong> — ' + esc(D.empresa.lema) + '.',
     'Logotipo <strong>provisional</strong>: reemplace <code>assets/logo-rbtec.svg</code> y <code>assets/logo-rbtec-blanco.svg</code> por el oficial, con el mismo nombre.',
     'SCADA: <strong>' + esc(D.demo.aviso.toLowerCase()) + '</strong>; no corresponden a un pozo real.',
-    'Distribución de la macropera aproximada; datos del separador ' + esc(SEP.tags.join(' / ')) + ' por capturar. Todos los datos técnicos se corrigen en <code>js/data.js</code>.'
+    'Distribución de la macropera y DTI con fines ilustrativos · sin escala.'
   ].map(function (t) { return '<li>' + t + '</li>'; }).join('');
 
   /* ====================== Revelado y contadores ====================== */

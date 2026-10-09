@@ -13,6 +13,8 @@
       desempeño (ISA-101: fondo gris pizarra, color solo donde informa).
       renderAt(h, { resaltar, t }) pinta la hora simulada h; no depende
       del cuadro anterior (el video HyperFrames busca cuadros arbitrarios).
+      Mímico en el orden del proceso: gas → placa de orificio (TDG) → PV;
+      líquido → Coriolis → LV; ambas corrientes se reincorporan a batería.
    Todos los valores son SIMULADOS (WT.data.demo.aviso).
    ===================================================================== */
 (function () {
@@ -31,8 +33,8 @@
   var HTOT = HEND + 2;                       // horizonte de la simulación (28 h con los valores actuales)
   var BBL_M3 = 0.158987294928;               // m³ por barril
 
-  /* Color local para el agua (no existe en WT.data.colores; ver sugerencias) */
-  var AGUA = '#3d8fd1';
+  /* Color del agua (% agua / Q agua) desde WT.data.colores, con respaldo */
+  var AGUA = C.agua || '#3d8fd1';
   /* Plumas de tendencia: 3 tonos categóricos validados (all-pairs, modo oscuro, fondo #1e2328) */
   var PEN = ['#3987e5', '#d95926', '#199e70'];
 
@@ -69,14 +71,18 @@
   function slug(h) { return 1 + 1.6 * Math.exp(-h / 0.55); }                 // agitación al abrir el pozo
   function deriva(h) { return U.clamp((h - HS) / HM, 0, 1) - 0.5; }          // −0.5 → +0.5 durante la medición
 
-  var RHO_AGUA = 1030;                                                        // kg/m³ agua de formación
+  function num(v, fb) { return typeof v === 'number' && isFinite(v) ? v : fb; }
+  var RHO_AGUA = num(DM.densidadAgua, 1030);                                  // kg/m³ agua de formación
   var PA0 = DM.pctAgua / 100;
   var RHO_ACEITE = (DM.densidad - PA0 * RHO_AGUA) / (1 - PA0);               // aceite coherente con demo.densidad
   var P_LINEA = DM.pBateria - 0.3;                                            // presión estática de la línea antes de abrir
   var P_CIERRE = DM.pPozo * 1.34;                                             // presión en boca de pozo cerrado
-  var T_AMB = 29;                                                             // °C ambiente al arrancar
+  var T_AMB = num(DM.tAmbiente, 29);                                          // °C ambiente al arrancar
   var AGUA_INI = Math.min(95, DM.pctAgua + 17);                               // limpieza: fluidos de control al inicio
-  var DP_GAS = 64;                                                            // inH₂O en la placa con el gasto de demo
+  var DP_GAS = num(DM.dpGas, 64);                                             // inH₂O en la placa con el gasto de demo
+  var NIVEL_SP = U.clamp(num(D.separador.nivelSP, 50), 10, 90);               // % consigna del lazo de nivel (LIC)
+  var NIVEL_INI = Math.max(5, NIVEL_SP - 25);                                 // nivel al abrir el pozo
+  var LV_BASE = 42;                                                           // % apertura típica de la LV en régimen
   var K_SAL = (DM.pSalida - DM.pBateria) / (DM.pSep - DM.pBateria);
 
   /* Valores instantáneos (sin acumulados) */
@@ -93,12 +99,12 @@
     var pPozo = DM.pPozo + (P_CIERRE - DM.pPozo) * env(h, 0.5, 5.0) + N.pPozo(h) * s - 0.9 * d;
     var tSep = DM.tSep + (T_AMB - DM.tSep) * env(h, 0.85, 3.0) + N.tSep(h) + 0.9 * Math.sin(PI2 * (h - 4) / 24);
     var pctAgua = U.clamp(DM.pctAgua + (AGUA_INI - DM.pctAgua) * Math.exp(-h / 0.5) + N.agua(h) * s + 0.6 * d, 0, 100);
-    var nivel = U.clamp(50 + (20 - 50) * env(h, 0.5, 5.2) + N.niv(h) * s, 3, 97);
+    var nivel = U.clamp(NIVEL_SP + (NIVEL_INI - NIVEL_SP) * env(h, 0.5, 5.2) + N.niv(h) * s, 3, 97);
     var pa = pctAgua / 100;
     var densidad = pa * RHO_AGUA + (1 - pa) * RHO_ACEITE - 0.65 * (tSep - DM.tSep) + N.rho(h);
     var masico = qM * BBL_M3 / 24 * densidad;
     var dpGas = DP_GAS * Math.pow(qG / DM.qGas, 2) * (DM.pSep + 1.033) / (pSep + 1.033);
-    var lv = U.clamp(42 + 1.9 * (nivel - 50) + 30 * (qM / DM.qMezcla - 1), 0, 100);
+    var lv = U.clamp(LV_BASE + 1.9 * (nivel - NIVEL_SP) + 30 * (qM / DM.qMezcla - 1), 0, 100);
     var pv = U.clamp(46 + 34 * (qG / DM.qGas - 1) + 28 * (pSep - DM.pSep), 0, 100);
     if (qM < 1) lv = 0;
     if (qG < 0.005) pv = 0;
@@ -213,11 +219,33 @@
      Nombres desde WT.data (sin duplicar a mano)
      ------------------------------------------------------------------ */
   function eqNombre(id, fb) { var e = U.equipo(id); return e ? e.nombre : fb; }
-  var NOMBRE_SCADA = (eqNombre('scada', 'SCADA SAF-900').match(/SAF-?\s?\d+/) || ['SAF-900'])[0];
-  var NOMBRE_RTU = eqNombre('rtu', 'RTU');
-  var NOMBRE_PROMASS = (eqNombre('coriolis', 'Coriolis').match(/Promass\s*\d+/) || ['Coriolis'])[0];
-  var NOMBRE_PLACA = eqNombre('placa', 'Placa de orificio').split(' +')[0];
+  function eqCorto(id, fb) { var e = U.equipo(id); return e ? (e.corto || e.nombre) : fb; }
+  var NOMBRE_SCADA = eqCorto('scada', '').replace(/^SCADA\s*/i, '') || (eqNombre('scada', '').match(/SAF-?\s?\d+/) || ['SAF-900'])[0];
+  var NOMBRE_RTU = eqNombre('rtu', (D.rtu && D.rtu.modelo) ? 'RTU ' + D.rtu.modelo : 'RTU');
+  var CORTO_RTU = eqCorto('rtu', 'RTU');
+  var NOMBRE_CORIOLIS = eqCorto('coriolis', 'Coriolis');
+  var NOMBRE_PLACA = eqCorto('placa', 'Placa de orificio');
   function isa(tag) { var i = U.instrumento(tag); return i ? i.isa : ''; }
+
+  /* Válvulas de control y funciones del RTU (lazos) desde WT.data.
+     Orden en cada salida: primero el medidor y después la válvula de control. */
+  function valvula(corriente, fb) {
+    var vc = D.valvulasControl || [], i;
+    for (i = 0; i < vc.length; i++) if (vc[i].corriente === corriente) return vc[i];
+    return { tag: fb, nombre: '', corriente: corriente, lazo: null, ubicacion: '' };
+  }
+  function funcion(tag) {
+    var f = D.funciones || [], i;
+    for (i = 0; i < f.length; i++) if (f[i].tag === tag) return f[i];
+    return null;
+  }
+  var V_GAS = valvula('gas', 'PV'), V_LIQ = valvula('liquido', 'LV');
+  function descValvula(vc) {
+    var f = vc.lazo ? funcion(vc.lazo) : null, s = vc.tag + (vc.nombre ? ' · ' + vc.nombre : '');
+    if (f) s += ' · lazo ' + f.tag + (f.mide ? ' (' + f.mide + ' → ' + (f.actua || vc.tag) + ')' : '') + ' en el ' + CORTO_RTU;
+    if (vc.ubicacion) s += ' · ' + vc.ubicacion;
+    return s;
+  }
 
   /* Valor mostrado por cada tag en el mímico */
   var TAGVAL = {
@@ -248,28 +276,32 @@
       head: [12, 10, 516, 42], banner: [12, 60, 516, 120], mimico: [12, 188, 516, 324], acum: [12, 520, 516, 240], cor: [12, 768, 516, 148], foot: [12, 924, 516, 26] }
   };
 
-  /* Geometrías del mímico (viewBox propio, ajustado a la proporción del panel) */
+  /* Geometrías del mímico (viewBox propio, ajustado a la proporción del panel).
+     Orden del proceso en cada salida del separador (izquierda → derecha):
+       gas:     placa de orificio (FE, con TDG) → PV (contrapresión) → reincorporación
+       líquido: Coriolis (CORIOLIS)             → LV (control de nivel) → reincorporación
+     feX/corX = medidor, pvX/lvX = válvula de control (siempre feX < pvX y corX < lvX). */
   var MIM = {
     wide: {
       VW: 1100, VH: 480, bw: 132, bh: 60, bhx: 84, bwx: 182, fTag: 14, fVal: 26, fSub: 12.5, fLbl: 13.5,
       tree: { x: 70, top: 150, base: 430, wingY: 235 }, chokeX: 160,
       ves: { xa: 250, xb: 640, cy: 250, r: 80 },
-      gasX: 590, gasY: 92, pvX: 680, feX: 784, liqX: 585, liqY: 392, lvX: 680, corX: 784, recX: 884, endX: 1090,
-      box: { TDP: [70, 95], TPS: [384, 116], TT: [330, 424], TN: [482, 424], TDG: [784, 166], CORIOLIS: [784, 302], TDM: [950, 442], TPL: [1028, 330] },
+      gasX: 590, gasY: 92, feX: 750, pvX: 872, liqX: 585, liqY: 392, corX: 750, lvX: 872, recX: 930, endX: 1090,
+      box: { TDP: [70, 95], TPS: [384, 116], TT: [330, 424], TN: [482, 424], TDG: [750, 166], CORIOLIS: [750, 302], TDM: [950, 442], TPL: [1028, 330] },
       lbl: [
-        { k: 'arbol', x: 70, y: 458 }, { k: 'estrangulador', x: 160, y: 268 }, { k: 'pv', x: 680, y: 60 }, { k: 'placa', x: 784, y: 60 },
-        { k: 'lv', x: 680, y: 428 }, { k: 'coriolis', x: 784, y: 428 }, { k: 'bateria', x: 1090, y: 420, a: 'end' }
+        { k: 'arbol', x: 70, y: 458 }, { k: 'estrangulador', x: 160, y: 268 }, { k: 'placa', x: 750, y: 58 }, { k: 'pv', x: 872, y: 56 },
+        { k: 'coriolis', x: 750, y: 430 }, { k: 'lv', x: 872, y: 355 }, { k: 'bateria', x: 1090, y: 420, a: 'end' }
       ],
       legend: [16, 26], badge: [1088, 26]
     },
     compact: {
       VW: 900, VH: 540, bw: 148, bh: 70, bhx: 96, bwx: 190, fTag: 16, fVal: 31, fSub: 14, fLbl: 16,
       tree: { x: 62, top: 172, base: 490, wingY: 262 }, chokeX: 146,
-      ves: { xa: 216, xb: 506, cy: 282, r: 82 },
-      gasX: 462, gasY: 108, pvX: 548, feX: 634, liqX: 458, liqY: 426, lvX: 548, corX: 634, recX: 726, endX: 894,
-      box: { TDP: [82, 86], TPS: [336, 142], TT: [252, 478], TN: [408, 478], TDG: [634, 190], CORIOLIS: [634, 330], TDM: [814, 492], TPL: [814, 344] },
+      ves: { xa: 200, xb: 490, cy: 282, r: 82 },
+      gasX: 446, gasY: 108, feX: 604, pvX: 682, liqX: 442, liqY: 426, corX: 604, lvX: 682, recX: 726, endX: 894,
+      box: { TDP: [82, 86], TPS: [326, 142], TT: [252, 478], TN: [408, 478], TDG: [604, 190], CORIOLIS: [604, 330], TDM: [814, 492], TPL: [814, 344] },
       lbl: [
-        { k: 'pv', x: 548, y: 76 }, { k: 'lv', x: 548, y: 460 }, { k: 'bateria', x: 894, y: 414, a: 'end' }
+        { k: 'pv', x: 682, y: 70 }, { k: 'lv', x: 682, y: 462 }, { k: 'bateria', x: 894, y: 414, a: 'end' }
       ],
       legend: [14, 28], badge: [888, 28]
     }
@@ -519,7 +551,7 @@
   }
   function setT(e, s) { if (e && e._s !== s) { e.textContent = s; e._s = s; } }
   function setA(e, k, v) { var c = '_a' + k; if (e[c] !== v) { e.setAttribute(k, v); e[c] = v; } }
-  function setCls(e, c, on) { on = !!on; var k = '_c' + c; if (e[k] !== on) { e.classList.toggle(c, on); e[k] = on; } }
+  function setCls(e, c, on) { on = !!on; var k = '_c' + c; if (e[k] !== on) { e.classList.toggle(c, on); if (!on && e.getAttribute('class') === '') e.removeAttribute('class'); e[k] = on; } }
   function place(e, r) { e.style.left = r[0] + 'px'; e.style.top = r[1] + 'px'; e.style.width = r[2] + 'px'; e.style.height = r[3] + 'px'; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
@@ -616,8 +648,13 @@
     sv('rect', { x: v.xa, y: v.cy - v.r, width: v.xb - v.xa, height: 2 * v.r, fill: C.gas, 'fill-opacity': 0.05 }, gIn);
     refs.liq = sv('rect', { x: v.xa, y: v.cy, width: v.xb - v.xa, height: v.r * 2, fill: 'url(#' + id + 'liq)' }, gIn);
     refs.surf = sv('line', { x1: v.xa, y1: v.cy, x2: v.xb, y2: v.cy, stroke: C.liquidoAmbar, 'stroke-width': 2.5 }, gIn);
-    // set-point de nivel (50 %)
-    sv('line', { x1: v.xb - rx - 30, y1: v.cy, x2: v.xb - rx + 6, y2: v.cy, stroke: '#c5cdd5', 'stroke-width': 1.2, 'stroke-dasharray': '4 3', opacity: 0.55 }, gIn);
+    // consigna (SP) del lazo de nivel: WT.data.separador.nivelSP
+    var spY = v.cy + v.r - 2 * v.r * NIVEL_SP / 100;
+    sv('line', { x1: v.xb - rx - 30, y1: spY, x2: v.xb - rx + 6, y2: spY, stroke: '#c5cdd5', 'stroke-width': 1.2, 'stroke-dasharray': '4 3', opacity: 0.6 }, gIn);
+    if (!compacto) {
+      var tSP = sv('text', { x: v.xb - rx - 34, y: spY + 4, 'text-anchor': 'end', 'font-size': G.fLbl * 0.8, class: 'lbl', 'font-family': 'var(--mono)', opacity: 0.8 }, gIn);
+      tSP.textContent = 'SP';
+    }
     // extractor de niebla
     sv('rect', { x: G.gasX - 32, y: v.cy - v.r + 8, width: 64, height: v.r * 0.3, fill: 'url(#' + id + 'mesh)', stroke: '#7d8995', 'stroke-width': 1.2 }, gIn);
     // deflector
@@ -628,32 +665,37 @@
     tSep.setAttribute('fill', '#aeb8c2');
     refs.sepTxt = tSep;
 
-    // ---- válvulas de control (PV gas, LV líquido) ----
-    function ctrlValve(xv, yv) {
-      var g = sv('g', null, svg);
+    // ---- medidores (primero) y válvulas de control (después) en cada salida ----
+    function titulo(g, s) { if (s) { var t = sv('title', null, g); t.textContent = s; } }
+    // gas: placa de orificio (FE) con el transmisor de presión diferencial TDG
+    var gF = sv('g', { 'data-eq': 'placa' }, svg);
+    titulo(gF, eqNombre('placa', NOMBRE_PLACA) + ' · salida de gas, aguas arriba de la ' + V_GAS.tag);
+    sv('rect', { x: G.feX - 9, y: G.gasY - 15, width: 6, height: 30, rx: 1, class: 'eq' }, gF);
+    sv('rect', { x: G.feX + 3, y: G.gasY - 15, width: 6, height: 30, rx: 1, class: 'eq' }, gF);
+    sv('line', { x1: G.feX, y1: G.gasY - 19, x2: G.feX, y2: G.gasY + 19, stroke: '#e6ebf0', 'stroke-width': 2 }, gF);
+    // líquido: medidor Coriolis
+    var gC = sv('g', { 'data-eq': 'coriolis' }, svg);
+    titulo(gC, eqNombre('coriolis', NOMBRE_CORIOLIS) + ' · salida de líquido, aguas arriba de la ' + V_LIQ.tag);
+    sv('rect', { x: G.corX - 36, y: G.liqY - 13, width: 72, height: 26, rx: 6, class: 'eq' }, gC);
+    sv('path', { d: 'M' + (G.corX - 22) + ',' + (G.liqY - 13) + 'q22,-16 44,0', fill: 'none', stroke: '#8a96a3', 'stroke-width': 2 }, gC);
+    sv('line', { x1: G.corX, y1: G.liqY - 19, x2: G.corX, y2: G.liqY - 28, stroke: '#8a96a3', 'stroke-width': 3 }, gC);
+    sv('circle', { cx: G.corX, cy: G.liqY - 34, r: 8, fill: '#2f5f8f', stroke: '#8fc4ea', 'stroke-width': 1.5 }, gC);
+    // válvulas de control aguas abajo de cada medidor (PV gas, LV líquido)
+    function ctrlValve(xv, yv, vc) {
+      var g = sv('g', { 'data-tag': vc.tag }, svg);
+      titulo(g, descValvula(vc));
       sv('line', { x1: xv, y1: yv, x2: xv, y2: yv - 22, stroke: '#aab4bf', 'stroke-width': 2 }, g);
       sv('path', { d: 'M' + (xv - 12) + ',' + (yv - 22) + 'a12,10 0 0 1 24,0z', fill: '#2a3138', stroke: '#aab4bf', 'stroke-width': 2 }, g);
       var b = sv('path', { d: 'M' + (xv - 15) + ',' + (yv - 11) + 'L' + (xv + 15) + ',' + (yv + 11) + 'V' + (yv - 11) + 'L' + (xv - 15) + ',' + (yv + 11) + 'Z', class: 'vlv open' }, g);
       return b;
     }
-    refs.pv = ctrlValve(G.pvX, G.gasY);
-    refs.lv = ctrlValve(G.lvX, G.liqY);
-    // placa de orificio
-    var gF = sv('g', null, svg);
-    sv('rect', { x: G.feX - 9, y: G.gasY - 15, width: 6, height: 30, rx: 1, class: 'eq' }, gF);
-    sv('rect', { x: G.feX + 3, y: G.gasY - 15, width: 6, height: 30, rx: 1, class: 'eq' }, gF);
-    sv('line', { x1: G.feX, y1: G.gasY - 19, x2: G.feX, y2: G.gasY + 19, stroke: '#e6ebf0', 'stroke-width': 2 }, gF);
-    // Coriolis
-    var gC = sv('g', null, svg);
-    sv('rect', { x: G.corX - 36, y: G.liqY - 13, width: 72, height: 26, rx: 6, class: 'eq' }, gC);
-    sv('path', { d: 'M' + (G.corX - 22) + ',' + (G.liqY - 13) + 'q22,-16 44,0', fill: 'none', stroke: '#8a96a3', 'stroke-width': 2 }, gC);
-    sv('line', { x1: G.corX, y1: G.liqY - 19, x2: G.corX, y2: G.liqY - 28, stroke: '#8a96a3', 'stroke-width': 3 }, gC);
-    sv('circle', { cx: G.corX, cy: G.liqY - 34, r: 8, fill: '#2f5f8f', stroke: '#8fc4ea', 'stroke-width': 1.5 }, gC);
+    refs.pv = ctrlValve(G.pvX, G.gasY, V_GAS);
+    refs.lv = ctrlValve(G.lvX, G.liqY, V_LIQ);
 
     // ---- rótulos de equipo ----
     var LBL = {
       arbol: eqNombre('arbol', 'Árbol de válvulas'), estrangulador: compacto ? 'Estrangulador' : eqNombre('estrangulador', 'Estrangulador'),
-      pv: 'PV', lv: 'LV', placa: NOMBRE_PLACA + ' (FE)', coriolis: 'Coriolis ' + NOMBRE_PROMASS, bateria: 'A batería'
+      pv: V_GAS.tag, lv: V_LIQ.tag, placa: NOMBRE_PLACA + ' (FE)', coriolis: NOMBRE_CORIOLIS, bateria: 'A batería'
     };
     refs.lblTxt = {};
     G.lbl.forEach(function (l) {
@@ -926,7 +968,7 @@
       // --- mímico ---
       var pm = panel('mimico', 'Mímico de proceso', compacto ? '' : 'Pozo → separador → batería');
       pm.el.classList.add('saf-mim');
-      var svg = sv('svg', { role: 'img', 'aria-label': 'Mímico: árbol de válvulas, estrangulador, separador ' + tag + ', medición de gas y líquido y reincorporación a batería, con los 8 instrumentos' }, pm.body);
+      var svg = sv('svg', { role: 'img', 'aria-label': 'Mímico: árbol de válvulas, estrangulador, separador ' + tag + '; gas: ' + NOMBRE_PLACA.toLowerCase() + ' y después ' + V_GAS.tag + '; líquido: ' + NOMBRE_CORIOLIS + ' y después ' + V_LIQ.tag + '; reincorporación a batería, con los ' + D.instrumentos.length + ' instrumentos' }, pm.body);
       S.mim = buildMimico(svg, G, compacto, tag);
 
       // --- acumulados ---
@@ -954,7 +996,7 @@
       });
 
       // --- Coriolis / % agua ---
-      var pc = panel('cor', compacto ? 'Coriolis · ' + NOMBRE_PROMASS : 'Coriolis ' + NOMBRE_PROMASS, '');
+      var pc = panel('cor', NOMBRE_CORIOLIS, '');
       var cor = hx('div', 'saf-cor', pc.body);
       cor.innerHTML =
         '<div class="saf-lbl">% agua / % aceite</div>' +
@@ -962,7 +1004,7 @@
         '<div class="saf-leg"><span><i class="saf-sw" style="background:' + C.liquidoAmbar + '"></i>Aceite <b class="pa"></b></span><span><i class="saf-sw" style="background:' + AGUA + '"></i>Agua <b class="pw"></b></span></div>' +
         '<div class="saf-stats"><div class="saf-stat"><span class="k">Densidad</span><span class="val"><span class="de"></span><small>kg/m³</small></span></div>' +
         '<div class="saf-stat"><span class="k">Flujo másico</span><span class="val"><span class="ma"></span><small>kg/h</small></span></div></div>' +
-        (compacto ? '' : '<p class="saf-note">Separador bifásico: el líquido sale como una sola corriente (aceite + agua); el Coriolis mide masa, densidad y % agua.</p>');
+        (compacto ? '' : '<p class="saf-note">Separador bifásico: el líquido sale como una sola corriente (aceite + agua); el Coriolis, aguas arriba de la ' + esc(V_LIQ.tag) + ', mide masa, densidad y % agua.</p>');
       S.cAc = cor.querySelector('.ac'); S.cAg = cor.querySelector('.ag');
       S.cPa = cor.querySelector('.pa'); S.cPw = cor.querySelector('.pw'); S.cDe = cor.querySelector('.de'); S.cMa = cor.querySelector('.ma');
 
@@ -999,7 +1041,7 @@
       // --- pie ---
       if (L.foot) {
         var ft = hx('footer', 'saf-foot', scr); place(ft, L.foot);
-        ft.innerHTML = '<span><b>' + esc(DM.aviso) + '</b>' + (compacto ? '' : ' · Interpretación de tags por confirmar con el área técnica') + '</span>' +
+        ft.innerHTML = '<span><b>' + esc(DM.aviso) + '</b></span>' +
           '<span>' + (compacto ? 'kg/cm² · °C · bpd · MMpcd' : 'Unidades de campo: kg/cm² · °C · bpd · MMpcd · bls · MMpc') + '</span>';
       }
       fit();

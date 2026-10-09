@@ -3,8 +3,9 @@
    ---------------------------------------------------------------------
    Escena Three.js (r170, global THREE) de la locación de aforo:
    árbol de válvulas → estrangulador TP/TR → cabezal/manifold → línea de
-   entrada → separador bifásico (remolque) → líquido (LV + Coriolis) y gas
-   (PV + placa de orificio) → reincorporación → línea de salida → batería.
+   entrada → separador bifásico (remolque) → líquido (Coriolis → LV) y gas
+   (placa de orificio + TDG → PV) → reincorporación → línea de salida → batería.
+   En cada salida primero se mide y después pasa por la válvula de control.
 
    Contrato (docs/ARQUITECTURA.md):
      var s = WT.Scene3D.create({ canvas, width, height, pixelRatio, quality, separatorTag });
@@ -182,6 +183,14 @@
   function create(opts) {
     opts = opts || {};
     var D = WT.data, U = WT.util, C = D.colores, MP = D.macropera, PL = MP.plataforma;
+    // Colores de equipo y de capas desde WT.data.colores (con respaldo si faltan)
+    var EQC = C.equipo || {};
+    var COL = {
+      recipiente: EQC.recipiente || '#2c4b3b', brida: EQC.brida || '#7b4f8a', remolque: EQC.remolque || '#f0a21b',
+      cabezalEH: EQC.cabezalEH || '#1f72c8', psv: EQC.psv || '#c81f2a', placaTag: EQC.placaTag || '#f39a1e',
+      zona: C.zonaSeguridad || '#d6262e', camino: C.camino || '#b9a888',
+      liquido: C.liquido || '#1c140c', ambar: C.liquidoAmbar || '#e8971e'
+    };
     var canvas = opts.canvas;
     if (!canvas) throw new Error('WT.Scene3D.create: falta { canvas }');
     var W = Math.max(2, opts.width || canvas.clientWidth || 1280);
@@ -339,8 +348,8 @@
 
     var texZone = canvasTex(128, 128, function (g, w, h) {
       g.clearRect(0, 0, w, h);
-      g.fillStyle = 'rgba(214,38,46,0.55)'; g.fillRect(0, 0, w, h);
-      g.fillStyle = 'rgba(255,194,14,0.65)';
+      g.fillStyle = hexA(COL.zona, 0.55); g.fillRect(0, 0, w, h);
+      g.fillStyle = hexA(C.amarillo || '#ffc20e', 0.65);
       for (var i = -w; i < w * 2; i += 64) { g.beginPath(); g.moveTo(i, h); g.lineTo(i + 32, h); g.lineTo(i + 32 + h, 0); g.lineTo(i + h, 0); g.closePath(); g.fill(); }
     }, { repeat: true });
 
@@ -382,7 +391,7 @@
       var px = w / 1.6;
       // placa naranja con el tag (como la placa "FA-02" de la foto 05)
       var x0 = 0.1 * px, y0 = 0.1 * h, pw = 0.56 * px, ph = 0.36 * h;
-      g.fillStyle = '#f39a1e'; g.fillRect(x0, y0, pw, ph);
+      g.fillStyle = COL.placaTag; g.fillRect(x0, y0, pw, ph);
       g.strokeStyle = '#1a1a1a'; g.lineWidth = 5; g.strokeRect(x0 + 8, y0 + 8, pw - 16, ph - 16);
       g.fillStyle = '#141414'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.font = '800 ' + Math.round(ph * 0.78) + 'px ' + FONT_D;
@@ -478,7 +487,7 @@
     function signUV(id) { var r = SIGNS[id]; return [r[0] / 2048, 1 - (r[1] + r[3]) / 1024, (r[0] + r[2]) / 2048, 1 - r[1] / 1024]; }
 
     var texTape = canvasTex(512, 32, function (g, w, h) {
-      g.fillStyle = '#d4232c'; g.fillRect(0, 0, w, h);
+      g.fillStyle = COL.zona; g.fillRect(0, 0, w, h);
       g.fillStyle = '#fff'; g.font = '800 22px ' + FONT_D; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillText('PELIGRO', w * 0.25, h / 2 + 1); g.fillText('PELIGRO', w * 0.75, h / 2 + 1);
     }, { repeat: true, text: true });
@@ -541,12 +550,12 @@
     std('railYellow', '#f2b51c', 0.5, 0.1);
     std('pipeGreen', '#2f4c3c', 0.48, 0.25);
     std('lineBlack', '#2a2d2f', 0.6, 0.3);
-    std('flange', '#7b4f8a', 0.5, 0.2);
-    std('trailer', '#f0a21b', 0.55, 0.15);
+    std('flange', COL.brida, 0.5, 0.2);
+    std('trailer', COL.remolque, 0.55, 0.15);
     std('tire', '#1c1c1c', 0.92, 0);
     std('rim', '#ecece6', 0.4, 0.3);
-    std('psv', '#c81f2a', 0.45, 0.2);
-    std('ehBlue', '#1f72c8', 0.35, 0.25);
+    std('psv', COL.psv, 0.45, 0.2);
+    std('ehBlue', COL.cabezalEH, 0.35, 0.25);
     std('ehBody', '#b8bdc1', 0.35, 0.8);
     std('ehGlass', '#203a52', 0.1, 0.5);
     std('stainless', '#c9cdd0', 0.25, 0.95);
@@ -576,16 +585,38 @@
     var clipZ = new THREE.Plane(new V3(0, 0, -1), 0), clipX = new THREE.Plane(new V3(1, 0, 0), 1e5);
     var clipCapX = new THREE.Plane(new V3(-1, 0, 0), -1e5), clipLevel = new THREE.Plane(new V3(0, -1, 0), 1.9);
     var CLIP_SEP = [clipZ, clipX];
-    std('vesselOut', '#2c4b3b', 0.4, 0.22, { clippingPlanes: CLIP_SEP, clipIntersection: true, side: THREE.FrontSide });
+    std('vesselOut', COL.recipiente, 0.4, 0.22, { clippingPlanes: CLIP_SEP, clipIntersection: true, side: THREE.FrontSide });
     std('vesselIn', '#8a8478', 0.85, 0.05, { clippingPlanes: CLIP_SEP, clipIntersection: true, side: THREE.BackSide, emissive: new THREE.Color('#4a453b'), emissiveIntensity: 0.55 });
     std('decal', '#ffffff', 0.45, 0.1, { map: texSepDecal, transparent: true, clippingPlanes: CLIP_SEP, clipIntersection: true, polygonOffset: true, polygonOffsetFactor: -2 });
     std('darkClip', '#2e3134', 0.55, 0.55, { clippingPlanes: CLIP_SEP, clipIntersection: true });
     std('section', '#ffffff', 0.4, 0.4, { map: texHatch, clippingPlanes: [clipCapX], side: THREE.DoubleSide, emissive: new THREE.Color('#3a3326'), emissiveIntensity: 0.4 });
     std('sectionFront', '#ffffff', 0.4, 0.4, { map: texHatch, side: THREE.DoubleSide, emissive: new THREE.Color('#3a3326'), emissiveIntensity: 0.4 });
     texHatch.repeat.set(9, 9);
-    std('liqBody', '#060302', 0.2, 0.15, { side: THREE.DoubleSide, clippingPlanes: [clipLevel], emissive: new THREE.Color(C.liquidoAmbar), emissiveIntensity: 0.025 });
-    std('liqFace', '#070403', 0.28, 0.15, { side: THREE.DoubleSide, clippingPlanes: [clipLevel], transparent: true, opacity: 0.86, emissive: new THREE.Color(C.liquidoAmbar), emissiveIntensity: 0.035, depthWrite: false });
-    std('liqTop', '#160d06', 0.06, 0.35, { side: THREE.DoubleSide, emissive: new THREE.Color(C.liquidoAmbar), emissiveIntensity: 0.16 });
+    /* Líquido separado (aceite + agua) en el corte: NEGRO (colores.liquido). El ámbar
+       (colores.liquidoAmbar) es solo brillo/reflejo: una línea de menisco en la cara de corte
+       que se desvanece hacia abajo y los reflejos de la superficie. Café = solo el chorro de mezcla. */
+    var liqU = { level: { value: 1.95 }, amber: { value: new THREE.Color(COL.ambar) }, t: { value: 0 } };
+    std('liqBody', new THREE.Color(COL.liquido).multiplyScalar(0.45), 0.2, 0.15, { side: THREE.DoubleSide, clippingPlanes: [clipLevel] });
+    std('liqFace', COL.liquido, 0.3, 0.1, { side: THREE.DoubleSide, clippingPlanes: [clipLevel], transparent: true, opacity: 0.92, depthWrite: false });
+    std('liqTop', new THREE.Color(COL.liquido).multiplyScalar(0.3), 0.1, 0.2, { side: THREE.DoubleSide });
+    MAT.liqFace.onBeforeCompile = function (sh) {
+      sh.uniforms.uLevel = liqU.level; sh.uniforms.uAmber = liqU.amber;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWY = (modelMatrix * vec4(transformed, 1.0)).y;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vWY; uniform float uLevel; uniform vec3 uAmber;')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n float dL = max(uLevel - vWY, 0.0); totalEmissiveRadiance += uAmber * (0.5 * exp(-dL / 0.01) + 0.022 * exp(-dL / 0.05));');
+    };
+    MAT.liqFace.customProgramCacheKey = function () { return 'liqFaceMenisco'; };
+    MAT.liqTop.onBeforeCompile = function (sh) {
+      // superficie negra con destellos ámbar que se desplazan (ondas); coordenadas locales del remolque y t → determinista
+      sh.uniforms.uAmber = liqU.amber; sh.uniforms.uT = liqU.t;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vLP;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvLP = transformed.xz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 uAmber; uniform float uT; varying vec2 vLP;')
+        .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n float gl1 = 0.5 + 0.5 * sin(vLP.x * 19.0 - uT * 1.2 + 2.2 * sin(vLP.x * 4.7 + uT * 0.5 + vLP.y * 11.0));\n'
+          + ' float glint = 0.12 + 2.4 * pow(gl1, 6.0);\n reflectedLight.indirectSpecular *= uAmber * glint; reflectedLight.directSpecular *= uAmber * 1.3;');
+    };
+    MAT.liqTop.customProgramCacheKey = function () { return 'liqTopAmbar'; };
     ['ground', 'grass', 'talud', 'tape', 'liqTop', 'liqFace', 'liqBody', 'decal', 'section', 'sectionFront'].forEach(function (k) { MAT[k].userData.noCast = true; });
 
     // Materiales "rayos X" (fantasma) para tuberías
@@ -701,7 +732,7 @@
       b.add('galv', gCylAB(bon1, stem1, rp * 0.22, 6));
       handwheel(b, o.wheelKey || key, c.clone().addScaledVector(s, rp * (o.wheelAt || 6.2)), s, rp * (o.wheelR || 2.4));
     }
-    function controlValve(b, c, dir, rp, up) {
+    function controlValve(b, c, dir, rp, up, sideSign) { // sideSign = -1 pasa el posicionador al otro costado
       var d = dir.clone().normalize(), u = (up || new V3(0, 1, 0)).clone().normalize();
       b.add('pipeGreen', orient(new THREE.SphereGeometry(rp * 1.9, 16, 12), c.clone(), d));
       flangePair(b, 'flange', c.clone().addScaledVector(d, -rp * 2.4), d, rp);
@@ -709,7 +740,7 @@
       b.add('pipeGreen', gCylAB(c.clone().addScaledVector(u, rp * 1.5), c.clone().addScaledVector(u, rp * 3.2), rp * 1.1, 12));
       b.add('flange', orient(gCyl(rp * 1.9, rp * 1.9, 0.03, 16), c.clone().addScaledVector(u, rp * 3.2), u));
       // yugo
-      var side = new V3().crossVectors(d, u).normalize();
+      var side = new V3().crossVectors(d, u).normalize().multiplyScalar(sideSign || 1);
       [-1, 1].forEach(function (k) {
         b.add('galv', gCylAB(c.clone().addScaledVector(u, rp * 3.2).addScaledVector(d, k * rp * 0.9), c.clone().addScaledVector(u, rp * 5.6).addScaledVector(d, k * rp * 0.9), rp * 0.18, 6));
       });
@@ -717,8 +748,14 @@
       // actuador de diafragma (domo)
       var dome = new THREE.SphereGeometry(rp * 2.5, 20, 10, 0, TAU, 0, PI / 2); dome.scale(1, 0.55, 1);
       var bot = new THREE.SphereGeometry(rp * 2.5, 20, 10, 0, TAU, PI / 2, PI / 2); bot.scale(1, 0.32, 1);
-      var ring = gCyl(rp * 2.6, rp * 2.6, rp * 0.25, 20);
-      [dome, bot, ring].forEach(function (g) { orient(g, c.clone().addScaledVector(u, rp * 6.3), u); b.add('actuator', g); });
+      var ring = gCyl(rp * 2.9, rp * 2.9, rp * 0.3, 24);
+      var ac = c.clone().addScaledVector(u, rp * 6.3);
+      [dome, bot, ring].forEach(function (g) { orient(g, ac, u); b.add('actuator', g); });
+      // tornillería de la brida de la carcasa y tapón del domo (se lee como actuador aun visto de frente)
+      var abolts = [];
+      for (var i = 0; i < 14; i++) { var an = (i + 0.5) / 14 * TAU, bt = gCyl(rp * 0.13, rp * 0.13, rp * 0.62, 6); bt.translate(Math.cos(an) * rp * 2.7, 0, Math.sin(an) * rp * 2.7); abolts.push(prep(bt)); }
+      b.add('galv', orient(THREE.mergeGeometries(abolts), ac, u));
+      b.add('galv', orient(gCyl(rp * 0.38, rp * 0.38, rp * 0.3, 12), ac.clone().addScaledVector(u, rp * 2.5 * 0.55 + rp * 0.1), u));
       // posicionador
       var pos = gBox(rp * 1.6, rp * 1.8, rp * 1.2, rp * 0.2);
       pos.translate(0, 0, 0); orient(pos, c.clone().addScaledVector(u, rp * 4.4).addScaledVector(side, rp * 1.4), u); b.add('ehBody', pos);
@@ -956,9 +993,15 @@
     ];
     /* Patín del separador (coordenadas locales del remolque, x = eje largo):
        gas y líquido se miden bajo el recipiente (como en el FA-02 de la foto 05) y se
-       reincorporan en el extremo oeste, junto a las conexiones de entrada/salida. */
-    var SK = { yG: 1.36, zG: -0.17, yL: 0.98, zL: 0.18, xTe: -2.1, xPV: 1.25, yPV: 1.95, xOri: -1.25, xCor: -0.35, xLV: 0.22, xTDM: -2.52 };
-    var R_GAS = [L2W(0.7, 2.12, 0), L2W(0.7, 2.55, 0), L2W(SK.xPV, 2.55, SK.zG), L2W(SK.xPV, SK.yG, SK.zG), L2W(SK.xTe, SK.yG, SK.zG), L2W(SK.xTe, SK.yL, SK.zG), L2W(SK.xTe, SK.yL, SK.zL)];
+       reincorporan en el extremo oeste, junto a las conexiones de entrada/salida.
+       Ambas corridas fluyen de este a oeste (de la boquilla hacia la te), así que en cada
+       una el medidor queda al este (aguas arriba) y la válvula de control al oeste:
+         líquido: boquilla inferior → Coriolis (xCor) → LV (xLV) → te
+         gas:     boquilla superior → bajante (xGd) → placa + TDG (xOri) → PV (xPV) → te
+       Cada válvula queda junto a su medidor: el par de gas en la mitad este y el de líquido en
+       la oeste. La PV va en tramo horizontal bajo el recipiente, con el actuador hacia el sur (+z). */
+    var SK = { yG: 1.36, zG: -0.17, yL: 0.98, zL: 0.18, xTe: -2.1, xGd: 1.25, xOri: 0.85, xPV: 0.1, xCor: -0.45, xLV: -1.2, xTDM: -2.52 };
+    var R_GAS = [L2W(0.7, 2.12, 0), L2W(0.7, 2.55, 0), L2W(SK.xGd, 2.55, SK.zG), L2W(SK.xGd, SK.yG, SK.zG), L2W(SK.xTe, SK.yG, SK.zG), L2W(SK.xTe, SK.yL, SK.zG), L2W(SK.xTe, SK.yL, SK.zL)];
     var R_LIQ = [L2W(0.55, 1.7, 0), L2W(0.55, SK.yL, 0), L2W(0.55, SK.yL, SK.zL), L2W(SK.xTe, SK.yL, SK.zL)];
     var BX = MP.lineaBateria.desdeX, BZ = MP.lineaBateria.z, BX1 = MP.lineaBateria.haciaX;
     var teOut = L2W(-3.25, 0.35, 0.6), southZ = L2W(0, 0, 2.15).z;
@@ -1153,19 +1196,24 @@
       // ---- corridas de gas y líquido (bajo el recipiente) ----
       var bg = new Builder();
       pipeRoute(bg, 'pipeGreen', RT_PIPE.gas, RP);
-      flangePair(bg, 'flange', L2W(SK.xPV, 2.32, SK.zG), new V3(0, 1, 0), RP);
-      [-0.3, 0.45].forEach(function (x) { flangePair(bg, 'flange', L2W(x, SK.yG, SK.zG), new V3(1, 0, 0).transformDirection(sepM), RP); });
+      flangePair(bg, 'flange', L2W(SK.xGd, 2.32, SK.zG), new V3(0, 1, 0), RP);
+      flangePair(bg, 'flange', L2W(SK.xGd, 1.72, SK.zG), new V3(0, 1, 0), RP);
+      flangePair(bg, 'flange', L2W(-0.75, SK.yG, SK.zG), new V3(1, 0, 0).transformDirection(sepM), RP);
       bg.flush('lineaGas', sepGroup, { stream: 'gas' });
       var bq = new Builder();
       pipeRoute(bq, 'pipeGreen', RT_PIPE.liquido, RP);
-      flangePair(bq, 'flange', L2W(-1.5, SK.yL, SK.zL), new V3(1, 0, 0).transformDirection(sepM), RP);
+      flangePair(bq, 'flange', L2W(0.2, SK.yL, SK.zL), new V3(1, 0, 0).transformDirection(sepM), RP);
+      flangePair(bq, 'flange', L2W(-1.65, SK.yL, SK.zL), new V3(1, 0, 0).transformDirection(sepM), RP);
       bq.flush('lineaLiquido', sepGroup, { stream: 'liquido' });
 
-      // ---- válvulas de control: PV (contrapresión, gas) y LV (nivel, líquido) ----
-      var X = new V3(1, 0, 0).transformDirection(sepM), Yv = new V3(0, 1, 0);
+      // ---- válvulas de control, aguas abajo de cada medidor ----
+      // LV (nivel): después del Coriolis, actuador hacia arriba.
+      // PV (contrapresión): después de la placa; bajo el recipiente no cabe el actuador vertical,
+      // así que se monta con el actuador horizontal hacia el sur (+z), visible desde el frente.
+      var X = new V3(1, 0, 0).transformDirection(sepM), Yv = new V3(0, 1, 0), Zs = new V3(0, 0, 1).transformDirection(sepM);
       var bLV = new Builder(); controlValve(bLV, L2W(SK.xLV, SK.yL, SK.zL), X, RP, Yv); bLV.flush('LV', sepGroup);
-      var bPV = new Builder(); controlValve(bPV, L2W(SK.xPV, SK.yPV, SK.zG), new V3(0, -1, 0), RP, X); bPV.flush('PV', sepGroup);
-      // ---- Coriolis Promass 300 (salida de líquido) ----
+      var bPV = new Builder(); controlValve(bPV, L2W(SK.xPV, SK.yG, SK.zG), X, RP, Zs, -1); bPV.flush('PV', sepGroup); // posicionador arriba
+      // ---- Coriolis Promass 300 (salida de líquido, aguas arriba de la LV) ----
       var cx = SK.xCor, yl = SK.yL, zl = SK.zL;
       var bc = new Builder(sepM);
       flangePair(bc, 'flange', new V3(cx - 0.32, yl, zl), new V3(1, 0, 0), RP);
@@ -1182,7 +1230,7 @@
       bct.add('ehBlue', orient(gCyl(0.062, 0.062, 0.03, 18), new V3(cx, yl + 0.25, zl - 0.08), new V3(0, 0, 1)));
       bct.add('black', gCylAB(new V3(cx + 0.07, yl + 0.2, zl), new V3(cx + 0.12, yl + 0.2, zl), 0.012, 8));
       bct.flush('CORIOLIS', sepGroup);
-      // ---- placa de orificio (portaplaca) + transmisor de presión diferencial ----
+      // ---- placa de orificio (portaplaca) + transmisor de presión diferencial (aguas arriba de la PV) ----
       var ox = SK.xOri, yg = SK.yG, zg = SK.zG;
       var bo = new Builder(sepM);
       flangePair(bo, 'flange', new V3(ox, yg, zg), new V3(1, 0, 0), RP, { k: 2.4, th: 0.055, bolts: 8 });
@@ -1389,7 +1437,7 @@
     })();
 
     /* =========================== SEGURIDAD =========================== */
-    var zoneFillMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#e0423f'), transparent: true, opacity: 0.12, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, toneMapped: false });
+    var zoneFillMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(COL.zona), transparent: true, opacity: 0.12, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, toneMapped: false });
     var zoneEdgeMat = new THREE.MeshBasicMaterial({ map: texZone, transparent: true, opacity: 0.8, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -5, toneMapped: false });
     var signPoles = [];
     function signBoard(b, id, cx, cz, wdt, hgt, yaw, postH) {
@@ -1505,7 +1553,8 @@
       }
       var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
       var edgeA = canvasTex(4, 64, function (gg, ww2, hh) { var gr = gg.createLinearGradient(0, 0, 0, hh); gr.addColorStop(0, '#000'); gr.addColorStop(0.18, '#fff'); gr.addColorStop(0.82, '#fff'); gr.addColorStop(1, '#000'); gg.fillStyle = gr; gg.fillRect(0, 0, ww2, hh); }, { linear: true });
-      var roadMat = new THREE.MeshLambertMaterial({ color: new THREE.Color('#e9d9b8'), side: THREE.DoubleSide, map: texGravel.clone(), alphaMap: edgeA, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      // colores.camino es el tono final: la textura de grava (lineal, media 0.5) lo multiplica por ~0.5
+      var roadMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(COL.camino).multiplyScalar(2), side: THREE.DoubleSide, map: texGravel.clone(), alphaMap: edgeA, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
       roadMat.map.repeat.set(1, 3); roadMat.map.needsUpdate = true;
       var road = new THREE.Mesh(g, roadMat); road.receiveShadow = true; road.renderOrder = 0; root.add(road);
       ID.acceso = [road];
@@ -1929,11 +1978,12 @@
       TDM: arr(L2W(SK.xTDM, SK.yL + RP + 0.165, SK.zL)),
       TPL: [BX + 1.25, 0.35 + RP + 0.165, BZ],
       // extensiones
-      LV: arr(L2W(SK.xLV, SK.yL + 0.38, SK.zL)), PV: arr(L2W(SK.xPV + 0.36, SK.yPV, SK.zG)), lineaSalida: [30, 0.45, (southZ + BZ) / 2],
+      LV: arr(L2W(SK.xLV, SK.yL + 0.38, SK.zL)), PV: arr(L2W(SK.xPV, SK.yG, SK.zG + RP * 6.3)), lineaSalida: [30, 0.45, (southZ + BZ) / 2],
       mangaViento: [MP.mangaViento.x, 6.1, MP.mangaViento.z], pozosInactivos: [MP.pozos[2].x, 1.4, MP.pozos[2].z], scada: [MP.caseta.x, 2.3, MP.caseta.z]
     };
     var S = function (pos, target, fov) { return { pos: pos, target: target, fov: fov || 40 }; };
     var sx = sp.x, sz = sp.z;
+    var mLiq = (SK.xCor + SK.xLV) / 2, mGas = (SK.xOri + SK.xPV) / 2;
     var SHOTS = {
       aerea: S([sx + 46, 62, sz + 74], [sx - 8, 0, sz - 9], 40),
       establecimiento: S([pz.x - 16, 5.2, pz.z + 21], [pz.x + 9, 1.2, pz.z + 6.5], 36),
@@ -1942,8 +1992,9 @@
       lineaEntrada: S([mf.x - 3.0, 3.6, mf.z + 9.5], [mf.x + 6.5, 0.6, mf.z + 3.5], 42),
       separador: S([sx - 2.6, 3.4, sz + 7.6], [sx + 0.1, 1.45, sz], 40),
       separadorCorte: S([sx - 0.6, 2.45, sz + 3.7], [sx - 0.6, 1.85, sz], 42),
-      medicionLiquido: S(arr(L2W(SK.xCor - 0.55, 1.55, 2.25)), arr(L2W(SK.xCor + 0.15, 1.02, SK.zL)), 40),
-      medicionGas: S(arr(L2W(SK.xOri + 1.3, 1.85, 2.5)), arr(L2W(SK.xOri + 0.55, 1.4, 0)), 42),
+      // medidor (este, a la derecha) → válvula de control (oeste, a la izquierda) en el mismo cuadro
+      medicionLiquido: S(arr(L2W(mLiq - 0.5, 1.6, 2.3)), arr(L2W(mLiq + 0.12, 1.04, SK.zL)), 40),
+      medicionGas: S(arr(L2W(mGas + 0.82, 2.1, 2.4)), arr(L2W(mGas - 0.08, 1.4, -0.05)), 42),
       recombinacion: S(arr(L2W(SK.xTe - 2.0, 1.85, 2.6)), arr(L2W(SK.xTe - 0.3, 1.0, SK.zL)), 40),
       bateria: S([BX - 3, 6.5, BZ + 12], [BX + 6, 0.3, BZ], 42),
       caseta: S([MP.caseta.x - 9.5, 4.2, MP.caseta.z + 10.5], [MP.caseta.x - 1.5, 1.5, MP.caseta.z], 40),
@@ -2109,6 +2160,7 @@
       var nivel = clamp(st.nivel == null ? 0.45 : +st.nivel, 0.05, 0.92);
       var h = SEP.cy - SEP.Ri + nivel * 2 * SEP.Ri;
       A.nivel[1] = Math.round(h * 1000) / 1000;
+      liqU.level.value = h; liqU.t.value = t; // el remolque solo gira en y: la altura local es la del mundo
       var xs = on ? lerp(xW - 0.02, xE + 0.02, smoother(c)) : -1e4;
       LP.z.set(_loc.set(0, 0, -1), 0); clipZ.copy(LP.z).applyMatrix4(sepM);
       LP.x.set(_loc.set(1, 0, 0), -xs); clipX.copy(LP.x).applyMatrix4(sepM);
