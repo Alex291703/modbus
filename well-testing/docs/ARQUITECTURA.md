@@ -17,12 +17,14 @@ well-testing/
   js/cutaway.js         Corte interno del separador (Canvas 2D/SVG)     → WT.Cutaway
   js/pid.js             DTI con simbología ISA (SVG)                    → WT.PID
   js/scada.js           Simulación determinista + pantalla SCADA SAF-900 → WT.SCADA
+  js/logo.js            Logotipos incrustados (data URI) para exportar PNG/SVG → WT.logo
   js/vendor/            three.min.js (r170, global THREE + OrbitControls, RoundedBoxGeometry,
                         mergeGeometries, RoomEnvironment), gsap.min.js + plugins
   assets/               logos, fuentes woff2, fotos de campo
   video/                Proyecto HyperFrames (lib → ../js, assets → ../assets por enlace simbólico)
   entregables/          MP4, PNG y PDF generados
-  tools/                shot.mjs (capturas), exportadores
+  tools/                shot.mjs (capturas), export-stills.mjs (PNG/PDF/SVG del DTI),
+                        build-logo.mjs (regenera js/logo.js), make-music.py (música)
 ```
 
 ## Reglas comunes
@@ -40,9 +42,10 @@ well-testing/
 * **Colores de corriente**: mezcla = café, gas = amarillo, líquido = negro con
   resalte ámbar, señal de instrumento = azul claro (`WT.data.colores`).
 * **No inventar equipos de proceso**. El proceso es: árbol de válvulas → estrangulador
-  TP/TR → cabezal/manifold → línea de entrada → separador bifásico → (líquido: LV +
-  Coriolis Promass 300) y (gas: PV + placa de orificio con transmisor de presión
-  diferencial) → reincorporación → línea de salida → línea a batería. Instrumentos:
+  TP/TR → cabezal/manifold → línea de entrada → separador bifásico → (líquido:
+  Coriolis Promass 300 → LV) y (gas: placa de orificio con transmisor de presión
+  diferencial TDG → PV) → reincorporación → línea de salida → línea a batería.
+  En cada salida el medidor va aguas arriba de su válvula de control. Instrumentos:
   los 8 tags de `WT.data.instrumentos`, todos al RTU Honeywell ControlEdge 2020 →
   SCADA SAF-900 en la PC de campo. Accesorios visibles en fotos: PSV, manómetro,
   registro bridado. Circuito cerrado: **no hay quemador ni venteo**.

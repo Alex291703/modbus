@@ -68,7 +68,7 @@ salida de gas por arriba (PV). Burbujas y gotas en movimiento.
 
 ## Frame 6 — Medición
 
-- scene: Pantalla dividida: líquido por LV → Coriolis Promass 300 / gas por PV → placa de orificio + TDG
+- scene: Pantalla dividida: líquido por Coriolis Promass 300 → LV / gas por placa de orificio + TDG → PV
 - duration: 12s
 - transition_in: split
 - poster: 58s

@@ -117,7 +117,7 @@
       { tag: 'TT', isa: 'TIT', variable: 'Temperatura del separador', punto: 'Termopozo en el separador', unidad: '°C', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: false },
       { tag: 'TN', isa: 'LIT', variable: 'Nivel del separador', punto: 'Separador (control de nivel → LV)', unidad: '%', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
       { tag: 'CORIOLIS', isa: 'FIT', variable: 'Flujo másico, densidad y % agua del líquido', punto: 'Salida de líquido', unidad: 'kg/h · kg/m³ · %', marca: 'Endress+Hauser Promass 300', senal: '4–20 mA HART / Modbus', confirmar: false },
-      { tag: 'TDG', isa: 'PDIT', variable: 'Presión diferencial en placa de orificio (gasto de gas)', punto: 'Salida de gas', unidad: 'inH₂O', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
+      { tag: 'TDG', isa: 'FIT', variable: 'Gasto de gas por presión diferencial en placa de orificio', punto: 'Salida de gas', unidad: 'inH₂O', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
       { tag: 'TDM', isa: 'PIT', variable: 'Presión de la línea de salida (mezcla reincorporada)', punto: 'Línea de salida, después de la reincorporación', unidad: 'kg/cm²', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true },
       { tag: 'TPL', isa: 'PIT', variable: 'Presión de la línea a batería', punto: 'Línea a batería', unidad: 'kg/cm²', marca: 'Endress+Hauser', senal: '4–20 mA HART', confirmar: true }
     ],
@@ -131,7 +131,7 @@
     funciones: [
       { tag: 'LIC', en: 'RTU', mide: 'TN', actua: 'LV', desc: 'Control de nivel del separador' },
       { tag: 'PIC', en: 'RTU', mide: 'TPS', actua: 'PV', desc: 'Control de presión del separador (contrapresión)', confirmar: true },
-      { tag: 'FQI', en: 'RTU', mide: 'TDG', desc: 'Cálculo de gasto y acumulado de gas' }
+      { tag: 'FQI', en: 'RTU', mide: 'TDG', compensa: ['TPS', 'TT'], desc: 'Gasto de gas (MMpcd) y acumulado (MMpc) con el ΔP de la placa (TDG), compensado por presión (TPS) y temperatura (TT)' }
     ],
     rtu: { modelo: 'Honeywell ControlEdge 2020', modulo: 'Controller & Mixed I/O SC-UCMX02', enlaceScada: 'Ethernet' },
     lineas: { diametroNominal: '4"', fuente: 'Rotulado en la tubería del equipo (fotografía)' },
@@ -192,12 +192,12 @@
 
     /* Pasos del corte interno del separador (entregable 2) */
     pasosSeparacion: [
-      { n: 1, id: 'choque', titulo: 'Choque contra el deflector', texto: 'La mezcla entra a alta velocidad y golpea el deflector: pierde momento y ocurre la separación primaria del gas y el líquido.' },
-      { n: 2, id: 'liberacion', titulo: 'Caída de presión y liberación de gas', texto: 'Al pasar del estrangulador y la línea al volumen del separador, la presión baja y el gas disuelto se libera en forma de burbujas.' },
-      { n: 3, id: 'asentamiento', titulo: 'Asentamiento por gravedad', texto: 'Con baja velocidad y tiempo de residencia, las gotas de líquido caen y las burbujas suben por diferencia de densidad.' },
-      { n: 4, id: 'niebla', titulo: 'Extractor de niebla', texto: 'Las gotas finas que arrastra el gas chocan con la malla, se unen (coalescen) y escurren de regreso al líquido.' },
-      { n: 5, id: 'nivel', titulo: 'Control de nivel', texto: 'El TN detecta que el nivel sube y el controlador abre la válvula de líquido (LV): el líquido sale por el fondo, se mide en el Coriolis y pasa por la LV.' },
-      { n: 6, id: 'gas', titulo: 'Salida de gas por arriba', texto: 'El gas seco sale por la boquilla superior, se mide en la placa de orificio y pasa por la válvula de contrapresión (PV), que mantiene la presión del separador.' }
+      { n: 1, id: 'choque', titulo: 'Choque contra el deflector', texto: 'La mezcla entra a alta velocidad y golpea el deflector: pierde momento y ocurre la separación primaria del gas y el líquido.', textoCorto: 'La mezcla choca con el deflector: separación primaria gas–líquido.' },
+      { n: 2, id: 'liberacion', titulo: 'Caída de presión y liberación de gas', texto: 'La caída de presión principal ocurre en el estrangulador, así que la mezcla llega al separador con gas libre. Ya dentro, a la presión del separador y con tiempo de residencia, el gas que aún viene disuelto o atrapado en el líquido se libera en forma de burbujas.', textoCorto: 'A presión del separador, el gas aún disuelto se libera en burbujas.' },
+      { n: 3, id: 'asentamiento', titulo: 'Asentamiento por gravedad', texto: 'Con baja velocidad y tiempo de residencia, las gotas de líquido caen y las burbujas suben por diferencia de densidad.', textoCorto: 'Con tiempo de residencia, las gotas caen y las burbujas suben.' },
+      { n: 4, id: 'niebla', titulo: 'Extractor de niebla', texto: 'Las gotas finas que arrastra el gas chocan con la malla, se unen (coalescen) y escurren de regreso al líquido.', textoCorto: 'La malla atrapa las gotas finas del gas y escurren al líquido.' },
+      { n: 5, id: 'nivel', titulo: 'Control de nivel', texto: 'El TN detecta que el nivel sube y el controlador abre la válvula de líquido (LV): el líquido sale por el fondo, se mide en el Coriolis y pasa por la LV.', textoCorto: 'Al subir el nivel, el LIC abre la LV; el Coriolis mide el líquido.' },
+      { n: 6, id: 'gas', titulo: 'Salida de gas por arriba', texto: 'El gas separado, ya sin gotas de líquido, sale por la boquilla superior, se mide en la placa de orificio y pasa por la válvula de contrapresión (PV), que mantiene la presión del separador.', textoCorto: 'El gas sale por arriba, se mide en la placa y pasa por la PV.' }
     ]
   };
 

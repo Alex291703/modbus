@@ -151,11 +151,12 @@ button { font: inherit; }
 .wt-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 720px) {
-  .wt-topbar { padding: 8px 16px; flex-wrap: wrap; row-gap: 6px; }
-  .wt-topbar .wt-title { font-size: 17px; }
+  .wt-topbar { flex-wrap: wrap; gap: 4px 12px; padding: 8px 12px 6px; }
+  .wt-topbar .wt-title { font-size: 17px; line-height: 1.1; }
   .wt-topbar .wt-title small { display: none; }
   .wt-topbar .wt-logo { height: 32px; }
-  .wt-topbar nav { width: 100%; margin-left: 0; overflow-x: auto; flex-wrap: nowrap; }
+  .wt-topbar nav { order: 3; width: 100%; margin-left: 0; gap: 2px; overflow-x: auto; flex-wrap: nowrap; }
+  .wt-topbar nav a { padding: 5px 8px; font-size: 13px; white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
